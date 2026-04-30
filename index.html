@@ -3,158 +3,159 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Offline Label Matcher</title>
-    <!-- Load Tesseract.js for Local OCR -->
+    <title>Auto-Label QC (High Speed)</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; padding-bottom: 50px; }
-        header { background: #1e293b; color: white; padding: 15px; display: flex; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-        .main { max-width: 500px; margin: 0 auto; padding: 15px; }
+        body { font-family: sans-serif; background: #1a1a1a; color: white; overflow: hidden; }
         
-        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
-        .step-title { font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        
-        #videoContainer { position: relative; background: #000; border-radius: 8px; overflow: hidden; aspect-ratio: 4/3; margin-bottom: 12px; }
+        /* Full screen camera for production speed */
+        #videoContainer { 
+            position: relative; 
+            width: 100vw; 
+            height: 70vh; 
+            background: #000; 
+        }
         video { width: 100%; height: 100%; object-fit: cover; }
         canvas { display: none; }
 
-        .scan-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-        .scan-frame { width: 80%; height: 50%; border: 2px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 0 999px rgba(0,0,0,0.5); }
-        .scanning-line { position: absolute; width: 100%; height: 2px; background: #22c55e; top: 0; animation: scan 2s linear infinite; display: none; }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        /* Status UI */
+        .ui-overlay {
+            position: absolute;
+            bottom: 0; width: 100%; height: 30vh;
+            background: #222; padding: 15px;
+            display: flex; flex-direction: column; gap: 10px;
+            border-top: 2px solid #444;
+        }
 
-        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-bottom: 8px; font-size: 16px; }
-        .btn-primary { background: #2563eb; color: white; }
-        .btn-success { background: #16a34a; color: white; }
-        .btn-secondary { background: #64748b; color: white; }
-        
-        .text-preview { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; font-size: 13px; min-height: 40px; white-space: pre-wrap; margin-top: 10px; }
-        
-        .result-banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; margin-top: 10px; display: none; }
-        .pass { background: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
-        .fail { background: #fee2e2; color: #b91c1c; border: 2px solid #dc2626; }
-        
-        .loading { display: none; text-align: center; color: #2563eb; font-weight: bold; margin: 10px 0; }
+        .scan-frame { 
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%);
+            width: 70%; height: 40%; 
+            border: 4px solid white; border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        /* Result Colors */
+        .status-idle { border-color: white; }
+        .status-reading { border-color: #fbbf24; box-shadow: 0 0 20px #fbbf24; }
+        .status-pass { border-color: #22c55e; background: rgba(34, 197, 94, 0.2); box-shadow: 0 0 30px #22c55e; }
+        .status-fail { border-color: #ef4444; background: rgba(239, 68, 68, 0.3); box-shadow: 0 0 40px #ef4444; }
+
+        .btn { padding: 15px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; }
+        .btn-master { background: #3b82f6; color: white; }
+        .btn-reset { background: #444; color: white; }
+
+        .log-box { font-family: monospace; font-size: 12px; background: #000; padding: 10px; height: 60px; overflow-y: auto; color: #aaa; border-radius: 5px; }
+        .master-display { font-size: 14px; color: #3b82f6; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
     </style>
 </head>
 <body>
 
-<header>
-    <span>📦 Label Matcher</span>
-    <span id="statText">Local Mode (No API)</span>
-</header>
+<div id="videoContainer">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="scan-frame" id="scanFrame"></div>
+</div>
 
-<div class="main">
-    <!-- Step 1: Master -->
-    <div class="card" id="masterCard">
-        <div class="step-title">1️⃣ Scan Master (Reference)</div>
-        <div id="videoContainer">
-            <video id="video" autoplay playsinline muted></video>
-            <div class="scan-overlay"><div class="scan-frame"></div><div class="scanning-line" id="line1"></div></div>
-        </div>
-        <button class="btn btn-primary" onclick="capture('master')" id="btnMaster">Capture Master</button>
-        <div id="masterLoading" class="loading">Reading text...</div>
-        <div class="text-preview" id="masterDisplay">Master text will appear here...</div>
+<div class="ui-overlay">
+    <div id="masterStatus" class="master-display">Step 1: Capture Master Label...</div>
+    
+    <div id="controls">
+        <button class="btn btn-master" id="masterBtn" onclick="captureMaster()">📸 CAPTURE MASTER</button>
+        <button class="btn btn-reset" onclick="resetApp()" style="display:none" id="resetBtn">🔄 RESET</button>
     </div>
 
-    <!-- Step 2: Sample -->
-    <div class="card" id="sampleCard" style="opacity: 0.5; pointer-events: none;">
-        <div class="step-title">2️⃣ Scan Sample (To Check)</div>
-        <button class="btn btn-success" onclick="capture('sample')" id="btnSample">Capture & Compare</button>
-        <div id="sampleLoading" class="loading">Analyzing...</div>
-        <div id="resultBanner" class="result-banner"></div>
-        <div class="text-preview" id="sampleDisplay">Sample text will appear here...</div>
-    </div>
-
-    <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
+    <div id="log" class="log-box">System ready...</div>
+    <div id="autoStatus" style="text-align: center; font-weight: bold; color: #fbbf24;"></div>
 </div>
 
 <canvas id="canvas"></canvas>
 
 <script>
     let masterText = "";
-    let video = document.getElementById('video');
-    let canvas = document.getElementById('canvas');
+    let isAutoScanning = false;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const scanFrame = document.getElementById('scanFrame');
+    const logBox = document.getElementById('log');
 
-    // Start camera immediately
-    async function initCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment', width: {ideal: 1280} } 
-            });
-            video.srcObject = stream;
-        } catch (err) {
-            alert("Camera error: " + err.message);
+    async function init() {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment', width: {ideal: 1280} } 
+        });
+        video.srcObject = stream;
+    }
+
+    function addLog(msg) {
+        const time = new Date().toLocaleTimeString().split(' ')[0];
+        logBox.innerHTML = `[${time}] ${msg}<br>` + logBox.innerHTML;
+    }
+
+    async function captureMaster() {
+        scanFrame.className = "scan-frame status-reading";
+        addLog("Reading Master...");
+        
+        const text = await performOCR();
+        if (text) {
+            masterText = text.toLowerCase().replace(/\s+/g, ' ');
+            document.getElementById('masterStatus').innerText = "MASTER SET: " + text.substring(0, 30) + "...";
+            document.getElementById('masterBtn').style.display = "none";
+            document.getElementById('resetBtn').style.display = "inline-block";
+            addLog("Master captured. Starting Continuous Auto-Scan...");
+            startAutoScan();
         }
     }
 
-    async function capture(type) {
-        const loading = document.getElementById(type + 'Loading');
-        const display = document.getElementById(type + 'Display');
-        const line = (type === 'master') ? document.getElementById('line1') : null;
+    async function startAutoScan() {
+        isAutoScanning = true;
+        document.getElementById('autoStatus').innerText = "⚡ AUTO-SCAN ACTIVE";
+        
+        while (isAutoScanning) {
+            scanFrame.className = "scan-frame status-reading";
+            const sampleText = await performOCR();
+            
+            if (sampleText) {
+                const cleanSample = sampleText.toLowerCase().replace(/\s+/g, ' ');
+                
+                // Compare logic (allows for partial match in case of minor OCR errors)
+                if (cleanSample.includes(masterText) || masterText.includes(cleanSample)) {
+                    scanFrame.className = "scan-frame status-pass";
+                    addLog("PASS: Match found");
+                } else {
+                    scanFrame.className = "scan-frame status-fail";
+                    addLog("FAIL: Mismatch detected");
+                    // Vibration feedback for staff if on mobile
+                    if (navigator.vibrate) navigator.vibrate(200); 
+                }
+            }
+            
+            // Wait 2 seconds before next scan for mass production flow
+            await new Promise(r => setTimeout(r, 2000));
+            scanFrame.className = "scan-frame status-idle";
+        }
+    }
 
-        loading.style.display = 'block';
-        if(line) line.style.display = 'block';
-
-        // Capture frame to canvas
+    async function performOCR() {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        // Run Local OCR
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        
         try {
-            const result = await Tesseract.recognize(canvas, 'eng', {
-                logger: m => console.log(m)
-            });
-            
-            const cleanText = result.data.text.trim().toLowerCase().replace(/\s+/g, ' ');
-
-            if (type === 'master') {
-                masterText = cleanText;
-                display.innerText = result.data.text;
-                // Unlock Step 2
-                document.getElementById('sampleCard').style.opacity = "1";
-                document.getElementById('sampleCard').style.pointer_events = "auto";
-                document.getElementById('masterCard').style.border = "2px solid #2563eb";
-            } else {
-                display.innerText = result.data.text;
-                compare(cleanText);
-            }
+            const result = await Tesseract.recognize(canvas, 'eng');
+            return result.data.text.trim();
         } catch (e) {
-            alert("OCR Error: " + e.message);
-        }
-
-        loading.style.display = 'none';
-        if(line) line.style.display = 'none';
-    }
-
-    function compare(sampleText) {
-        const banner = document.getElementById('resultBanner');
-        banner.style.display = 'block';
-
-        // Direct matching logic
-        // We use "includes" or exact match depending on how strict you want to be
-        if (sampleText === masterText || masterText.includes(sampleText)) {
-            banner.innerText = "✅ MATCH OK";
-            banner.className = "result-banner pass";
-        } else {
-            banner.innerText = "❌ NO MATCH";
-            banner.className = "result-banner fail";
+            addLog("OCR Error: Check lighting");
+            return null;
         }
     }
 
-    function resetAll() {
+    function resetApp() {
+        isAutoScanning = false;
         masterText = "";
-        document.getElementById('masterDisplay').innerText = "Master text will appear here...";
-        document.getElementById('sampleDisplay').innerText = "Sample text will appear here...";
-        document.getElementById('resultBanner').style.display = 'none';
-        document.getElementById('sampleCard').style.opacity = "0.5";
-        document.getElementById('masterCard').style.border = "1px solid #e2e8f0";
+        location.reload(); // Simplest way to clear everything
     }
 
-    initCamera();
+    init();
 </script>
 
 </body>
