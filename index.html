@@ -1,615 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Label Checker</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline Label Matcher</title>
+    <!-- Load Tesseract.js for Local OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: sans-serif; background: #f0f2f5; color: #1a1a1a; padding-bottom: 50px; }
+        header { background: #1e293b; color: white; padding: 15px; display: flex; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+        .main { max-width: 500px; margin: 0 auto; padding: 15px; }
+        
+        .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .step-title { font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        
+        #videoContainer { position: relative; background: #000; border-radius: 8px; overflow: hidden; aspect-ratio: 4/3; margin-bottom: 12px; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        canvas { display: none; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f5;
-      color: #1a1a1a;
-      min-height: 100vh;
-    }
+        .scan-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+        .scan-frame { width: 80%; height: 50%; border: 2px solid rgba(255,255,255,0.8); border-radius: 8px; box-shadow: 0 0 0 999px rgba(0,0,0,0.5); }
+        .scanning-line { position: absolute; width: 100%; height: 2px; background: #22c55e; top: 0; animation: scan 2s linear infinite; display: none; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
 
-    header {
-      background: #1a1a2e;
-      color: white;
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    header h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.3px; }
-    header .stats { display: flex; gap: 16px; font-size: 13px; }
-    .stat-pass { color: #4ade80; font-weight: 600; }
-    .stat-fail { color: #f87171; font-weight: 600; }
-
-    .main { max-width: 600px; margin: 0 auto; padding: 16px; }
-
-    /* API Key section */
-    #apiKeySection {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-      border: 1.5px solid #e5e7eb;
-    }
-    #apiKeySection h2 { font-size: 15px; margin-bottom: 8px; color: #374151; }
-    #apiKeySection p { font-size: 13px; color: #6b7280; margin-bottom: 12px; }
-    .input-row { display: flex; gap: 8px; }
-    .input-row input {
-      flex: 1;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 14px;
-      outline: none;
-    }
-    .input-row input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.15); }
-    .btn {
-      padding: 8px 16px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: opacity 0.15s;
-    }
-    .btn:active { opacity: 0.75; }
-    .btn-primary { background: #4f46e5; color: white; }
-    .btn-success { background: #16a34a; color: white; }
-    .btn-danger { background: #dc2626; color: white; }
-    .btn-gray { background: #e5e7eb; color: #374151; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-    /* Mode tabs */
-    .mode-tabs {
-      display: flex;
-      background: white;
-      border-radius: 12px;
-      padding: 6px;
-      margin-bottom: 16px;
-      border: 1px solid #e5e7eb;
-      gap: 4px;
-    }
-    .tab {
-      flex: 1;
-      padding: 10px;
-      text-align: center;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-      color: #6b7280;
-      border: none;
-      background: transparent;
-    }
-    .tab.active {
-      background: #4f46e5;
-      color: white;
-    }
-
-    /* Camera card */
-    .card {
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid #e5e7eb;
-      margin-bottom: 16px;
-    }
-    .card-header {
-      padding: 14px 16px;
-      border-bottom: 1px solid #f3f4f6;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .card-header h3 { font-size: 15px; font-weight: 600; }
-    .card-body { padding: 16px; }
-
-    .badge {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 20px;
-    }
-    .badge-master { background: #e0e7ff; color: #4338ca; }
-    .badge-sample { background: #dcfce7; color: #15803d; }
-    .badge-ready { background: #d1fae5; color: #065f46; }
-
-    /* Video / camera */
-    #videoContainer {
-      position: relative;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      aspect-ratio: 4/3;
-      margin-bottom: 12px;
-    }
-    #video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    #canvas { display: none; }
-
-    .scan-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-    .scan-frame {
-      width: 80%;
-      height: 60%;
-      border: 2px solid rgba(255,255,255,0.7);
-      border-radius: 8px;
-      box-shadow: 0 0 0 9999px rgba(0,0,0,0.35);
-    }
-    .scan-frame.scanning {
-      border-color: #fbbf24;
-      animation: pulse 0.8s infinite alternate;
-    }
-    @keyframes pulse { from { opacity: 1; } to { opacity: 0.4; } }
-
-    /* Camera controls */
-    .cam-controls { display: flex; gap: 8px; }
-    .cam-controls .btn { flex: 1; }
-
-    /* Extracted text */
-    .extracted-box {
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 13px;
-      line-height: 1.6;
-      min-height: 60px;
-      color: #374151;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .extracted-box.empty { color: #9ca3af; font-style: italic; }
-
-    /* Result card */
-    #resultCard { display: none; }
-    .result-pass .card-header { background: #f0fdf4; }
-    .result-fail .card-header { background: #fef2f2; }
-    .result-icon { font-size: 22px; }
-
-    .diff-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-    .diff-table th {
-      text-align: left;
-      padding: 6px 10px;
-      background: #f3f4f6;
-      font-weight: 600;
-      color: #374151;
-      font-size: 12px;
-    }
-    .diff-table td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: top; }
-    .diff-row-fail td { background: #fff5f5; }
-    .diff-row-ok td { background: #f0fdf4; }
-    .diff-old { color: #dc2626; text-decoration: line-through; font-family: monospace; }
-    .diff-new { color: #16a34a; font-family: monospace; }
-    .diff-ok { color: #15803d; }
-    .diff-label { color: #6b7280; font-size: 12px; }
-
-    /* Log */
-    #logSection { margin-top: 8px; }
-    .log-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 13px;
-    }
-    .log-item:last-child { border-bottom: none; }
-    .log-time { color: #9ca3af; font-size: 11px; min-width: 55px; }
-    .log-status-pass { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
-    .log-status-fail { width: 8px; height: 8px; border-radius: 50%; background: #f87171; flex-shrink: 0; }
-    .log-text { flex: 1; color: #374151; }
-    .log-empty { padding: 16px; text-align: center; color: #9ca3af; font-size: 13px; }
-
-    .processing-msg {
-      text-align: center;
-      padding: 12px;
-      font-size: 13px;
-      color: #6366f1;
-      animation: blink 1s infinite alternate;
-    }
-    @keyframes blink { from { opacity: 1; } to { opacity: 0.5; } }
-
-    .master-saved-banner {
-      background: #e0e7ff;
-      color: #3730a3;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      margin-bottom: 12px;
-      display: none;
-    }
-
-    .info-tip {
-      font-size: 12px;
-      color: #6b7280;
-      padding: 8px 0 0;
-      line-height: 1.5;
-    }
-
-    @media (max-width: 480px) {
-      .main { padding: 10px; }
-      header h1 { font-size: 15px; }
-    }
-  </style>
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-bottom: 8px; font-size: 16px; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-secondary { background: #64748b; color: white; }
+        
+        .text-preview { background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px; border-radius: 6px; font-size: 13px; min-height: 40px; white-space: pre-wrap; margin-top: 10px; }
+        
+        .result-banner { padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; font-size: 18px; margin-top: 10px; display: none; }
+        .pass { background: #dcfce7; color: #15803d; border: 2px solid #16a34a; }
+        .fail { background: #fee2e2; color: #b91c1c; border: 2px solid #dc2626; }
+        
+        .loading { display: none; text-align: center; color: #2563eb; font-weight: bold; margin: 10px 0; }
+    </style>
 </head>
 <body>
 
 <header>
-  <h1>🏷️ Label Checker</h1>
-  <div class="stats">
-    <span>Pass: <span class="stat-pass" id="passCount">0</span></span>
-    <span>Fail: <span class="stat-fail" id="failCount">0</span></span>
-  </div>
+    <span>📦 Label Matcher</span>
+    <span id="statText">Local Mode (No API)</span>
 </header>
 
 <div class="main">
-
-  <!-- API Key -->
-  <div id="apiKeySection">
-    <h2>Anthropic API Key</h2>
-    <p>Enter your API key to enable AI label reading. It is stored only in your browser session.</p>
-    <div class="input-row">
-      <input type="password" id="apiKeyInput" placeholder="sk-ant-..." />
-      <button class="btn btn-primary" onclick="saveApiKey()">Save</button>
-    </div>
-    <div id="apiKeyStatus" class="info-tip"></div>
-  </div>
-
-  <!-- Mode Tabs -->
-  <div class="mode-tabs">
-    <button class="tab active" id="tabMaster" onclick="switchMode('master')">
-      📋 Step 1 — Scan Master
-    </button>
-    <button class="tab" id="tabSample" onclick="switchMode('sample')">
-      🔍 Step 2 — Scan Samples
-    </button>
-    <button class="tab" id="tabLog" onclick="switchMode('log')">
-      📊 Log
-    </button>
-  </div>
-
-  <!-- Master Mode -->
-  <div id="panelMaster">
-    <div class="card">
-      <div class="card-header">
-        <h3>Master Label</h3>
-        <span class="badge badge-master">Reference</span>
-      </div>
-      <div class="card-body">
-        <div id="masterSavedBanner" class="master-saved-banner">
-          ✅ Master saved — switch to Step 2 to scan samples
-        </div>
+    <!-- Step 1: Master -->
+    <div class="card" id="masterCard">
+        <div class="step-title">1️⃣ Scan Master (Reference)</div>
         <div id="videoContainer">
-          <video id="video" autoplay playsinline muted></video>
-          <canvas id="canvas"></canvas>
-          <div class="scan-overlay">
-            <div class="scan-frame" id="scanFrame"></div>
-          </div>
+            <video id="video" autoplay playsinline muted></video>
+            <div class="scan-overlay"><div class="scan-frame"></div><div class="scanning-line" id="line1"></div></div>
         </div>
-        <div class="cam-controls" style="margin-bottom:12px;">
-          <button class="btn btn-gray" onclick="startCamera()" id="btnStart">Start Camera</button>
-          <button class="btn btn-primary" onclick="capture('master')" id="btnCapture" disabled>
-            📸 Capture &amp; Read
-          </button>
-        </div>
-        <div id="masterProcessing" class="processing-msg" style="display:none">
-          🤖 AI reading label…
-        </div>
-        <label style="font-size:12px;font-weight:600;color:#6b7280;display:block;margin-bottom:4px;">EXTRACTED TEXT</label>
-        <div id="masterText" class="extracted-box empty">Not scanned yet</div>
-        <div class="info-tip">Point camera at the correct master label, then tap Capture &amp; Read. AI will extract all text fields.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Sample Mode -->
-  <div id="panelSample" style="display:none">
-    <div class="card">
-      <div class="card-header">
-        <h3>Sample Label</h3>
-        <span class="badge badge-sample">Checking</span>
-      </div>
-      <div class="card-body">
-        <div id="videoContainer2" style="position:relative;background:#000;border-radius:8px;overflow:hidden;aspect-ratio:4/3;margin-bottom:12px;">
-          <video id="video2" autoplay playsinline muted style="width:100%;height:100%;object-fit:cover;display:block;"></video>
-          <canvas id="canvas2" style="display:none"></canvas>
-          <div class="scan-overlay">
-            <div class="scan-frame" id="scanFrame2"></div>
-          </div>
-        </div>
-        <div class="cam-controls" style="margin-bottom:12px;">
-          <button class="btn btn-gray" onclick="startCamera2()" id="btnStart2">Start Camera</button>
-          <button class="btn btn-success" onclick="capture('sample')" id="btnCapture2" disabled>
-            🔍 Check Label
-          </button>
-        </div>
-        <div id="sampleProcessing" class="processing-msg" style="display:none">
-          🤖 Comparing with master…
-        </div>
-      </div>
+        <button class="btn btn-primary" onclick="capture('master')" id="btnMaster">Capture Master</button>
+        <div id="masterLoading" class="loading">Reading text...</div>
+        <div class="text-preview" id="masterDisplay">Master text will appear here...</div>
     </div>
 
-    <!-- Result Card -->
-    <div class="card" id="resultCard">
-      <div class="card-header" id="resultHeader">
-        <span id="resultIcon" class="result-icon"></span>
-        <h3 id="resultTitle" style="margin-left:8px;"></h3>
-      </div>
-      <div class="card-body">
-        <div id="resultBody"></div>
-      </div>
+    <!-- Step 2: Sample -->
+    <div class="card" id="sampleCard" style="opacity: 0.5; pointer-events: none;">
+        <div class="step-title">2️⃣ Scan Sample (To Check)</div>
+        <button class="btn btn-success" onclick="capture('sample')" id="btnSample">Capture & Compare</button>
+        <div id="sampleLoading" class="loading">Analyzing...</div>
+        <div id="resultBanner" class="result-banner"></div>
+        <div class="text-preview" id="sampleDisplay">Sample text will appear here...</div>
     </div>
-  </div>
 
-  <!-- Log Mode -->
-  <div id="panelLog" style="display:none">
-    <div class="card">
-      <div class="card-header">
-        <h3>Scan Log</h3>
-        <button class="btn btn-gray" style="font-size:12px;padding:4px 10px;" onclick="clearLog()">Clear</button>
-      </div>
-      <div id="logList"><div class="log-empty">No scans yet</div></div>
-    </div>
-  </div>
-
+    <button class="btn btn-secondary" onclick="resetAll()">Reset All</button>
 </div>
 
+<canvas id="canvas"></canvas>
+
 <script>
-  let apiKey = '';
-  let masterText = '';
-  let stream1 = null, stream2 = null;
-  let passCount = 0, failCount = 0;
-  let log = [];
+    let masterText = "";
+    let video = document.getElementById('video');
+    let canvas = document.getElementById('canvas');
 
-  function saveApiKey() {
-    const val = document.getElementById('apiKeyInput').value.trim();
-    if (!val.startsWith('sk-ant-')) {
-      document.getElementById('apiKeyStatus').textContent = '⚠️ Key should start with sk-ant-';
-      return;
-    }
-    apiKey = val;
-    document.getElementById('apiKeyStatus').textContent = '✅ API key saved for this session';
-    document.getElementById('apiKeySection').style.border = '1.5px solid #6ee7b7';
-  }
-
-  function switchMode(mode) {
-    document.getElementById('panelMaster').style.display = mode === 'master' ? '' : 'none';
-    document.getElementById('panelSample').style.display = mode === 'sample' ? '' : 'none';
-    document.getElementById('panelLog').style.display = mode === 'log' ? '' : 'none';
-    ['tabMaster','tabSample','tabLog'].forEach((id, i) => {
-      document.getElementById(id).classList.toggle('active', ['master','sample','log'][i] === mode);
-    });
-    if (mode === 'sample' && !stream2) startCamera2();
-  }
-
-  async function startCamera() {
-    try {
-      stream1 = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: {ideal:1280}, height:{ideal:960} } });
-      document.getElementById('video').srcObject = stream1;
-      document.getElementById('btnCapture').disabled = false;
-      document.getElementById('btnStart').textContent = '🎥 Camera On';
-    } catch(e) {
-      alert('Camera error: ' + e.message);
-    }
-  }
-
-  async function startCamera2() {
-    try {
-      stream2 = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: {ideal:1280}, height:{ideal:960} } });
-      document.getElementById('video2').srcObject = stream2;
-      document.getElementById('btnCapture2').disabled = false;
-      document.getElementById('btnStart2').textContent = '🎥 Camera On';
-    } catch(e) {
-      alert('Camera error: ' + e.message);
-    }
-  }
-
-  function captureFrame(videoEl, canvasEl) {
-    const v = document.getElementById(videoEl);
-    const c = document.getElementById(canvasEl);
-    c.width = v.videoWidth || 640;
-    c.height = v.videoHeight || 480;
-    c.getContext('2d').drawImage(v, 0, 0);
-    return c.toDataURL('image/jpeg', 0.92).split(',')[1];
-  }
-
-  async function capture(type) {
-    if (!apiKey) { alert('Please enter your Anthropic API key first.'); return; }
-
-    const frameB64 = type === 'master'
-      ? captureFrame('video', 'canvas')
-      : captureFrame('video2', 'canvas2');
-
-    const sf = type === 'master' ? 'scanFrame' : 'scanFrame2';
-    document.getElementById(sf).classList.add('scanning');
-    document.getElementById(type === 'master' ? 'masterProcessing' : 'sampleProcessing').style.display = '';
-    document.getElementById(type === 'master' ? 'btnCapture' : 'btnCapture2').disabled = true;
-
-    try {
-      const extracted = await callClaude(frameB64, type === 'sample' ? masterText : null);
-
-      if (type === 'master') {
-        masterText = extracted;
-        const el = document.getElementById('masterText');
-        el.textContent = extracted;
-        el.classList.remove('empty');
-        document.getElementById('masterSavedBanner').style.display = '';
-        document.getElementById('masterProcessing').style.display = 'none';
-        document.getElementById('btnCapture').disabled = false;
-      } else {
-        // Compare
-        const result = await compareClaude(masterText, extracted);
-        showResult(result, extracted);
-        addLog(result);
-        document.getElementById('sampleProcessing').style.display = 'none';
-        document.getElementById('btnCapture2').disabled = false;
-      }
-    } catch(e) {
-      alert('AI error: ' + e.message);
-      document.getElementById(type === 'master' ? 'masterProcessing' : 'sampleProcessing').style.display = 'none';
-      document.getElementById(type === 'master' ? 'btnCapture' : 'btnCapture2').disabled = false;
+    // Start camera immediately
+    async function initCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment', width: {ideal: 1280} } 
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            alert("Camera error: " + err.message);
+        }
     }
 
-    document.getElementById(sf).classList.remove('scanning');
-  }
+    async function capture(type) {
+        const loading = document.getElementById(type + 'Loading');
+        const display = document.getElementById(type + 'Display');
+        const line = (type === 'master') ? document.getElementById('line1') : null;
 
-  async function callClaude(imageB64, masterRef) {
-    const systemPrompt = masterRef
-      ? `You are a label inspection AI. The user will show you a scanned label image. Extract ALL text exactly as it appears, preserving line breaks. Output only the raw text, no commentary.`
-      : `You are a label reader. Extract ALL text from this label image exactly as printed, preserving structure and line breaks. Output only the raw text.`;
+        loading.style.display = 'block';
+        if(line) line.style.display = 'block';
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: [{
-          role: 'user',
-          content: [
-            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageB64 } },
-            { type: 'text', text: 'Extract all text from this label.' }
-          ]
-        }]
-      })
-    });
+        // Capture frame to canvas
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error?.message || resp.statusText);
-    }
-    const data = await resp.json();
-    return data.content[0].text.trim();
-  }
+        // Run Local OCR
+        try {
+            const result = await Tesseract.recognize(canvas, 'eng', {
+                logger: m => console.log(m)
+            });
+            
+            const cleanText = result.data.text.trim().toLowerCase().replace(/\s+/g, ' ');
 
-  async function compareClaude(master, sample) {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-5',
-        max_tokens: 1000,
-        system: `You are a label quality inspector. Compare master and sample label text. Respond ONLY with valid JSON, no markdown, no commentary. Format:
-{
-  "pass": true or false,
-  "summary": "one line summary",
-  "differences": [
-    { "field": "field name or description", "master": "expected value", "sample": "actual value", "type": "wrong_text|wrong_number|missing" }
-  ]
-}
-If labels match, differences array is empty and pass is true.`,
-        messages: [{
-          role: 'user',
-          content: `MASTER LABEL:\n${master}\n\nSAMPLE LABEL:\n${sample}`
-        }]
-      })
-    });
+            if (type === 'master') {
+                masterText = cleanText;
+                display.innerText = result.data.text;
+                // Unlock Step 2
+                document.getElementById('sampleCard').style.opacity = "1";
+                document.getElementById('sampleCard').style.pointer_events = "auto";
+                document.getElementById('masterCard').style.border = "2px solid #2563eb";
+            } else {
+                display.innerText = result.data.text;
+                compare(cleanText);
+            }
+        } catch (e) {
+            alert("OCR Error: " + e.message);
+        }
 
-    if (!resp.ok) {
-      const err = await resp.json();
-      throw new Error(err.error?.message || resp.statusText);
-    }
-    const data = await resp.json();
-    const raw = data.content[0].text.replace(/```json|```/g,'').trim();
-    return JSON.parse(raw);
-  }
-
-  function showResult(result, sampleText) {
-    const card = document.getElementById('resultCard');
-    const header = document.getElementById('resultHeader');
-    const icon = document.getElementById('resultIcon');
-    const title = document.getElementById('resultTitle');
-    const body = document.getElementById('resultBody');
-
-    card.style.display = '';
-    card.className = 'card ' + (result.pass ? 'result-pass' : 'result-fail');
-    header.style.background = result.pass ? '#f0fdf4' : '#fef2f2';
-    icon.textContent = result.pass ? '✅' : '❌';
-    title.textContent = result.pass ? 'PASS — Label matches master' : 'FAIL — ' + result.summary;
-
-    if (result.pass) {
-      body.innerHTML = '<div style="font-size:14px;color:#15803d;padding:8px 0;">All fields match the master label. Ready for next scan.</div>';
-    } else {
-      let html = '<table class="diff-table"><thead><tr><th>Field</th><th>Master (expected)</th><th>Sample (found)</th></tr></thead><tbody>';
-      for (const d of result.differences) {
-        const typeLabel = { wrong_text: 'Wrong text', wrong_number: 'Wrong number/code', missing: 'Missing' }[d.type] || d.type;
-        html += `<tr class="diff-row-fail">
-          <td><strong>${escHtml(d.field)}</strong><br><span class="diff-label">${typeLabel}</span></td>
-          <td class="diff-new">${escHtml(d.master)}</td>
-          <td class="diff-old">${escHtml(d.sample || '(blank)')}</td>
-        </tr>`;
-      }
-      html += '</tbody></table>';
-      body.innerHTML = html;
+        loading.style.display = 'none';
+        if(line) line.style.display = 'none';
     }
 
-    if (result.pass) passCount++; else failCount++;
-    document.getElementById('passCount').textContent = passCount;
-    document.getElementById('failCount').textContent = failCount;
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+    function compare(sampleText) {
+        const banner = document.getElementById('resultBanner');
+        banner.style.display = 'block';
 
-  function addLog(result) {
-    const now = new Date();
-    const time = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    log.unshift({ time, pass: result.pass, summary: result.summary || 'Match OK' });
-    renderLog();
-  }
+        // Direct matching logic
+        // We use "includes" or exact match depending on how strict you want to be
+        if (sampleText === masterText || masterText.includes(sampleText)) {
+            banner.innerText = "✅ MATCH OK";
+            banner.className = "result-banner pass";
+        } else {
+            banner.innerText = "❌ NO MATCH";
+            banner.className = "result-banner fail";
+        }
+    }
 
-  function renderLog() {
-    const list = document.getElementById('logList');
-    if (!log.length) { list.innerHTML = '<div class="log-empty">No scans yet</div>'; return; }
-    list.innerHTML = log.map(l => `
-      <div class="log-item">
-        <div class="${l.pass ? 'log-status-pass' : 'log-status-fail'}"></div>
-        <span class="log-time">${l.time}</span>
-        <span class="log-text">${l.pass ? '✓ PASS' : '✗ FAIL — ' + escHtml(l.summary)}</span>
-      </div>`).join('');
-  }
+    function resetAll() {
+        masterText = "";
+        document.getElementById('masterDisplay').innerText = "Master text will appear here...";
+        document.getElementById('sampleDisplay').innerText = "Sample text will appear here...";
+        document.getElementById('resultBanner').style.display = 'none';
+        document.getElementById('sampleCard').style.opacity = "0.5";
+        document.getElementById('masterCard').style.border = "1px solid #e2e8f0";
+    }
 
-  function clearLog() {
-    log = []; passCount = 0; failCount = 0;
-    document.getElementById('passCount').textContent = 0;
-    document.getElementById('failCount').textContent = 0;
-    renderLog();
-  }
-
-  function escHtml(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+    initCamera();
 </script>
+
 </body>
 </html>
