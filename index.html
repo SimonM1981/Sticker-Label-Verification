@@ -1,230 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Label Verifier</title>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 10px;
-      background: #111;
-      color: #ddd;
-      text-align: center;
-    }
-    #video {
-      width: 100%;
-      max-width: 640px;
-      background: #000;
-      display: block;
-      margin: 10px auto;
-      border-radius: 8px;
-    }
-    #canvas { display: none; }
-    
-    .scan-frame {
-      width: 320px;
-      height: 160px;
-      margin: 20px auto;
-      border: 4px dashed #666;
-      border-radius: 8px;
-      position: relative;
-    }
+// Move variables to global scope so they are accessible
+let masterText = "";
+let isAutoScanning = false;
 
-    button {
-      padding: 12px 24px;
-      margin: 8px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      background: #3b82f6;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover { background: #2563eb; }
+// We still use DOMContentLoaded to start the camera and get element references
+document.addEventListener("DOMContentLoaded", () => {
+    initCamera();
+});
 
-    #resetBtn { background: #ef4444; }
-    #resetBtn:hover { background: #dc2626; }
-
-    #log {
-      height: 220px;
-      overflow-y: scroll;
-      background: #1a1a1a;
-      padding: 10px;
-      text-align: left;
-      font-family: monospace;
-      font-size: 13px;
-      margin-top: 15px;
-      border-radius: 6px;
-    }
-  </style>
-</head>
-<body>
-
-  <h1>Sticker / Label Verifier</h1>
-
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas"></canvas>
-
-  <div class="scan-frame" id="scanFrame"></div>
-
-  <div>
-    <button id="masterBtn" onclick="captureMaster()">📸 Set Master Label</button>
-    <button id="resetBtn" onclick="resetMaster()" style="display:none;">Reset Master</button>
-  </div>
-
-  <p id="masterStatus">No master set</p>
-  <p id="autoStatus">Auto-scan inactive</p>
-
-  <div id="log"></div>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-
-      const video = document.getElementById('video');
-      const canvas = document.getElementById('canvas');
-      const scanFrame = document.getElementById('scanFrame');
-      const logBox = document.getElementById('log');
-      const masterStatus = document.getElementById('masterStatus');
-      const autoStatus = document.getElementById('autoStatus');
-
-      let masterText = "";
-      let isAutoScanning = false;
-
-      function addLog(msg, color = "#aaa") {
-        const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-        logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
-      }
-
-      async function initCamera() {
-        try {
-          addLog("Requesting camera access...", "#3b82f6");
-          const stream = await navigator.mediaDevices.getUserMedia({
+async function initCamera() {
+    const video = document.getElementById('video');
+    try {
+        addLog("Requesting camera access...", "#3b82f6");
+        const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "environment", width: {ideal: 1280}, height: {ideal: 720} }
-          });
-          video.srcObject = stream;
-          addLog("✅ Camera is live", "#22c55e");
-        } catch (err) {
-          addLog("❌ Camera error: " + err.message, "#ef4444");
-          console.error(err);
-        }
-      }
+        });
+        video.srcObject = stream;
+        addLog("✅ Camera is live", "#22c55e");
+    } catch (err) {
+        addLog("❌ Camera error: " + err.message, "#ef4444");
+    }
+}
 
-      function clean(text) {
-        return text ? text.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : "";
-      }
+function addLog(msg, color = "#aaa") {
+    const logBox = document.getElementById('log');
+    const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
+}
 
-      async function performOCR(isMaster = false) {
-        if (!video.videoWidth) {
-          addLog("Video not ready", "#eab308");
-          return null;
-        }
+function clean(text) {
+    return text ? text.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : "";
+}
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0);
+async function performOCR(isMaster = false) {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    
+    if (!video.videoWidth) {
+        addLog("Video not ready", "#eab308");
+        return null;
+    }
 
-        try {
-          addLog("Running OCR...", "#aaa");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
 
-          const result = await Tesseract.recognize(canvas, 'eng', {
-            tessedit_pageseg_mode: isMaster ? 7 : 6,
-          });
+    try {
+        addLog("Running OCR...", "#aaa");
+        const result = await Tesseract.recognize(canvas, 'eng');
+        const rawText = result.data.text.trim();
+        addLog(`Raw OCR: "${rawText}"`, "#aaa");
+        return rawText;
+    } catch (e) {
+        addLog("OCR failed", "#ef4444");
+        return null;
+    }
+}
 
-          const rawText = result.data.text.trim();
-          addLog(`Raw OCR: "${rawText}"`, "#aaa");
+async function captureMaster() {
+    const scanFrame = document.getElementById('scanFrame');
+    scanFrame.style.borderColor = "#3b82f6";
+    addLog("--- Trying to capture Master ---", "#3b82f6");
 
-          return rawText;
+    const rawText = await performOCR(true);
 
-        } catch (e) {
-          addLog("OCR failed", "#ef4444");
-          console.error(e);
-          return null;
-        }
-      }
+    if (rawText && rawText.length > 4) {
+        masterText = clean(rawText);
+        document.getElementById('masterStatus').innerText = "MASTER SET: " + masterText.substring(0, 30);
+        document.getElementById('masterBtn').style.display = "none";
+        document.getElementById('resetBtn').style.display = "inline-block";
+        addLog("✅ Master captured successfully!", "#22c55e");
+        startAutoScan();
+    } else {
+        addLog("❌ Could not read text clearly.", "#ef4444");
+    }
+}
 
-      async function captureMaster() {
-        scanFrame.style.borderColor = "#3b82f6";
-        addLog("--- Trying to capture Master ---", "#3b82f6");
+async function startAutoScan() {
+    isAutoScanning = true;
+    document.getElementById('autoStatus').innerText = "⚡ AUTO-SCAN ACTIVE";
 
-        const rawText = await performOCR(true);
-
-        if (rawText && rawText.length > 4) {
-          masterText = clean(rawText);
-          masterStatus.innerText = "MASTER SET: " + masterText.substring(0, 30);
-          document.getElementById('masterBtn').style.display = "none";
-          document.getElementById('resetBtn').style.display = "inline-block";
-          addLog("✅ Master captured successfully!", "#22c55e");
-          startAutoScan();
-        } else {
-          addLog("❌ Could not read text clearly.", "#ef4444");
-          addLog("Tips: Hold label steady, good light, text big in frame", "#ef4444");
-        }
-      }
-
-      async function startAutoScan() {
-        isAutoScanning = true;
-        autoStatus.innerText = "⚡ AUTO-SCAN ACTIVE";
-
-        while (isAutoScanning) {
-          const rawSample = await performOCR(false);
-          
-          if (rawSample && rawSample.length > 3) {
+    while (isAutoScanning) {
+        const rawSample = await performOCR(false);
+        const scanFrame = document.getElementById('scanFrame');
+        
+        if (rawSample && rawSample.length > 3) {
             const sampleClean = clean(rawSample);
             const similarity = calculateSimilarity(sampleClean, masterText);
 
             if (sampleClean.includes(masterText) || masterText.includes(sampleClean) || similarity > 0.72) {
-              scanFrame.style.borderColor = "#22c55e";
-              addLog("✅ PASS", "#22c55e");
+                scanFrame.style.borderColor = "#22c55e";
+                addLog("✅ PASS", "#22c55e");
             } else {
-              scanFrame.style.borderColor = "#ef4444";
-              addLog(`❌ FAIL`, "#ef4444");
+                scanFrame.style.borderColor = "#ef4444";
+                addLog(`❌ FAIL`, "#ef4444");
             }
-          }
-          await new Promise(r => setTimeout(r, 1600));
         }
-      }
+        await new Promise(r => setTimeout(r, 1600));
+    }
+}
 
-      function calculateSimilarity(s1, s2) {
-        if (!s1 || !s2) return 0;
-        const longer = s1.length > s2.length ? s1 : s2;
-        const shorter = s1.length > s2.length ? s2 : s1;
-        if (longer.length === 0) return 1;
-        const distance = editDistance(longer, shorter);
-        return (longer.length - distance) / longer.length;
-      }
+function calculateSimilarity(s1, s2) {
+    if (!s1 || !s2) return 0;
+    const longer = s1.length > s2.length ? s1 : s2;
+    const shorter = s1.length > s2.length ? s2 : s1;
+    if (longer.length === 0) return 1;
+    const distance = editDistance(longer, shorter);
+    return (longer.length - distance) / longer.length;
+}
 
-      function editDistance(s1, s2) {
-        if (s1.length < s2.length) [s1, s2] = [s2, s1];
-        let costs = Array.from({length: s2.length + 1}, (_, i) => i);
-        for (let i = 0; i < s1.length; i++) {
-          let lastValue = i + 1;
-          for (let j = 0; j < s2.length; j++) {
-            const temp = costs[j];
-            costs[j] = s1[i] === s2[j] ? lastValue - 1 : Math.min(costs[j], costs[j+1], lastValue) + 1;
-            lastValue = temp;
-          }
-          costs[s2.length] = Math.min(costs[s2.length], lastValue) + 1;
-        }
-        return costs[s2.length];
-      }
-
-      function resetMaster() {
-        isAutoScanning = false;
-        masterText = "";
-        masterStatus.innerText = "No master set";
-        autoStatus.innerText = "Auto-scan inactive";
-        document.getElementById('masterBtn').style.display = "inline-block";
-        document.getElementById('resetBtn').style.display = "none";
-        scanFrame.style.borderColor = "#666";
-        addLog("System reset", "#eab308");
-      }
-
-      // Start the app
-      initCamera();
-    });
-  </script>
-</body>
-</html>
+function editDistance(s1, s2) {
+    let costs = [];
+    for (let i = 0; i <= s1.length; i++) {
+        let lastValue = i;
+        for (let j = 0; j <= s2.length; j++) {
+            if (i == 0) costs[j] = j;
+            else {
+                if (j > 0) {
+                    let newValue = costs[j - 1];
+                    if (s1.charAt(i -Normally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
