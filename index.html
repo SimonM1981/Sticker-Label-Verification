@@ -1,78 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Auto-Label QC (High Speed)</title>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: sans-serif; background: #1a1a1a; color: white; overflow: hidden; }
-        
-        /* Full screen camera for production speed */
-        #videoContainer { 
-            position: relative; 
-            width: 100vw; 
-            height: 70vh; 
-            background: #000; 
-        }
-        video { width: 100%; height: 100%; object-fit: cover; }
-        canvas { display: none; }
-
-        /* Status UI */
-        .ui-overlay {
-            position: absolute;
-            bottom: 0; width: 100%; height: 30vh;
-            background: #222; padding: 15px;
-            display: flex; flex-direction: column; gap: 10px;
-            border-top: 2px solid #444;
-        }
-
-        .scan-frame { 
-            position: absolute; top: 50%; left: 50%; 
-            transform: translate(-50%, -50%);
-            width: 70%; height: 40%; 
-            border: 4px solid white; border-radius: 12px;
-            transition: all 0.2s;
-        }
-
-        /* Result Colors */
-        .status-idle { border-color: white; }
-        .status-reading { border-color: #fbbf24; box-shadow: 0 0 20px #fbbf24; }
-        .status-pass { border-color: #22c55e; background: rgba(34, 197, 94, 0.2); box-shadow: 0 0 30px #22c55e; }
-        .status-fail { border-color: #ef4444; background: rgba(239, 68, 68, 0.3); box-shadow: 0 0 40px #ef4444; }
-
-        .btn { padding: 15px; border-radius: 8px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; }
-        .btn-master { background: #3b82f6; color: white; }
-        .btn-reset { background: #444; color: white; }
-
-        .log-box { font-family: monospace; font-size: 12px; background: #000; padding: 10px; height: 60px; overflow-y: auto; color: #aaa; border-radius: 5px; }
-        .master-display { font-size: 14px; color: #3b82f6; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-    </style>
-</head>
-<body>
-
-<div id="videoContainer">
-    <video id="video" autoplay playsinline muted></video>
-    <div class="scan-frame" id="scanFrame"></div>
-</div>
-
-<div class="ui-overlay">
-    <div id="masterStatus" class="master-display">Step 1: Capture Master Label...</div>
-    
-    <div id="controls">
-        <button class="btn btn-master" id="masterBtn" onclick="captureMaster()">📸 CAPTURE MASTER</button>
-        <button class="btn btn-reset" onclick="resetApp()" style="display:none" id="resetBtn">🔄 RESET</button>
-    </div>
-
-    <div id="log" class="log-box">System ready...</div>
-    <div id="autoStatus" style="text-align: center; font-weight: bold; color: #fbbf24;"></div>
-</div>
-
-<canvas id="canvas"></canvas>
-
-<script>
-    let masterText = "";
+let masterText = "";
     let isAutoScanning = false;
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
@@ -80,29 +6,56 @@
     const logBox = document.getElementById('log');
 
     async function init() {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment', width: {ideal: 1280} } 
-        });
-        video.srcObject = stream;
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'environment', width: {ideal: 1280} } 
+            });
+            video.srcObject = stream;
+        } catch (err) {
+            addLog("Camera Error: " + err.message, "#ef4444");
+        }
     }
 
-    function addLog(msg) {
+    function addLog(msg, color = "#aaa") {
         const time = new Date().toLocaleTimeString().split(' ')[0];
-        logBox.innerHTML = `[${time}] ${msg}<br>` + logBox.innerHTML;
+        logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
+    }
+
+    // Clean text: remove special chars, extra spaces, and convert to lowercase
+    function clean(text) {
+        return text.toLowerCase().replace(/[^a-z0-9]/g, '');
+    }
+
+    async function performOCR() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        try {
+            // Using Tesseract.js (make sure the script tag is in your HTML)
+            const result = await Tesseract.recognize(canvas, 'eng');
+            return result.data.text.trim();
+        } catch (e) {
+            return null;
+        }
     }
 
     async function captureMaster() {
         scanFrame.className = "scan-frame status-reading";
         addLog("Reading Master...");
         
-        const text = await performOCR();
-        if (text) {
-            masterText = text.toLowerCase().replace(/\s+/g, ' ');
-            document.getElementById('masterStatus').innerText = "MASTER SET: " + text.substring(0, 30) + "...";
+        const rawText = await performOCR();
+        if (rawText && rawText.length > 3) {
+            masterText = clean(rawText);
+            document.getElementById('masterStatus').innerText = "MASTER SET: " + masterText.substring(0, 20);
             document.getElementById('masterBtn').style.display = "none";
             document.getElementById('resetBtn').style.display = "inline-block";
-            addLog("Master captured. Starting Continuous Auto-Scan...");
+            addLog("Master captured. Auto-Scan starting...", "#3b82f6");
             startAutoScan();
+        } else {
+            addLog("Failed to read Master. Try better light.", "#ef4444");
+            scanFrame.className = "scan-frame status-idle";
         }
     }
 
@@ -112,51 +65,47 @@
         
         while (isAutoScanning) {
             scanFrame.className = "scan-frame status-reading";
-            const sampleText = await performOCR();
+            const rawSample = await performOCR();
             
-            if (sampleText) {
-                const cleanSample = sampleText.toLowerCase().replace(/\s+/g, ' ');
+            if (rawSample) {
+                const sampleClean = clean(rawSample);
                 
-                // Compare logic (allows for partial match in case of minor OCR errors)
-                if (cleanSample.includes(masterText) || masterText.includes(cleanSample)) {
+                // FUZZY MATCH LOGIC
+                const isMatch = sampleClean.includes(masterText) || 
+                                masterText.includes(sampleClean) || 
+                                (sampleClean.length > 0 && calculateSimilarity(sampleClean, masterText) > 0.8);
+
+                if (isMatch) {
                     scanFrame.className = "scan-frame status-pass";
-                    addLog("PASS: Match found");
+                    addLog("PASS: Match OK", "#22c55e");
                 } else {
                     scanFrame.className = "scan-frame status-fail";
-                    addLog("FAIL: Mismatch detected");
-                    // Vibration feedback for staff if on mobile
-                    if (navigator.vibrate) navigator.vibrate(200); 
+                    addLog("FAIL: Mismatch", "#ef4444");
+                    if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
                 }
             }
             
-            // Wait 2 seconds before next scan for mass production flow
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 1500)); // 1.5 second loop
             scanFrame.className = "scan-frame status-idle";
         }
     }
 
-    async function performOCR() {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        
-        try {
-            const result = await Tesseract.recognize(canvas, 'eng');
-            return result.data.text.trim();
-        } catch (e) {
-            addLog("OCR Error: Check lighting");
-            return null;
-        }
+    // Similarity check logic
+    function calculateSimilarity(s1, s2) {
+        let longer = s1.length > s2.length ? s1 : s2;
+        let shorter = s1.length > s2.length ? s2 : s1;
+        if (longer.length === 0) return 1.0;
+        return (longer.length - editDistance(longer, shorter)) / parseFloat(longer.length);
     }
 
-    function resetApp() {
-        isAutoScanning = false;
-        masterText = "";
-        location.reload(); // Simplest way to clear everything
-    }
-
-    init();
-</script>
-
-</body>
-</html>
+    function editDistance(s1, s2) {
+        let costs = [];
+        for (let i = 0; i <= s1.length; i++) {
+            let lastValue = i;
+            for (let j = 0; j <= s2.length; j++) {
+                if (i === 0) costs[j] = j;
+                else {
+                    if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) !== s2.charAt(j - 1))
+                            newValue = Math.min(Math.min(newValue, lastNormally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
