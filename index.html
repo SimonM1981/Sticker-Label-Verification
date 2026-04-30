@@ -1,27 +1,202 @@
-<script>
-const video = document.getElementById('video');
-const logBox = document.getElementById('log');
-
-function addLog(msg, color = "#aaa") {
-    const time = new Date().toLocaleTimeString();
-    logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
-}
-
-async function initCamera() {
-    try {
-        addLog("Requesting camera...", "#3b82f6");
-        
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" }
-        });
-        
-        video.srcObject = stream;
-        addLog("Camera started successfully ✓", "#22c55e");
-        
-    } catch (err) {
-        addLog("Camera failed: " + err.message, "#ef4444");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Label Verifier</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 10px; background: #111; color: #ddd; }
+    #video { 
+      width: 100%; 
+      max-width: 640px; 
+      background: #000; 
+      display: block; 
+      margin: 10px auto;
     }
-}
+    #canvas { display: none; }
+    .scan-frame {
+      width: 300px;
+      height: 150px;
+      margin: 20px auto;
+      border: 3px dashed #666;
+      position: relative;
+    }
+    button { padding: 12px 20px; margin: 5px; font-size: 16px; }
+    #log { 
+      height: 200px; 
+      overflow-y: scroll; 
+      background: #1a1a1a; 
+      padding: 10px; 
+      font-family: monospace; 
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
 
-window.onload = initCamera;
-</script>
+  <h1>Sticker / Label Verifier</h1>
+
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas"></canvas>
+
+  <div class="scan-frame" id="scanFrame"></div>
+
+  <div>
+    <button id="masterBtn" onclick="captureMaster()">📸 Set Master Label</button>
+    <button id="resetBtn" onclick="resetMaster()" style="display:none;">Reset</button>
+  </div>
+
+  <p id="masterStatus">No master set</p>
+  <p id="autoStatus">Auto-scan inactive</p>
+
+  <div id="log"></div>
+
+  <script>
+    // Wait until DOM is fully loaded
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('canvas');
+      const scanFrame = document.getElementById('scanFrame');
+      const logBox = document.getElementById('log');
+      const masterStatus = document.getElementById('masterStatus');
+      const autoStatus = document.getElementById('autoStatus');
+
+      let masterText = "";
+      let isAutoScanning = false;
+
+      function addLog(msg, color = "#aaa") {
+        const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
+      }
+
+      async function initCamera() {
+        try {
+          addLog("Requesting camera access...", "#3b82f6");
+          
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" }
+          });
+
+          video.srcObject = stream;
+          addLog("✅ Camera started successfully", "#22c55e");
+
+        } catch (err) {
+          addLog("❌ Camera error: " + err.message, "#ef4444");
+          console.error(err);
+        }
+      }
+
+      function clean(text) {
+        return text ? text.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : "";
+      }
+
+      async function performOCR() {
+        if (!video.videoWidth) {
+          addLog("Video not ready", "#eab308");
+          return null;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+
+        try {
+          const result = await Tesseract.recognize(canvas, 'eng');
+          const text = result.data.text.trim();
+          addLog(`OCR: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`, "#aaa");
+          return text;
+        } catch (e) {
+          addLog("OCR failed", "#ef4444");
+          console.error(e);
+          return null;
+        }
+      }
+
+      async function captureMaster() {
+        scanFrame.className = "scan-frame";
+        scanFrame.style.borderColor = "#3b82f6";
+        addLog("Reading Master Label...");
+
+        const rawText = await performOCR();
+
+        if (rawText && rawText.length > 3) {
+          masterText = clean(rawText);
+          masterStatus.innerText = "MASTER SET: " + masterText.substring(0, 25);
+          document.getElementById('masterBtn').style.display = "none";
+          document.getElementById('resetBtn').style.display = "inline-block";
+          addLog("Master captured successfully!", "#22c55e");
+          startAutoScan();
+        } else {
+          addLog("Failed to read text. Try better lighting.", "#ef4444");
+        }
+      }
+
+      async function startAutoScan() {
+        isAutoScanning = true;
+        autoStatus.innerText = "⚡ AUTO-SCAN ACTIVE";
+
+        while (isAutoScanning) {
+          const rawSample = await performOCR();
+          
+          if (rawSample && rawSample.length > 3) {
+            const sampleClean = clean(rawSample);
+            const similarity = calculateSimilarity(sampleClean, masterText);
+
+            if (sampleClean.includes(masterText) || masterText.includes(sampleClean) || similarity > 0.75) {
+              scanFrame.style.borderColor = "#22c55e";
+              addLog("✅ PASS", "#22c55e");
+            } else {
+              scanFrame.style.borderColor = "#ef4444";
+              addLog("❌ FAIL", "#ef4444");
+              if (navigator.vibrate) navigator.vibrate(200);
+            }
+          }
+
+          await new Promise(r => setTimeout(r, 1500));
+        }
+      }
+
+      function calculateSimilarity(s1, s2) {
+        if (!s1 || !s2) return 0;
+        const longer = s1.length > s2.length ? s1 : s2;
+        const shorter = s1.length > s2.length ? s2 : s1;
+        if (longer.length === 0) return 1;
+        const distance = editDistance(longer, shorter);
+        return (longer.length - distance) / longer.length;
+      }
+
+      function editDistance(s1, s2) {
+        if (s1.length < s2.length) [s1, s2] = [s2, s1];
+        let costs = Array.from({length: s2.length + 1}, (_, i) => i);
+        for (let i = 0; i < s1.length; i++) {
+          let lastValue = i + 1;
+          for (let j = 0; j < s2.length; j++) {
+            const temp = costs[j];
+            costs[j] = s1[i] === s2[j] ? lastValue - 1 : Math.min(costs[j], costs[j+1], lastValue) + 1;
+            lastValue = temp;
+          }
+          costs[s2.length] = Math.min(costs[s2.length], lastValue) + 1;
+        }
+        return costs[s2.length];
+      }
+
+      function resetMaster() {
+        isAutoScanning = false;
+        masterText = "";
+        masterStatus.innerText = "No master set";
+        autoStatus.innerText = "Auto-scan inactive";
+        document.getElementById('masterBtn').style.display = "inline-block";
+        document.getElementById('resetBtn').style.display = "none";
+        scanFrame.style.borderColor = "#666";
+        addLog("System reset", "#eab308");
+      }
+
+      // Start the app
+      initCamera();
+    });
+  </script>
+</body>
+</html>
