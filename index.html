@@ -6,30 +6,57 @@
   <title>Label Verifier</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 10px; background: #111; color: #ddd; }
-    #video { 
-      width: 100%; 
-      max-width: 640px; 
-      background: #000; 
-      display: block; 
+    body {
+      font-family: Arial, sans-serif;
+      margin: 10px;
+      background: #111;
+      color: #ddd;
+      text-align: center;
+    }
+    #video {
+      width: 100%;
+      max-width: 640px;
+      background: #000;
+      display: block;
       margin: 10px auto;
+      border-radius: 8px;
     }
     #canvas { display: none; }
+    
     .scan-frame {
-      width: 300px;
-      height: 150px;
+      width: 320px;
+      height: 160px;
       margin: 20px auto;
-      border: 3px dashed #666;
+      border: 4px dashed #666;
+      border-radius: 8px;
       position: relative;
     }
-    button { padding: 12px 20px; margin: 5px; font-size: 16px; }
-    #log { 
-      height: 200px; 
-      overflow-y: scroll; 
-      background: #1a1a1a; 
-      padding: 10px; 
-      font-family: monospace; 
-      font-size: 14px;
+
+    button {
+      padding: 12px 24px;
+      margin: 8px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background: #3b82f6;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover { background: #2563eb; }
+
+    #resetBtn { background: #ef4444; }
+    #resetBtn:hover { background: #dc2626; }
+
+    #log {
+      height: 220px;
+      overflow-y: scroll;
+      background: #1a1a1a;
+      padding: 10px;
+      text-align: left;
+      font-family: monospace;
+      font-size: 13px;
+      margin-top: 15px;
+      border-radius: 6px;
     }
   </style>
 </head>
@@ -44,7 +71,7 @@
 
   <div>
     <button id="masterBtn" onclick="captureMaster()">📸 Set Master Label</button>
-    <button id="resetBtn" onclick="resetMaster()" style="display:none;">Reset</button>
+    <button id="resetBtn" onclick="resetMaster()" style="display:none;">Reset Master</button>
   </div>
 
   <p id="masterStatus">No master set</p>
@@ -53,7 +80,6 @@
   <div id="log"></div>
 
   <script>
-    // Wait until DOM is fully loaded
     document.addEventListener("DOMContentLoaded", () => {
 
       const video = document.getElementById('video');
@@ -74,14 +100,11 @@
       async function initCamera() {
         try {
           addLog("Requesting camera access...", "#3b82f6");
-          
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment" }
+            video: { facingMode: "environment", width: {ideal: 1280}, height: {ideal: 720} }
           });
-
           video.srcObject = stream;
-          addLog("✅ Camera started successfully", "#22c55e");
-
+          addLog("✅ Camera is live", "#22c55e");
         } catch (err) {
           addLog("❌ Camera error: " + err.message, "#ef4444");
           console.error(err);
@@ -92,7 +115,7 @@
         return text ? text.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : "";
       }
 
-      async function performOCR() {
+      async function performOCR(isMaster = false) {
         if (!video.videoWidth) {
           addLog("Video not ready", "#eab308");
           return null;
@@ -104,10 +127,17 @@
         ctx.drawImage(video, 0, 0);
 
         try {
-          const result = await Tesseract.recognize(canvas, 'eng');
-          const text = result.data.text.trim();
-          addLog(`OCR: ${text.substring(0, 50)}${text.length > 50 ? '...' : ''}`, "#aaa");
-          return text;
+          addLog("Running OCR...", "#aaa");
+
+          const result = await Tesseract.recognize(canvas, 'eng', {
+            tessedit_pageseg_mode: isMaster ? 7 : 6,
+          });
+
+          const rawText = result.data.text.trim();
+          addLog(`Raw OCR: "${rawText}"`, "#aaa");
+
+          return rawText;
+
         } catch (e) {
           addLog("OCR failed", "#ef4444");
           console.error(e);
@@ -116,21 +146,21 @@
       }
 
       async function captureMaster() {
-        scanFrame.className = "scan-frame";
         scanFrame.style.borderColor = "#3b82f6";
-        addLog("Reading Master Label...");
+        addLog("--- Trying to capture Master ---", "#3b82f6");
 
-        const rawText = await performOCR();
+        const rawText = await performOCR(true);
 
-        if (rawText && rawText.length > 3) {
+        if (rawText && rawText.length > 4) {
           masterText = clean(rawText);
-          masterStatus.innerText = "MASTER SET: " + masterText.substring(0, 25);
+          masterStatus.innerText = "MASTER SET: " + masterText.substring(0, 30);
           document.getElementById('masterBtn').style.display = "none";
           document.getElementById('resetBtn').style.display = "inline-block";
-          addLog("Master captured successfully!", "#22c55e");
+          addLog("✅ Master captured successfully!", "#22c55e");
           startAutoScan();
         } else {
-          addLog("Failed to read text. Try better lighting.", "#ef4444");
+          addLog("❌ Could not read text clearly.", "#ef4444");
+          addLog("Tips: Hold label steady, good light, text big in frame", "#ef4444");
         }
       }
 
@@ -139,23 +169,21 @@
         autoStatus.innerText = "⚡ AUTO-SCAN ACTIVE";
 
         while (isAutoScanning) {
-          const rawSample = await performOCR();
+          const rawSample = await performOCR(false);
           
           if (rawSample && rawSample.length > 3) {
             const sampleClean = clean(rawSample);
             const similarity = calculateSimilarity(sampleClean, masterText);
 
-            if (sampleClean.includes(masterText) || masterText.includes(sampleClean) || similarity > 0.75) {
+            if (sampleClean.includes(masterText) || masterText.includes(sampleClean) || similarity > 0.72) {
               scanFrame.style.borderColor = "#22c55e";
               addLog("✅ PASS", "#22c55e");
             } else {
               scanFrame.style.borderColor = "#ef4444";
-              addLog("❌ FAIL", "#ef4444");
-              if (navigator.vibrate) navigator.vibrate(200);
+              addLog(`❌ FAIL`, "#ef4444");
             }
           }
-
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise(r => setTimeout(r, 1600));
         }
       }
 
