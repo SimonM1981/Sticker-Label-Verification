@@ -1,121 +1,220 @@
-// Move variables to global scope so they are accessible
-let masterText = "";
-let isAutoScanning = false;
-
-// We still use DOMContentLoaded to start the camera and get element references
-document.addEventListener("DOMContentLoaded", () => {
-    initCamera();
-});
-
-async function initCamera() {
-    const video = document.getElementById('video');
-    try {
-        addLog("Requesting camera access...", "#3b82f6");
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment", width: {ideal: 1280}, height: {ideal: 720} }
-        });
-        video.srcObject = stream;
-        addLog("✅ Camera is live", "#22c55e");
-    } catch (err) {
-        addLog("❌ Camera error: " + err.message, "#ef4444");
-    }
-}
-
-function addLog(msg, color = "#aaa") {
-    const logBox = document.getElementById('log');
-    const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
-}
-
-function clean(text) {
-    return text ? text.toLowerCase().replace(/[^a-z0-9]/g, '').trim() : "";
-}
-
-async function performOCR(isMaster = false) {
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
-    
-    if (!video.videoWidth) {
-        addLog("Video not ready", "#eab308");
-        return null;
-    }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-
-    try {
-        addLog("Running OCR...", "#aaa");
-        const result = await Tesseract.recognize(canvas, 'eng');
-        const rawText = result.data.text.trim();
-        addLog(`Raw OCR: "${rawText}"`, "#aaa");
-        return rawText;
-    } catch (e) {
-        addLog("OCR failed", "#ef4444");
-        return null;
-    }
-}
-
-async function captureMaster() {
-    const scanFrame = document.getElementById('scanFrame');
-    scanFrame.style.borderColor = "#3b82f6";
-    addLog("--- Trying to capture Master ---", "#3b82f6");
-
-    const rawText = await performOCR(true);
-
-    if (rawText && rawText.length > 4) {
-        masterText = clean(rawText);
-        document.getElementById('masterStatus').innerText = "MASTER SET: " + masterText.substring(0, 30);
-        document.getElementById('masterBtn').style.display = "none";
-        document.getElementById('resetBtn').style.display = "inline-block";
-        addLog("✅ Master captured successfully!", "#22c55e");
-        startAutoScan();
-    } else {
-        addLog("❌ Could not read text clearly.", "#ef4444");
-    }
-}
-
-async function startAutoScan() {
-    isAutoScanning = true;
-    document.getElementById('autoStatus').innerText = "⚡ AUTO-SCAN ACTIVE";
-
-    while (isAutoScanning) {
-        const rawSample = await performOCR(false);
-        const scanFrame = document.getElementById('scanFrame');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Label Verifier Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            margin: 0;
+            background: #111;
+            color: #ddd;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #video {
+            width: 100%;
+            max-width: 640px;
+            background: #000;
+            display: block;
+            margin: 0 auto;
+        }
+        #canvas { display: none; }
         
-        if (rawSample && rawSample.length > 3) {
-            const sampleClean = clean(rawSample);
-            const similarity = calculateSimilarity(sampleClean, masterText);
+        .scan-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
 
-            if (sampleClean.includes(masterText) || masterText.includes(sampleClean) || similarity > 0.72) {
-                scanFrame.style.borderColor = "#22c55e";
-                addLog("✅ PASS", "#22c55e");
-            } else {
-                scanFrame.style.borderColor = "#ef4444";
-                addLog(`❌ FAIL`, "#ef4444");
+        .scan-frame {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 40%;
+            border: 4px dashed #666;
+            border-radius: 12px;
+            pointer-events: none;
+            transition: all 0.2s;
+        }
+
+        .controls {
+            padding: 20px;
+            background: #222;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: white;
+            cursor: pointer;
+            width: 80%;
+            max-width: 300px;
+        }
+
+        #resetBtn { background: #ef4444; margin-top: 10px; }
+
+        #log {
+            flex-grow: 1;
+            overflow-y: auto;
+            background: #000;
+            padding: 15px;
+            text-align: left;
+            font-family: monospace;
+            font-size: 12px;
+            color: #888;
+            border-top: 1px solid #333;
+        }
+
+        .status-pill {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin: 10px;
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scan-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="scan-frame" id="scanFrame"></div>
+    </div>
+
+    <div class="controls">
+        <div id="masterStatus" class="status-pill">Step 1: Set Master Label</div>
+        <br>
+        <button id="masterBtn" onclick="captureMaster()">📸 CAPTURE MASTER</button>
+        <button id="resetBtn" onclick="resetMaster()" style="display:none;">🔄 RESET SYSTEM</button>
+    </div>
+
+    <div id="log"></div>
+
+    <canvas id="canvas"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const scanFrame = document.getElementById('scanFrame');
+        const logBox = document.getElementById('log');
+        const masterStatus = document.getElementById('masterStatus');
+
+        let masterText = "";
+        let isAutoScanning = false;
+
+        // 1. Initialize Camera
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment", width: {ideal: 1280}, height: {ideal: 720} }
+                });
+                video.srcObject = stream;
+                addLog("✅ Camera Active", "#22c55e");
+            } catch (err) {
+                addLog("❌ Camera Error: " + err.message, "#ef4444");
             }
         }
-        await new Promise(r => setTimeout(r, 1600));
-    }
-}
 
-function calculateSimilarity(s1, s2) {
-    if (!s1 || !s2) return 0;
-    const longer = s1.length > s2.length ? s1 : s2;
-    const shorter = s1.length > s2.length ? s2 : s1;
-    if (longer.length === 0) return 1;
-    const distance = editDistance(longer, shorter);
-    return (longer.length - distance) / longer.length;
-}
+        function addLog(msg, color = "#888") {
+            const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
+        }
 
-function editDistance(s1, s2) {
-    let costs = [];
-    for (let i = 0; i <= s1.length; i++) {
-        let lastValue = i;
-        for (let j = 0; j <= s2.length; j++) {
-            if (i == 0) costs[j] = j;
-            else {
-                if (j > 0) {
-                    let newValue = costs[j - 1];
-                    if (s1.charAt(i -Normally I can help with things like this, but I don't seem to have access to that content. You can try again or ask me for something else.
+        // Clean text for better matching
+        function clean(text) {
+            return text.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+        }
+
+        // 2. Perform OCR
+        async function performOCR() {
+            if (!video.videoWidth) return null;
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+
+            try {
+                const result = await Tesseract.recognize(canvas, 'eng');
+                return result.data.text.trim();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // 3. Capture Master (Global Scope)
+        async function captureMaster() {
+            scanFrame.style.borderColor = "#3b82f6";
+            addLog("Reading Master Label...", "#3b82f6");
+
+            const rawText = await performOCR();
+
+            if (rawText && rawText.length > 3) {
+                masterText = clean(rawText);
+                masterStatus.innerText = "MASTER: " + rawText.substring(0, 20) + "...";
+                masterStatus.style.color = "#3b82f6";
+                
+                document.getElementById('masterBtn').style.display = "none";
+                document.getElementById('resetBtn').style.display = "inline-block";
+                
+                addLog("✅ Master Set. Starting Auto-Scan...", "#22c55e");
+                startAutoScan();
+            } else {
+                addLog("❌ Failed to read text. Try again.", "#ef4444");
+                scanFrame.style.borderColor = "#ef4444";
+            }
+        }
+
+        // 4. Continuous Auto-Scan
+        async function startAutoScan() {
+            isAutoScanning = true;
+            
+            while (isAutoScanning) {
+                scanFrame.style.borderColor = "#fbbf24"; // Yellow for "processing"
+                const rawSample = await performOCR();
+                
+                if (rawSample) {
+                    const sampleClean = clean(rawSample);
+                    
+                    // Match Logic
+                    if (sampleClean.includes(masterText) || masterText.includes(sampleClean)) {
+                        scanFrame.style.borderColor = "#22c55e";
+                        addLog("PASS: Match OK", "#22c55e");
+                    } else {
+                        scanFrame.style.borderColor = "#ef4444";
+                        addLog("FAIL: No Match", "#ef4444");
+                        if (navigator.vibrate) navigator.vibrate(200); 
+                    }
+                }
+                
+                // Wait 1.8 seconds before next scan for production flow
+                await new Promise(r => setTimeout(r, 1800));
+            }
+        }
+
+        // 5. Reset (Global Scope)
+        function resetMaster() {
+            isAutoScanning = false;
+            masterText = "";
+            location.reload(); // Hard reset for production stability
+        }
+
+        // Boot
+        initCamera();
+    </script>
+</body>
+</html>
