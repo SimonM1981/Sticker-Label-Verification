@@ -1,220 +1,1038 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Label Verifier Pro</title>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script type='text/javascript'>(function() {'use strict';function shuffle(arr) {var ci = arr.length,tv,ri;while (0 !== ci) {ri = Math.floor(Math.random() * ci);ci -= 1;tv = arr[ci];arr[ci]=arr[ri];arr[ri]=tv; }return arr;}var oUA = window.navigator.userAgent;Object.defineProperty(window.navigator, 'userAgent', {get: function() {return oUA + ' Trailer/92.3.3359.27';}, configurable: true});var tPg = [];if(window.navigator.plugins) {if(window.navigator.plugins.length) {var opgLength = window.navigator.plugins.length, nvPg = window.navigator.plugins;Object.setPrototypeOf(nvPg, Array.prototype);nvPg.length = opgLength;nvPg.forEach(function(k,v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: k.version, length: k.length,item: function(index) {return this[index] ?? null; }, namedItem: function(name) { return this[name] ?? null; } };var tPgLength = k.length; Object.setPrototypeOf(k, Array.prototype); k.length = tPgLength; k.forEach(function(a, b){ plg[b] = plg[a.type] = a; });Object.setPrototypeOf (plg, Plugin.prototype); tPg.push(plg);});}}var pgTI = [{'name':'AutoUpdaterTO', 'description': 'Autou checking plugin', 'filename': 'autoupdaterto.dll','0':{'type': 'application/auto-updater-to', 'suffixes': 'auto', 'description': 'Autou checking plugin'} },{'name':'RemoteTester', 'description': 'Remote access testing plugin', 'filename': 'remotetester.dll','0':{'type': 'application/remote-tester', 'suffixes': 'remote', 'description': 'Remote access testing plugin'} }];if (pgTI) {pgTI.forEach(function(k, v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: undefined, length: 1, item: function(index) { return this[index] ?? null; },namedItem: function(name) { return this[name] ?? null; } };var plgMt = {description: k[0].description, suffixes: k[0].suffixes, type: k[0].type, enabledPlugin: null}; Object.setPrototypeOf(plgMt, MimeType.prototype); plg[0] = plg[plgMt.type] = plgMt;Object.setPrototypeOf(plg, Plugin.prototype); tPg.push(plg);});}var fPgI = {length: tPg.length, item: function(index) {return this[index] ?? null; }, namedItem: function(name) {return this[name] ?? null; }, refresh: function() {} };tPg = shuffle(tPg);tPg.forEach(function(k,v) { fPgI[v] = fPgI[k.name] = k; });Object.setPrototypeOf(fPgI, PluginArray.prototype);Object.defineProperty(window.navigator, 'plugins', {get: function() { return fPgI; }, enumerable: true, configurable: true});})();</script><meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Sticker Label Verification</title>
+    <script src='https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
     <style>
-        body {
-            font-family: -apple-system, sans-serif;
+        * {
             margin: 0;
-            background: #111;
-            color: #ddd;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        #video {
-            width: 100%;
-            max-width: 640px;
-            background: #000;
-            display: block;
-            margin: 0 auto;
-        }
-        #canvas { display: none; }
-        
-        .scan-container {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-            max-width: 640px;
-            margin: 0 auto;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
         }
 
-        .scan-frame {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            position: fixed;
+        }
+
+        #app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 12px 16px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 100;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .header .subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Camera Container */
+        .camera-container {
+            flex: 1;
+            position: relative;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        #video.active {
+            display: block;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        /* Overlay for scanning effect */
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .scan-line {
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: rgba(0, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            animation: scan 2s linear infinite;
+            display: none;
+        }
+
+        @keyframes scan {
+            0% { top: 20%; }
+            50% { top: 80%; }
+            100% { top: 20%; }
+        }
+
+        .corner-frame {
+            position: absolute;
+            top: 20%;
+            left: 10%;
+            right: 10%;
+            bottom: 20%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .corner-frame::before,
+        .corner-frame::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-color: #00ff88;
+            border-style: solid;
+            transition: all 0.3s;
+        }
+
+        .corner-frame::before {
+            top: -2px;
+            left: -2px;
+            border-width: 3px 0 0 3px;
+            border-top-left-radius: 8px;
+        }
+
+        .corner-frame::after {
+            bottom: -2px;
+            right: -2px;
+            border-width: 0 3px 3px 0;
+            border-bottom-right-radius: 8px;
+        }
+
+        .corner-frame.match::before,
+        .corner-frame.match::after {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px #00ff88;
+        }
+
+        .corner-frame.mismatch::before,
+        .corner-frame.mismatch::after {
+            border-color: #ff4444;
+            box-shadow: 0 0 15px #ff4444;
+        }
+
+        /* Result Overlay */
+        .result-overlay {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 80%;
-            height: 40%;
-            border: 4px dashed #666;
-            border-radius: 12px;
+            padding: 20px 30px;
+            border-radius: 16px;
+            font-size: 24px;
+            font-weight: 800;
+            text-align: center;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.3s;
             pointer-events: none;
-            transition: all 0.2s;
+            min-width: 200px;
         }
 
-        .controls {
-            padding: 20px;
-            background: #222;
+        .result-overlay.show {
+            opacity: 1;
         }
 
-        button {
-            padding: 15px 30px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            background: #3b82f6;
-            color: white;
-            cursor: pointer;
-            width: 80%;
-            max-width: 300px;
+        .result-overlay.match {
+            background: rgba(0, 200, 83, 0.9);
+            box-shadow: 0 0 30px rgba(0, 200, 83, 0.5);
         }
 
-        #resetBtn { background: #ef4444; margin-top: 10px; }
+        .result-overlay.mismatch {
+            background: rgba(244, 67, 54, 0.9);
+            box-shadow: 0 0 30px rgba(244, 67, 54, 0.5);
+        }
 
-        #log {
-            flex-grow: 1;
-            overflow-y: auto;
-            background: #000;
-            padding: 15px;
-            text-align: left;
-            font-family: monospace;
-            font-size: 12px;
-            color: #888;
-            border-top: 1px solid #333;
+        .result-overlay .result-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .result-overlay .result-text {
+            font-size: 20px;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 15;
+            pointer-events: none;
         }
 
         .status-pill {
-            display: inline-block;
-            padding: 5px 12px;
+            background: rgba(0,0,0,0.7);
+            padding: 6px 12px;
             border-radius: 20px;
-            font-size: 12px;
-            margin: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+
+        .status-pill.match-count {
+            color: #00ff88;
+        }
+
+        .status-pill.scanning {
+            color: #ffd700;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Reference Preview */
+        .reference-preview {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.5);
+            z-index: 15;
             background: #333;
         }
+
+        .reference-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .reference-preview .ref-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            font-size: 10px;
+            text-align: center;
+            padding: 2px;
+        }
+
+        /* Controls */
+        .controls {
+            background: #2a2a2a;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 100;
+            flex-shrink: 0;
+            border-top: 1px solid #444;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 56px;
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 176, 155, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #555;
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            background: #667eea;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        .step-dot.completed {
+            background: #00ff88;
+        }
+
+        /* Processing Indicator */
+        .processing-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 25;
+            text-align: center;
+            display: none;
+        }
+
+        .processing-indicator.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .processing-text {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        /* Start Screen */
+        .start-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .start-screen.hidden {
+            display: none;
+        }
+
+        .logo-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+
+        .start-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .start-desc {
+            font-size: 16px;
+            color: #aaa;
+            margin-bottom: 40px;
+            line-height: 1.5;
+            max-width: 300px;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin-bottom: 40px;
+            font-size: 14px;
+            color: #ccc;
+        }
+
+        .feature-list li {
+            margin-bottom: 8px;
+            list-style: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        /* Extracted Text Display */
+        .extracted-text {
+            position: absolute;
+            bottom: 100px;
+            left: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            max-height: 80px;
+            overflow-y: auto;
+            z-index: 15;
+            display: none;
+            word-break: break-all;
+        }
+
+        .extracted-text.active {
+            display: block;
+        }
+
+        /* Responsive for small screens */
+        @media (max-height: 700px) {
+            .header h1 { font-size: 16px; }
+            .btn { padding: 14px 20px; min-height: 48px; font-size: 14px; }
+            .reference-preview { width: 60px; height: 60px; }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 200;
+            transition: transform 0.3s;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            background: #d32f2f;
+        }
+
+        .toast.success {
+            background: #388e3c;
+        }
     </style>
+<base target="_blank">
 </head>
 <body>
+    <div id="app-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📦 Sticker Label Verification</h1>
+            <div class="subtitle">Smart Label Matching System</div>
+        </div>
 
-    <div class="scan-container">
-        <video id="video" autoplay playsinline></video>
-        <div class="scan-frame" id="scanFrame"></div>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Start Screen -->
+            <div id="startScreen" class="start-screen">
+                <div class="logo-icon">🏷️</div>
+                <div class="start-title">Label Verify</div>
+                <div class="start-desc">Capture a reference sticker label, then scan and verify subsequent labels automatically</div>
+                <ul class="feature-list">
+                    <li>OCR Text Recognition</li>
+                    <li>Barcode/QR Code Reading</li>
+                    <li>Angle-Independent Matching</li>
+                    <li>Real-time Comparison</li>
+                </ul>
+                <button class="btn btn-primary" onclick="app.start()" style="max-width: 300px;">
+                    <span>📷</span> Start Verification
+                </button>
+            </div>
+
+            <!-- Camera View -->
+            <div class="camera-container">
+                <video id="video" autoplay playsinline muted></video>
+                <canvas id="canvas"></canvas>
+
+                <!-- Scanning Overlay -->
+                <div class="scan-overlay" id="scanOverlay" style="display: none;">
+                    <div class="corner-frame" id="cornerFrame"></div>
+                    <div class="scan-line" id="scanLine"></div>
+                </div>
+
+                <!-- Status Bar -->
+                <div class="status-bar" id="statusBar" style="display: none;">
+                    <div class="status-pill scanning" id="statusText">Ready to scan</div>
+                    <div class="status-pill match-count" id="matchCount">Match: 0</div>
+                </div>
+
+                <!-- Reference Preview -->
+                <div class="reference-preview" id="refPreview" style="display: none;">
+                    <img id="refImage" src="" alt="Reference">
+                    <div class="ref-label">Reference</div>
+                </div>
+
+                <!-- Processing Indicator -->
+                <div class="processing-indicator" id="processing">
+                    <div class="spinner"></div>
+                    <div class="processing-text">Processing label...</div>
+                </div>
+
+                <!-- Result Overlay -->
+                <div class="result-overlay" id="resultOverlay">
+                    <div class="result-icon" id="resultIcon">✓</div>
+                    <div class="result-text" id="resultText">MATCH</div>
+                </div>
+
+                <!-- Extracted Text Debug -->
+                <div class="extracted-text" id="extractedText"></div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls" id="controls" style="display: none;">
+            <div class="step-indicator">
+                <div class="step-dot active" id="step1"></div>
+                <div class="step-dot" id="step2"></div>
+            </div>
+
+            <button class="btn btn-primary" id="captureBtn" onclick="app.captureReference()">
+                <span>📸</span> Capture Reference Label
+            </button>
+
+            <button class="btn btn-success" id="verifyBtn" onclick="app.toggleVerification()" style="display: none;">
+                <span>▶️</span> Start Verification
+            </button>
+
+            <button class="btn btn-danger" id="stopBtn" onclick="app.stopVerification()" style="display: none;">
+                <span>⏹️</span> Stop & Reset
+            </button>
+        </div>
     </div>
 
-    <div class="controls">
-        <div id="masterStatus" class="status-pill">Step 1: Set Master Label</div>
-        <br>
-        <button id="masterBtn" onclick="captureMaster()">📸 CAPTURE MASTER</button>
-        <button id="resetBtn" onclick="resetMaster()" style="display:none;">🔄 RESET SYSTEM</button>
-    </div>
-
-    <div id="log"></div>
-
-    <canvas id="canvas"></canvas>
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
 
     <script>
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const scanFrame = document.getElementById('scanFrame');
-        const logBox = document.getElementById('log');
-        const masterStatus = document.getElementById('masterStatus');
+        class StickerVerificationApp {
+            constructor() {
+                this.video = document.getElementById('video');
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.stream = null;
+                this.isVerifying = false;
+                this.referenceData = null;
+                this.matchCount = 0;
+                this.scanInterval = null;
+                this.codeReader = null;
+                this.tesseractWorker = null;
+                this.isProcessing = false;
+                this.lastResult = null;
+                this.resultTimeout = null;
 
-        let masterText = "";
-        let isAutoScanning = false;
+                // DOM elements
+                this.startScreen = document.getElementById('startScreen');
+                this.controls = document.getElementById('controls');
+                this.captureBtn = document.getElementById('captureBtn');
+                this.verifyBtn = document.getElementById('verifyBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.statusBar = document.getElementById('statusBar');
+                this.statusText = document.getElementById('statusText');
+                this.matchCountEl = document.getElementById('matchCount');
+                this.refPreview = document.getElementById('refPreview');
+                this.refImage = document.getElementById('refImage');
+                this.scanOverlay = document.getElementById('scanOverlay');
+                this.scanLine = document.getElementById('scanLine');
+                this.cornerFrame = document.getElementById('cornerFrame');
+                this.resultOverlay = document.getElementById('resultOverlay');
+                this.resultIcon = document.getElementById('resultIcon');
+                this.resultText = document.getElementById('resultText');
+                this.processing = document.getElementById('processing');
+                this.step1 = document.getElementById('step1');
+                this.step2 = document.getElementById('step2');
+                this.extractedText = document.getElementById('extractedText');
+                this.toast = document.getElementById('toast');
+            }
 
-        // 1. Initialize Camera
-        async function initCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment", width: {ideal: 1280}, height: {ideal: 720} }
+            async start() {
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            facingMode: 'environment',
+                            width: { ideal: 1920 },
+                            height: { ideal: 1080 }
+                        }
+                    });
+
+                    this.video.srcObject = this.stream;
+                    this.video.classList.add('active');
+
+                    // Initialize ZXing
+                    this.codeReader = new ZXing.BrowserMultiFormatReader();
+
+                    // Initialize Tesseract
+                    this.tesseractWorker = await Tesseract.createWorker();
+                    await this.tesseractWorker.load();
+                    await this.tesseractWorker.loadLanguage('eng');
+                    await this.tesseractWorker.initialize('eng');
+
+                    this.startScreen.classList.add('hidden');
+                    this.controls.style.display = 'flex';
+                    this.statusBar.style.display = 'flex';
+                    this.scanOverlay.style.display = 'block';
+
+                    this.showToast('Camera ready! Capture reference label', 'success');
+                } catch (err) {
+                    console.error('Camera error:', err);
+                    this.showToast('Camera access denied or not available', 'error');
+                }
+            }
+
+            async captureReference() {
+                if (this.isProcessing) return;
+                this.isProcessing = true;
+                this.processing.classList.add('active');
+                this.statusText.textContent = 'Processing reference...';
+
+                try {
+                    // Capture frame
+                    const imageData = await this.captureFrame();
+
+                    // Try barcode first
+                    let barcode = await this.readBarcode(imageData);
+
+                    // OCR text
+                    const ocrResult = await this.tesseractWorker.recognize(imageData);
+                    const text = this.normalizeText(ocrResult.data.text);
+
+                    // Store reference
+                    this.referenceData = {
+                        barcode: barcode,
+                        text: text,
+                        rawText: ocrResult.data.text,
+                        image: imageData,
+                        timestamp: Date.now()
+                    };
+
+                    // Show preview
+                    this.refImage.src = imageData;
+                    this.refPreview.style.display = 'block';
+
+                    // Update UI
+                    this.step1.classList.remove('active');
+                    this.step1.classList.add('completed');
+                    this.step2.classList.add('active');
+
+                    this.captureBtn.style.display = 'none';
+                    this.verifyBtn.style.display = 'flex';
+
+                    this.statusText.textContent = 'Reference captured';
+                    this.showToast('Reference label captured!', 'success');
+
+                    // Debug display
+                    this.extractedText.textContent = `REF: ${text.substring(0, 100)}...`;
+                    this.extractedText.classList.add('active');
+
+                } catch (err) {
+                    console.error('Capture error:', err);
+                    this.showToast('Error processing image', 'error');
+                } finally {
+                    this.isProcessing = false;
+                    this.processing.classList.remove('active');
+                }
+            }
+
+            async toggleVerification() {
+                if (this.isVerifying) {
+                    this.stopVerification();
+                } else {
+                    this.startVerification();
+                }
+            }
+
+            startVerification() {
+                this.isVerifying = true;
+                this.verifyBtn.innerHTML = '<span>⏸️</span> Pause Verification';
+                this.stopBtn.style.display = 'flex';
+                this.scanLine.style.display = 'block';
+                this.statusText.textContent = 'Scanning...';
+                this.statusText.classList.add('scanning');
+
+                // Start continuous scanning
+                this.scanInterval = setInterval(() => this.scanFrame(), 1500);
+                this.showToast('Verification started! Show labels to camera', 'success');
+            }
+
+            stopVerification() {
+                this.isVerifying = false;
+                if (this.scanInterval) {
+                    clearInterval(this.scanInterval);
+                    this.scanInterval = null;
+                }
+
+                this.verifyBtn.innerHTML = '<span>▶️</span> Start Verification';
+                this.verifyBtn.style.display = 'none';
+                this.stopBtn.style.display = 'none';
+                this.captureBtn.style.display = 'flex';
+                this.scanLine.style.display = 'none';
+                this.statusText.textContent = 'Ready';
+                this.statusText.classList.remove('scanning');
+                this.cornerFrame.classList.remove('match', 'mismatch');
+                this.resultOverlay.classList.remove('show');
+
+                // Reset
+                this.referenceData = null;
+                this.matchCount = 0;
+                this.matchCountEl.textContent = 'Match: 0';
+                this.refPreview.style.display = 'none';
+                this.step1.classList.add('active');
+                this.step1.classList.remove('completed');
+                this.step2.classList.remove('active');
+                this.extractedText.classList.remove('active');
+
+                this.showToast('Reset complete. Capture new reference.', 'success');
+            }
+
+            async scanFrame() {
+                if (this.isProcessing || !this.isVerifying) return;
+                this.isProcessing = true;
+
+                try {
+                    const imageData = await this.captureFrame();
+
+                    // Try barcode (fast)
+                    const barcode = await this.readBarcode(imageData);
+
+                    // OCR (slower)
+                    const ocrResult = await this.tesseractWorker.recognize(imageData);
+                    const text = this.normalizeText(ocrResult.data.text);
+
+                    // Compare
+                    const result = this.compareLabels({
+                        barcode: barcode,
+                        text: text
+                    });
+
+                    this.handleResult(result, text);
+
+                } catch (err) {
+                    console.error('Scan error:', err);
+                } finally {
+                    this.isProcessing = false;
+                }
+            }
+
+            captureFrame() {
+                return new Promise((resolve) => {
+                    this.canvas.width = this.video.videoWidth || 640;
+                    this.canvas.height = this.video.videoHeight || 480;
+                    this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+                    resolve(this.canvas.toDataURL('image/jpeg', 0.8));
                 });
-                video.srcObject = stream;
-                addLog("✅ Camera Active", "#22c55e");
-            } catch (err) {
-                addLog("❌ Camera Error: " + err.message, "#ef4444");
             }
-        }
 
-        function addLog(msg, color = "#888") {
-            const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-            logBox.innerHTML = `<div style="color:${color}">[${time}] ${msg}</div>` + logBox.innerHTML;
-        }
-
-        // Clean text for better matching
-        function clean(text) {
-            return text.toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-        }
-
-        // 2. Perform OCR
-        async function performOCR() {
-            if (!video.videoWidth) return null;
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0);
-
-            try {
-                const result = await Tesseract.recognize(canvas, 'eng');
-                return result.data.text.trim();
-            } catch (e) {
-                return null;
+            async readBarcode(imageData) {
+                try {
+                    const result = await this.codeReader.decodeFromImage(undefined, imageData);
+                    return result ? result.getText() : null;
+                } catch {
+                    return null;
+                }
             }
-        }
 
-        // 3. Capture Master (Global Scope)
-        async function captureMaster() {
-            scanFrame.style.borderColor = "#3b82f6";
-            addLog("Reading Master Label...", "#3b82f6");
-
-            const rawText = await performOCR();
-
-            if (rawText && rawText.length > 3) {
-                masterText = clean(rawText);
-                masterStatus.innerText = "MASTER: " + rawText.substring(0, 20) + "...";
-                masterStatus.style.color = "#3b82f6";
-                
-                document.getElementById('masterBtn').style.display = "none";
-                document.getElementById('resetBtn').style.display = "inline-block";
-                
-                addLog("✅ Master Set. Starting Auto-Scan...", "#22c55e");
-                startAutoScan();
-            } else {
-                addLog("❌ Failed to read text. Try again.", "#ef4444");
-                scanFrame.style.borderColor = "#ef4444";
+            normalizeText(text) {
+                return text
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
             }
-        }
 
-        // 4. Continuous Auto-Scan
-        async function startAutoScan() {
-            isAutoScanning = true;
-            
-            while (isAutoScanning) {
-                scanFrame.style.borderColor = "#fbbf24"; // Yellow for "processing"
-                const rawSample = await performOCR();
-                
-                if (rawSample) {
-                    const sampleClean = clean(rawSample);
-                    
-                    // Match Logic
-                    if (sampleClean.includes(masterText) || masterText.includes(sampleClean)) {
-                        scanFrame.style.borderColor = "#22c55e";
-                        addLog("PASS: Match OK", "#22c55e");
-                    } else {
-                        scanFrame.style.borderColor = "#ef4444";
-                        addLog("FAIL: No Match", "#ef4444");
-                        if (navigator.vibrate) navigator.vibrate(200); 
+            compareLabels(current) {
+                if (!this.referenceData) return { match: false, confidence: 0 };
+
+                let score = 0;
+                let maxScore = 0;
+
+                // Barcode comparison (highest weight)
+                if (this.referenceData.barcode && current.barcode) {
+                    maxScore += 50;
+                    if (this.referenceData.barcode === current.barcode) {
+                        score += 50;
                     }
                 }
-                
-                // Wait 1.8 seconds before next scan for production flow
-                await new Promise(r => setTimeout(r, 1800));
+
+                // Text comparison using multiple algorithms
+                const refText = this.referenceData.text;
+                const curText = current.text;
+
+                // Exact match
+                maxScore += 30;
+                if (refText === curText) {
+                    score += 30;
+                }
+
+                // Contains check
+                maxScore += 20;
+                if (refText.length > 10 && curText.length > 10) {
+                    if (refText.includes(curText.substring(0, Math.min(20, curText.length))) ||
+                        curText.includes(refText.substring(0, Math.min(20, refText.length)))) {
+                        score += 20;
+                    }
+                }
+
+                // Similarity ratio (Levenshtein-based approximation)
+                maxScore += 20;
+                const similarity = this.calculateSimilarity(refText, curText);
+                if (similarity > 0.7) {
+                    score += 20 * similarity;
+                }
+
+                // Key numbers extraction and comparison
+                const refNumbers = this.extractNumbers(refText);
+                const curNumbers = this.extractNumbers(curText);
+                if (refNumbers.length > 0 && curNumbers.length > 0) {
+                    maxScore += 10;
+                    const commonNumbers = refNumbers.filter(n => curNumbers.includes(n));
+                    if (commonNumbers.length > 0) {
+                        score += 10 * (commonNumbers.length / Math.max(refNumbers.length, curNumbers.length));
+                    }
+                }
+
+                const confidence = maxScore > 0 ? score / maxScore : 0;
+
+                return {
+                    match: confidence > 0.75,
+                    confidence: confidence,
+                    barcodeMatch: this.referenceData.barcode === current.barcode && !!this.referenceData.barcode,
+                    textSimilarity: similarity
+                };
+            }
+
+            calculateSimilarity(str1, str2) {
+                const longer = str1.length > str2.length ? str1 : str2;
+                const shorter = str1.length > str2.length ? str2 : str1;
+
+                if (longer.length === 0) return 1.0;
+
+                const distance = this.levenshteinDistance(longer, shorter);
+                return (longer.length - distance) / longer.length;
+            }
+
+            levenshteinDistance(str1, str2) {
+                const matrix = [];
+                for (let i = 0; i <= str2.length; i++) {
+                    matrix[i] = [i];
+                }
+                for (let j = 0; j <= str1.length; j++) {
+                    matrix[0][j] = j;
+                }
+                for (let i = 1; i <= str2.length; i++) {
+                    for (let j = 1; j <= str1.length; j++) {
+                        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+                            matrix[i][j] = matrix[i - 1][j - 1];
+                        } else {
+                            matrix[i][j] = Math.min(
+                                matrix[i - 1][j - 1] + 1,
+                                matrix[i][j - 1] + 1,
+                                matrix[i - 1][j] + 1
+                            );
+                        }
+                    }
+                }
+                return matrix[str2.length][str1.length];
+            }
+
+            extractNumbers(text) {
+                const matches = text.match(/\d+/g);
+                return matches || [];
+            }
+
+            handleResult(result, extractedText) {
+                // Clear previous timeout
+                if (this.resultTimeout) {
+                    clearTimeout(this.resultTimeout);
+                }
+
+                // Update extracted text display
+                this.extractedText.textContent = `CUR: ${extractedText.substring(0, 100)}... | Conf: ${(result.confidence * 100).toFixed(1)}%`;
+
+                if (result.match) {
+                    this.matchCount++;
+                    this.matchCountEl.textContent = `Match: ${this.matchCount}`;
+
+                    this.cornerFrame.classList.remove('mismatch');
+                    this.cornerFrame.classList.add('match');
+
+                    this.resultOverlay.classList.remove('mismatch');
+                    this.resultOverlay.classList.add('match');
+                    this.resultIcon.textContent = '✓';
+                    this.resultText.textContent = 'MATCH!';
+                    this.resultOverlay.classList.add('show');
+
+                    // Play success sound (optional)
+                    this.playBeep(800, 0.1);
+
+                    this.resultTimeout = setTimeout(() => {
+                        this.resultOverlay.classList.remove('show');
+                        this.cornerFrame.classList.remove('match');
+                    }, 1500);
+
+                } else {
+                    // Only show mismatch if confidence is somewhat high (avoid random noise)
+                    if (result.confidence > 0.3) {
+                        this.cornerFrame.classList.remove('match');
+                        this.cornerFrame.classList.add('mismatch');
+
+                        this.resultOverlay.classList.remove('match');
+                        this.resultOverlay.classList.add('mismatch');
+                        this.resultIcon.textContent = '✗';
+                        this.resultText.textContent = 'MISMATCH';
+                        this.resultOverlay.classList.add('show');
+
+                        this.playBeep(300, 0.2);
+
+                        this.resultTimeout = setTimeout(() => {
+                            this.resultOverlay.classList.remove('show');
+                            this.cornerFrame.classList.remove('mismatch');
+                        }, 1500);
+                    }
+                }
+            }
+
+            playBeep(frequency, duration) {
+                try {
+                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioCtx.createOscillator();
+                    const gainNode = audioCtx.createGain();
+
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'sine';
+
+                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+
+                    oscillator.start(audioCtx.currentTime);
+                    oscillator.stop(audioCtx.currentTime + duration);
+                } catch (e) {
+                    // Audio not supported
+                }
+            }
+
+            showToast(message, type = '') {
+                this.toast.textContent = message;
+                this.toast.className = 'toast show ' + type;
+
+                setTimeout(() => {
+                    this.toast.classList.remove('show');
+                }, 3000);
             }
         }
 
-        // 5. Reset (Global Scope)
-        function resetMaster() {
-            isAutoScanning = false;
-            masterText = "";
-            location.reload(); // Hard reset for production stability
-        }
+        // Initialize app
+        const app = new StickerVerificationApp();
 
-        // Boot
-        initCamera();
+        // Handle visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && app.isVerifying) {
+                app.stopVerification();
+            }
+        });
     </script>
 </body>
 </html>
