@@ -1,1651 +1,215 @@
-
-html_content = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Sticker Label Verify PRO</title>
+    <title>Label Verify PRO - Enhanced</title>
     <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-        
-        html, body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #000;
-            color: white;
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-            position: fixed;
-        }
-        
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Header */
-        .header {
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-            padding: 6px 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-            z-index: 100;
-            flex-shrink: 0;
-            min-height: 44px;
-        }
-        
-        .header h1 {
-            font-size: 15px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
-        
-        .header .subtitle {
-            font-size: 10px;
-            opacity: 0.9;
-        }
-        
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            min-height: 0;
-        }
-        
-        /* Camera */
-        .camera-container {
-            flex: 1;
-            position: relative;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            min-height: 0;
-        }
-        
-        #video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: none;
-            z-index: 1;
-        }
-        
-        #video.active {
-            display: block;
-        }
-        
-        #canvas, #processCanvas {
-            display: none;
-        }
-        
-        /* Full-screen result flash */
-        .result-flash {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 50;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.15s;
-        }
-        
-        .result-flash.match {
-            background: rgba(0, 230, 118, 0.25);
-            opacity: 1;
-        }
-        
-        .result-flash.mismatch {
-            background: rgba(255, 23, 68, 0.25);
-            opacity: 1;
-        }
-        
-        /* Big center result */
-        .result-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 40;
-            pointer-events: none;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        
-        .result-center.show {
-            opacity: 1;
-        }
-        
-        .result-center .big-icon {
-            font-size: 100px;
-            text-shadow: 0 0 30px rgba(0,0,0,0.8);
-            margin-bottom: 10px;
-        }
-        
-        .result-center .big-text {
-            font-size: 36px;
-            font-weight: 900;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.9);
-            padding: 10px 30px;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-        }
-        
-        .result-center.match .big-text {
-            color: #00e676;
-        }
-        
-        .result-center.mismatch .big-text {
-            color: #ff1744;
-        }
-        
-        /* Scan frame */
-        .scan-frame {
-            position: absolute;
-            top: 15%;
-            left: 5%;
-            right: 5%;
-            bottom: 20%;
-            border: 3px solid rgba(255, 255, 255, 0.7);
-            border-radius: 12px;
-            z-index: 10;
-            pointer-events: none;
-        }
-        
-        .scan-frame::before, .scan-frame::after {
-            content: '';
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            border-color: #00e676;
-            border-style: solid;
-            transition: all 0.2s;
-        }
-        
-        .scan-frame::before {
-            top: -3px;
-            left: -3px;
-            border-width: 4px 0 0 4px;
-            border-top-left-radius: 12px;
-        }
-        
-        .scan-frame::after {
-            bottom: -3px;
-            right: -3px;
-            border-width: 0 4px 4px 0;
-            border-bottom-right-radius: 12px;
-        }
-        
-        .scan-frame.match {
-            border-color: #00e676;
-            box-shadow: 0 0 30px rgba(0, 230, 118, 0.4), inset 0 0 30px rgba(0, 230, 118, 0.2);
-        }
-        
-        .scan-frame.mismatch {
-            border-color: #ff1744;
-            box-shadow: 0 0 30px rgba(255, 23, 68, 0.4), inset 0 0 30px rgba(255, 23, 68, 0.2);
-        }
-        
-        /* Status bar */
-        .status-bar {
-            position: absolute;
-            top: 8px;
-            left: 8px;
-            right: 8px;
-            display: flex;
-            justify-content: space-between;
-            z-index: 15;
-            pointer-events: none;
-            gap: 6px;
-        }
-        
-        .status-pill {
-            background: rgba(0,0,0,0.85);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 800;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-        
-        .status-pill.match-count { color: #00e676; }
-        .status-pill.mismatch-count { color: #ff1744; }
-        .status-pill.total-count { color: #ffd600; }
-        
-        /* Reference preview */
-        .ref-preview {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 70px;
-            height: 70px;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 2px solid rgba(255,255,255,0.6);
-            z-index: 15;
-            background: #333;
-        }
-        
-        .ref-preview img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .ref-preview .ref-label {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(0,0,0,0.85);
-            font-size: 9px;
-            text-align: center;
-            padding: 2px;
-            font-weight: 700;
-        }
-        
-        /* Controls */
-        .controls {
-            background: #0d1117;
-            padding: 10px 12px 14px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 100;
-            flex-shrink: 0;
-            border-top: 2px solid #30363d;
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 14px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.1s;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 52px;
-            -webkit-appearance: none;
-            position: relative;
-            z-index: 101;
-        }
-        
-        .btn:active {
-            transform: scale(0.96);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #2962ff 0%, #0039cb 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #00c853 0%, #009624 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #ff9100 0%, #c56200 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 145, 0, 0.4);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #ff1744 0%, #b71c1c 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(255, 23, 68, 0.4);
-        }
-        
-        .btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        
-        .btn-row {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .btn-row .btn {
-            flex: 1;
-        }
-        
-        /* Start screen */
-        .start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
-            padding: 24px;
-            text-align: center;
-        }
-        
-        .start-screen.hidden {
-            display: none;
-        }
-        
-        .start-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-        }
-        
-        .start-title {
-            font-size: 28px;
-            font-weight: 900;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #2962ff 0%, #00e676 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .start-desc {
-            font-size: 15px;
-            color: #8b949e;
-            margin-bottom: 30px;
-            line-height: 1.6;
-            max-width: 300px;
-        }
-        
-        .feature-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 30px;
-            width: 100%;
-            max-width: 320px;
-        }
-        
-        .feature-item {
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            color: #c9d1d9;
-        }
-        
-        .feature-item .feature-icon {
-            font-size: 24px;
-            margin-bottom: 4px;
-        }
-        
-        /* Processing */
-        .processing-overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 30;
-            text-align: center;
-            display: none;
-        }
-        
-        .processing-overlay.active {
-            display: block;
-        }
-        
-        .processing-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255,255,255,0.2);
-            border-top-color: #2962ff;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 10px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 120px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #21262d;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
-            z-index: 200;
-            transition: transform 0.3s;
-            white-space: nowrap;
-            border: 1px solid #30363d;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        
-        .toast.show {
-            transform: translateX(-50%) translateY(0);
-        }
-        
-        .toast.error { 
-            background: #3e0008; 
-            border-color: #ff1744;
-            color: #ff8a80;
-        }
-        
-        .toast.success { 
-            background: #002e0f; 
-            border-color: #00e676;
-            color: #69f0ae;
-        }
-        
-        /* Settings panel */
-        .settings-panel {
-            position: absolute;
-            top: 0;
-            right: -100%;
-            width: 85%;
-            max-width: 350px;
-            height: 100%;
-            background: #0d1117;
-            z-index: 60;
-            transition: right 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            border-left: 2px solid #30363d;
-        }
-        
-        .settings-panel.open {
-            right: 0;
-        }
-        
-        .settings-header {
-            padding: 16px;
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .settings-header h2 {
-            font-size: 16px;
-            font-weight: 800;
-        }
-        
-        .settings-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-        }
-        
-        .settings-body {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-        }
-        
-        .setting-item {
-            margin-bottom: 20px;
-        }
-        
-        .setting-label {
-            font-size: 13px;
-            color: #8b949e;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-        
-        .setting-value {
-            font-size: 18px;
-            font-weight: 800;
-            color: #58a6ff;
-        }
-        
-        .setting-desc {
-            font-size: 11px;
-            color: #6e7681;
-            margin-top: 4px;
-        }
-        
-        /* Log panel */
-        .log-panel {
-            position: absolute;
-            top: 0;
-            right: -100%;
-            width: 85%;
-            max-width: 350px;
-            height: 100%;
-            background: #0d1117;
-            z-index: 60;
-            transition: right 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            border-left: 2px solid #30363d;
-        }
-        
-        .log-panel.open {
-            right: 0;
-        }
-        
-        .log-header {
-            padding: 16px;
-            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .log-header h2 {
-            font-size: 16px;
-            font-weight: 800;
-        }
-        
-        .log-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 28px;
-            cursor: pointer;
-        }
-        
-        .log-stats-row {
-            display: flex;
-            padding: 12px;
-            gap: 8px;
-            border-bottom: 1px solid #30363d;
-        }
-        
-        .log-stat {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.05);
-        }
-        
-        .log-stat .stat-num {
-            font-size: 24px;
-            font-weight: 900;
-        }
-        
-        .log-stat .stat-label {
-            font-size: 11px;
-            color: #8b949e;
-            margin-top: 2px;
-        }
-        
-        .log-stat.match-stat .stat-num { color: #00e676; }
-        .log-stat.mismatch-stat .stat-num { color: #ff1744; }
-        .log-stat.total-stat .stat-num { color: #ffd600; }
-        
-        .log-entries {
-            flex: 1;
-            overflow-y: auto;
-            padding: 8px;
-        }
-        
-        .log-entry {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            margin-bottom: 6px;
-            border-radius: 8px;
-            background: rgba(255,255,255,0.03);
-            font-size: 13px;
-            border-left: 3px solid transparent;
-        }
-        
-        .log-entry.match { border-left-color: #00e676; }
-        .log-entry.mismatch { border-left-color: #ff1744; }
-        
-        .log-entry-icon {
-            font-size: 22px;
-            width: 32px;
-            text-align: center;
-        }
-        
-        .log-entry-info {
-            flex: 1;
-        }
-        
-        .log-entry-time {
-            font-size: 11px;
-            color: #6e7681;
-        }
-        
-        .log-entry-text {
-            font-size: 12px;
-            color: #c9d1d9;
-            margin-top: 2px;
-            word-break: break-all;
-        }
-        
-        .log-actions {
-            padding: 12px;
-            border-top: 1px solid #30363d;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .log-actions .btn {
-            font-size: 12px;
-            padding: 10px;
-            min-height: 42px;
-        }
-        
-        /* Backdrop */
-        .backdrop {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 55;
-            display: none;
-        }
-        
-        .backdrop.show {
-            display: block;
-        }
-        
-        /* Info overlay */
-        .info-overlay {
-            position: absolute;
-            bottom: 90px;
-            left: 8px;
-            right: 8px;
-            background: rgba(13, 17, 23, 0.95);
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 12px;
-            z-index: 15;
-            display: none;
-            border: 1px solid #30363d;
-            font-family: 'SF Mono', Monaco, monospace;
-        }
-        
-        .info-overlay.active {
-            display: block;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
-        
-        .info-label {
-            color: #8b949e;
-        }
-        
-        .info-value {
-            color: #58a6ff;
-            font-weight: 700;
-        }
-        
-        .info-value.match { color: #00e676; }
-        .info-value.mismatch { color: #ff1744; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { background: #000; color: white; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        #video-container { position: relative; flex: 1; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        video { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Overlay UI */
+        .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,0.2); pointer-events: none; z-index: 5; }
+        .match-flash { position: absolute; inset: 0; z-index: 10; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+        .match-flash.match { background: rgba(0, 255, 0, 0.3); opacity: 1; }
+        .match-flash.error { background: rgba(255, 0, 0, 0.3); opacity: 1; }
+
+        .controls { background: #111; padding: 20px; border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
+        .btn { padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
+        .btn-primary { background: #2962ff; }
+        .btn-success { background: #00c853; }
+        .btn-danger { background: #d50000; }
+        
+        #status-bar { position: absolute; top: 10px; width: 95%; left: 2.5%; display: flex; justify-content: space-between; z-index: 20; }
+        .pill { background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1px solid #444; }
+        
+        canvas { display: none; }
     </style>
 </head>
 <body>
-    <div id="app-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>📦 LABEL VERIFY PRO</h1>
-            <div class="subtitle">All-Angle Scanning | Barcode + Text | Instant Audio</div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="main-content">
-            <!-- Start Screen -->
-            <div id="startScreen" class="start-screen">
-                <div class="start-icon">🏭</div>
-                <div class="start-title">Label Verify PRO</div>
-                <div class="start-desc">Point at any angle. Reads barcode instantly, text with smart fuzzy matching. Tick = match, Buzz = wrong.</div>
-                <div class="feature-grid">
-                    <div class="feature-item">
-                        <div class="feature-icon">🔄</div>
-                        <div>Any Angle OK</div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">⚡</div>
-                        <div>0.1s Barcode</div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">🔊</div>
-                        <div>Tick / Buzz</div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">📳</div>
-                        <div>Vibrate Alert</div>
-                    </div>
-                </div>
-                <button class="btn btn-primary" id="startBtn" onclick="app.start()" style="max-width: 320px;">
-                    <span>📷</span> START CAMERA
-                </button>
-            </div>
-            
-            <!-- Camera View -->
-            <div class="camera-container">
-                <video id="video" autoplay playsinline muted></video>
-                <canvas id="canvas"></canvas>
-                <canvas id="processCanvas"></canvas>
-                
-                <!-- Scan Frame -->
-                <div class="scan-frame" id="scanFrame"></div>
-                
-                <!-- Result Flash -->
-                <div class="result-flash" id="resultFlash"></div>
-                
-                <!-- Big Center Result -->
-                <div class="result-center" id="resultCenter">
-                    <div class="big-icon" id="bigIcon">✓</div>
-                    <div class="big-text" id="bigText">MATCH</div>
-                </div>
-                
-                <!-- Status Bar -->
-                <div class="status-bar" id="statusBar" style="display: none;">
-                    <div class="status-pill" id="statusText">READY</div>
-                    <div class="status-pill match-count" id="matchCount">✓ 0</div>
-                    <div class="status-pill mismatch-count" id="mismatchCount">✗ 0</div>
-                    <div class="status-pill total-count" id="totalCount">∑ 0</div>
-                </div>
-                
-                <!-- Reference Preview -->
-                <div class="ref-preview" id="refPreview" style="display: none;">
-                    <img id="refImage" src="" alt="Ref">
-                    <div class="ref-label">REF</div>
-                </div>
-                
-                <!-- Processing -->
-                <div class="processing-overlay" id="processing">
-                    <div class="processing-spinner"></div>
-                    <div style="font-size: 14px; color: #aaa; font-weight: 600;">Reading...</div>
-                </div>
-                
-                <!-- Info Overlay -->
-                <div class="info-overlay" id="infoOverlay">
-                    <div class="info-row">
-                        <span class="info-label">Last Read:</span>
-                        <span class="info-value" id="infoRead">--</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Reference:</span>
-                        <span class="info-value" id="infoRef">--</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Match Score:</span>
-                        <span class="info-value" id="infoScore">--</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Method:</span>
-                        <span class="info-value" id="infoMethod">--</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Controls -->
-        <div class="controls" id="controls" style="display: none;">
-            <button class="btn btn-primary" id="captureBtn" onclick="app.captureReference()">
-                <span>📸</span> CAPTURE REFERENCE LABEL
-            </button>
-            
-            <button class="btn btn-success" id="verifyBtn" onclick="app.startVerification()" style="display: none;">
-                <span>▶️</span> START BATCH SCAN
-            </button>
-            
-            <div class="btn-row" id="batchControls" style="display: none;">
-                <button class="btn btn-warning" id="pauseBtn" onclick="app.togglePause()">
-                    <span id="pauseIcon">⏸️</span> <span id="pauseText">PAUSE</span>
-                </button>
-                <button class="btn btn-primary" onclick="app.openLog()">
-                    <span>📋</span> LOG
-                </button>
-                <button class="btn btn-primary" onclick="app.openSettings()">
-                    <span>⚙️</span> SETTINGS
-                </button>
-            </div>
-            
-            <button class="btn btn-danger" id="stopBtn" onclick="app.stopVerification()" style="display: none;">
-                <span>🔄</span> RESET ALL
-            </button>
-        </div>
+
+    <div id="status-bar">
+        <div class="pill" id="mode-text">IDLE</div>
+        <div class="pill" id="count-text">MATCHES: 0</div>
     </div>
-    
-    <!-- Settings Panel -->
-    <div class="backdrop" id="settingsBackdrop" onclick="app.closeSettings()"></div>
-    <div class="settings-panel" id="settingsPanel">
-        <div class="settings-header">
-            <h2>⚙️ Settings</h2>
-            <button class="settings-close" onclick="app.closeSettings()">×</button>
-        </div>
-        <div class="settings-body">
-            <div class="setting-item">
-                <div class="setting-label">Match Threshold</div>
-                <div class="setting-value" id="settingThreshold">55%</div>
-                <div class="setting-desc">Lower = more lenient for angled/blurry labels</div>
-                <input type="range" min="30" max="90" value="55" id="thresholdSlider" onchange="app.updateThreshold(this.value)" style="width: 100%; margin-top: 8px;">
-            </div>
-            <div class="setting-item">
-                <div class="setting-label">Scan Interval</div>
-                <div class="setting-value" id="settingInterval">500ms</div>
-                <div class="setting-desc">Time between scans. 500ms = fast production</div>
-                <input type="range" min="200" max="2000" value="500" step="100" id="intervalSlider" onchange="app.updateInterval(this.value)" style="width: 100%; margin-top: 8px;">
-            </div>
-            <div class="setting-item">
-                <div class="setting-label">Audio Feedback</div>
-                <div class="setting-value" id="settingAudio">ON</div>
-                <div class="setting-desc">Tick = match, Buzz = mismatch</div>
-            </div>
-            <div class="setting-item">
-                <div class="setting-label">Vibration</div>
-                <div class="setting-value" id="settingVibration">ON</div>
-                <div class="setting-desc">Physical vibration for match/mismatch</div>
-            </div>
-            <div class="setting-item">
-                <div class="setting-label">Angle Tolerance</div>
-                <div class="setting-value">HIGH</div>
-                <div class="setting-desc">Accepts partial reads from any angle. Focuses on key numbers.</div>
-            </div>
-        </div>
+
+    <div id="video-container">
+        <video id="video" autoplay playsinline muted></video>
+        <div class="scan-overlay"></div>
+        <div id="flash" class="match-flash"></div>
     </div>
-    
-    <!-- Log Panel -->
-    <div class="backdrop" id="logBackdrop" onclick="app.closeLog()"></div>
-    <div class="log-panel" id="logPanel">
-        <div class="log-header">
-            <h2>📋 Scan Log</h2>
-            <button class="log-close" onclick="app.closeLog()">×</button>
-        </div>
-        <div class="log-stats-row">
-            <div class="log-stat match-stat">
-                <div class="stat-num" id="logMatch">0</div>
-                <div class="stat-label">Matched</div>
-            </div>
-            <div class="log-stat mismatch-stat">
-                <div class="stat-num" id="logMismatch">0</div>
-                <div class="stat-label">Mismatch</div>
-            </div>
-            <div class="log-stat total-stat">
-                <div class="stat-num" id="logTotal">0</div>
-                <div class="stat-label">Total</div>
-            </div>
-        </div>
-        <div class="log-entries" id="logEntries"></div>
-        <div class="log-actions">
-            <button class="btn btn-primary" onclick="app.exportCSV()">
-                <span>💾</span> EXPORT CSV
-            </button>
-            <button class="btn btn-danger" onclick="app.clearLog()">
-                <span>🗑️</span> CLEAR
-            </button>
-        </div>
+
+    <canvas id="proc-canvas"></canvas>
+
+    <div class="controls">
+        <button id="main-btn" class="btn btn-primary" onclick="app.handleAction()">START CAMERA</button>
+        <button id="reset-btn" class="btn btn-danger" style="display:none;" onclick="app.reset()">RESET</button>
     </div>
-    
-    <!-- Toast -->
-    <div class="toast" id="toast"></div>
 
     <script>
-        class LabelVerifyPro {
+        class LabelVerifyApp {
             constructor() {
                 this.video = document.getElementById('video');
-                this.canvas = document.getElementById('canvas');
-                this.processCanvas = document.getElementById('processCanvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.procCtx = this.processCanvas.getContext('2d');
+                this.canvas = document.getElementById('proc-canvas');
+                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+                this.flash = document.getElementById('flash');
+                this.mainBtn = document.getElementById('main-btn');
                 
-                this.stream = null;
-                this.isVerifying = false;
-                this.isPaused = false;
+                this.worker = null;
+                this.codeReader = new ZXing.BrowserMultiFormatReader();
+                
+                this.state = 'START'; // START, CAPTURE, VERIFYING
                 this.referenceData = null;
                 this.matchCount = 0;
-                this.mismatchCount = 0;
-                this.totalCount = 0;
-                this.scanInterval = null;
-                this.scanIntervalMs = 500;
-                this.codeReader = null;
-                this.tesseractWorker = null;
                 this.isProcessing = false;
-                this.scanLog = [];
-                this.lastScanTime = 0;
-                this.minScanInterval = 300;
-                this.lastScannedText = '';
-                this.lastScannedBarcode = '';
-                this.isDemoMode = false;
-                this.matchThreshold = 0.50;
-                this.audioEnabled = true;
-                this.vibrationEnabled = true;
-                this.audioCtx = null;
-                
-                // Cache DOM refs
-                this.els = {
-                    startScreen: document.getElementById('startScreen'),
-                    controls: document.getElementById('controls'),
-                    captureBtn: document.getElementById('captureBtn'),
-                    verifyBtn: document.getElementById('verifyBtn'),
-                    stopBtn: document.getElementById('stopBtn'),
-                    batchControls: document.getElementById('batchControls'),
-                    pauseBtn: document.getElementById('pauseBtn'),
-                    pauseIcon: document.getElementById('pauseIcon'),
-                    pauseText: document.getElementById('pauseText'),
-                    statusBar: document.getElementById('statusBar'),
-                    statusText: document.getElementById('statusText'),
-                    matchCount: document.getElementById('matchCount'),
-                    mismatchCount: document.getElementById('mismatchCount'),
-                    totalCount: document.getElementById('totalCount'),
-                    refPreview: document.getElementById('refPreview'),
-                    refImage: document.getElementById('refImage'),
-                    scanFrame: document.getElementById('scanFrame'),
-                    resultFlash: document.getElementById('resultFlash'),
-                    resultCenter: document.getElementById('resultCenter'),
-                    bigIcon: document.getElementById('bigIcon'),
-                    bigText: document.getElementById('bigText'),
-                    processing: document.getElementById('processing'),
-                    toast: document.getElementById('toast'),
-                    infoOverlay: document.getElementById('infoOverlay'),
-                    infoRead: document.getElementById('infoRead'),
-                    infoRef: document.getElementById('infoRef'),
-                    infoScore: document.getElementById('infoScore'),
-                    infoMethod: document.getElementById('infoMethod'),
-                    settingsPanel: document.getElementById('settingsPanel'),
-                    settingsBackdrop: document.getElementById('settingsBackdrop'),
-                    logPanel: document.getElementById('logPanel'),
-                    logBackdrop: document.getElementById('logBackdrop'),
-                    logEntries: document.getElementById('logEntries'),
-                    logMatch: document.getElementById('logMatch'),
-                    logMismatch: document.getElementById('logMismatch'),
-                    logTotal: document.getElementById('logTotal'),
-                    startBtn: document.getElementById('startBtn'),
-                    thresholdSlider: document.getElementById('thresholdSlider'),
-                    intervalSlider: document.getElementById('intervalSlider'),
-                };
             }
-            
-            log(msg) {
-                console.log('[LabelVerify]', msg);
+
+            async initOCR() {
+                this.updateStatus("Initializing AI...");
+                this.worker = await Tesseract.createWorker();
+                await this.worker.loadLanguage('eng');
+                await this.worker.setParameters({
+                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',
+                });
+                this.updateStatus("Ready");
             }
-            
-            initAudio() {
-                if (!this.audioCtx) {
-                    try {
-                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                        this.log('AudioContext created');
-                    } catch(e) {
-                        this.log('AudioContext failed: ' + e.message);
-                        this.audioEnabled = false;
-                    }
-                }
-                if (this.audioCtx && this.audioCtx.state === 'suspended') {
-                    this.audioCtx.resume();
+
+            async handleAction() {
+                if (this.state === 'START') {
+                    await this.startCamera();
+                    await this.initOCR();
+                    this.state = 'CAPTURE';
+                    this.mainBtn.innerText = "CAPTURE REFERENCE LABEL";
+                } else if (this.state === 'CAPTURE') {
+                    this.captureReference();
                 }
             }
-            
-            async start() {
-                this.log('=== STARTING ===');
-                this.els.startBtn.disabled = true;
-                this.els.startBtn.innerHTML = '<span>⏳</span> LOADING...';
-                this.initAudio();
-                
-                try {
-                    if (!navigator.mediaDevices?.getUserMedia) {
-                        throw new Error('Camera not supported');
-                    }
-                    
-                    this.stream = await navigator.mediaDevices.getUserMedia({
-                        video: {
-                            facingMode: { ideal: 'environment' },
-                            width: { min: 1280, ideal: 1920 },
-                            height: { min: 720, ideal: 1080 }
-                        },
-                        audio: false
-                    });
-                    
-                    this.video.srcObject = this.stream;
-                    
-                    await new Promise((resolve, reject) => {
-                        this.video.onloadedmetadata = () => resolve();
-                        this.video.onerror = () => reject(new Error('Video error'));
-                        setTimeout(() => reject(new Error('Timeout')), 8000);
-                    });
-                    
-                    this.video.classList.add('active');
-                    this.log('Camera: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
-                    
-                    // Init ZXing
-                    if (typeof ZXing !== 'undefined') {
-                        try {
-                            this.codeReader = new ZXing.BrowserMultiFormatReader();
-                            this.log('ZXing ready');
-                        } catch(e) { this.log('ZXing error: ' + e.message); }
-                    }
-                    
-                    // Init Tesseract in background
-                    this.initTesseract();
-                    
-                    // Show UI
-                    this.els.startScreen.classList.add('hidden');
-                    this.els.controls.style.display = 'flex';
-                    this.els.statusBar.style.display = 'flex';
-                    this.els.infoOverlay.classList.add('active');
-                    
-                    this.showToast('Camera ON! Point at label with BARCODE', 'success');
-                    this.log('Ready');
-                    
-                } catch (err) {
-                    this.log('Camera error: ' + err.message);
-                    this.showToast('Camera error: ' + err.message, 'error');
-                    this.els.startBtn.disabled = false;
-                    this.els.startBtn.innerHTML = '<span>📷</span> START CAMERA';
-                }
+
+            async startCamera() {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
+                });
+                this.video.srcObject = stream;
             }
-            
-            async initTesseract() {
-                if (typeof Tesseract !== 'undefined') {
-                    try {
-                        this.tesseractWorker = await Tesseract.createWorker();
-                        await this.tesseractWorker.load();
-                        await this.tesseractWorker.loadLanguage('eng');
-                        await this.tesseractWorker.initialize('eng');
-                        this.log('Tesseract ready');
-                    } catch(e) {
-                        this.log('Tesseract error: ' + e.message);
-                    }
-                }
-            }
-            
+
             async captureReference() {
-                if (this.isProcessing) return;
-                this.isProcessing = true;
-                this.els.processing.classList.add('active');
-                this.els.captureBtn.disabled = true;
-                this.els.statusText.textContent = 'READING...';
-                
-                try {
-                    const imageData = await this.captureFrame();
-                    
-                    // 1. Try BARCODE first (fastest, most accurate)
-                    let barcode = null;
-                    if (this.codeReader) {
-                        try {
-                            barcode = await this.readBarcode(imageData);
-                        } catch(e) {}
-                    }
-                    
-                    // 2. OCR fallback
-                    let text = '';
-                    let rawText = '';
-                    if (this.tesseractWorker) {
-                        try {
-                            const result = await this.tesseractWorker.recognize(imageData);
-                            rawText = result.data.text;
-                            text = this.normalizeText(rawText);
-                        } catch(e) {
-                            text = '';
-                        }
-                    }
-                    
-                    // 3. Extract numbers
-                    const numbers = this.extractNumbers(text);
-                    
-                    // Must have something
-                    if (!barcode && text.length < 3) {
-                        this.showToast('No barcode or text detected! Move closer', 'error');
-                        this.els.statusText.textContent = 'NO DATA';
-                        this.isProcessing = false;
-                        this.els.processing.classList.remove('active');
-                        this.els.captureBtn.disabled = false;
-                        return;
-                    }
-                    
-                    // Save reference
-                    this.referenceData = {
-                        barcode: barcode,
-                        text: text,
-                        rawText: rawText,
-                        numbers: numbers,
-                        image: imageData,
-                        timestamp: Date.now()
-                    };
-                    
-                    this.els.refImage.src = imageData;
-                    this.els.refPreview.style.display = 'block';
-                    this.els.captureBtn.style.display = 'none';
-                    this.els.verifyBtn.style.display = 'flex';
-                    
-                    this.els.statusText.textContent = 'REF SET';
-                    this.showToast('Reference captured! ' + (barcode ? 'Barcode: ' + barcode.substring(0,15) : 'Text: ' + text.substring(0,20)), 'success');
-                    
-                    this.updateInfo('Reference', barcode || text.substring(0,30), '100%', barcode ? 'BARCODE' : 'OCR');
-                    
-                } catch (err) {
-                    this.showToast('Error: ' + err.message, 'error');
-                } finally {
-                    this.isProcessing = false;
-                    this.els.processing.classList.remove('active');
-                    this.els.captureBtn.disabled = false;
-                }
-            }
-            
-            startVerification() {
-                if (!this.referenceData) {
-                    this.showToast('Capture reference first!', 'error');
-                    return;
-                }
-                
-                this.isVerifying = true;
-                this.isPaused = false;
-                this.els.verifyBtn.style.display = 'none';
-                this.els.batchControls.style.display = 'flex';
-                this.els.stopBtn.style.display = 'flex';
-                this.els.statusText.textContent = 'SCANNING';
-                this.els.statusText.style.color = '#ffd600';
-                
-                this.log('Batch scan started, interval: ' + this.scanIntervalMs + 'ms');
-                this.scanInterval = setInterval(() => this.scanFrame(), this.scanIntervalMs);
-                this.showToast('BATCH SCAN ACTIVE', 'success');
-            }
-            
-            togglePause() {
-                this.isPaused = !this.isPaused;
-                if (this.isPaused) {
-                    this.els.pauseIcon.textContent = '▶️';
-                    this.els.pauseText.textContent = 'RESUME';
-                    this.els.statusText.textContent = 'PAUSED';
-                    this.els.statusText.style.color = '#ff9100';
-                    this.showToast('PAUSED', 'info');
+                this.updateStatus("Reading Reference...");
+                const data = await this.scanFrame();
+                if (data) {
+                    this.referenceData = data;
+                    this.state = 'VERIFYING';
+                    this.mainBtn.innerText = "SCANNING BATCH...";
+                    this.mainBtn.className = "btn btn-success";
+                    document.getElementById('reset-btn').style.display = 'block';
+                    this.startBatchLoop();
                 } else {
-                    this.els.pauseIcon.textContent = '⏸️';
-                    this.els.pauseText.textContent = 'PAUSE';
-                    this.els.statusText.textContent = 'SCANNING';
-                    this.els.statusText.style.color = '#ffd600';
-                    this.showToast('RESUMED', 'success');
+                    alert("Could not see label clearly. Try a different angle.");
                 }
             }
-            
-            stopVerification() {
-                this.isVerifying = false;
-                this.isPaused = false;
-                if (this.scanInterval) {
-                    clearInterval(this.scanInterval);
-                    this.scanInterval = null;
-                }
-                
-                this.els.pauseIcon.textContent = '⏸️';
-                this.els.pauseText.textContent = 'PAUSE';
-                this.els.verifyBtn.style.display = 'none';
-                this.els.batchControls.style.display = 'none';
-                this.els.stopBtn.style.display = 'none';
-                this.els.captureBtn.style.display = 'flex';
-                this.els.statusText.textContent = 'READY';
-                this.els.statusText.style.color = 'white';
-                this.els.scanFrame.classList.remove('match', 'mismatch');
-                this.els.resultFlash.className = 'result-flash';
-                this.els.resultCenter.classList.remove('show', 'match', 'mismatch');
-                
-                this.referenceData = null;
-                this.matchCount = 0;
-                this.mismatchCount = 0;
-                this.totalCount = 0;
-                this.scanLog = [];
-                this.lastScannedText = '';
-                this.lastScannedBarcode = '';
-                this.updateCounters();
-                this.els.refPreview.style.display = 'none';
-                this.updateInfo('Last Read', '--', '--', '--');
-                
-                this.showToast('RESET COMPLETE', 'success');
-            }
-            
+
             async scanFrame() {
-                if (this.isProcessing || !this.isVerifying || this.isPaused) return;
-                this.isProcessing = true;
-                
+                // Try Barcode first (Immediate)
                 try {
-                    const imageData = await this.captureFrame();
-                    let barcode = null;
-                    let text = '';
-                    let rawText = '';
-                    let method = 'NONE';
-                    
-                    // 1. BARCODE first - INSTANT 0.1s
-                    if (this.codeReader) {
-                        try {
-                            barcode = await this.readBarcode(imageData);
-                            if (barcode) {
-                                method = 'BARCODE';
-                                this.log('Barcode: ' + barcode);
-                            }
-                        } catch(e) {}
+                    const result = await this.codeReader.decodeFromVideoElement(this.video);
+                    if (result) return result.text;
+                } catch (e) {}
+
+                // Fallback to OCR with Image Enhancement
+                this.canvas.width = this.video.videoWidth;
+                this.canvas.height = this.video.videoHeight;
+                this.ctx.drawImage(this.video, 0, 0);
+                
+                this.enhanceImage(); // Boost contrast for angled reads
+                
+                const { data: { text } } = await this.worker.recognize(this.canvas);
+                const cleanText = text.replace(/[^A-Z0-9]/g, '').trim();
+                return cleanText.length > 3 ? cleanText : null;
+            }
+
+            enhanceImage() {
+                const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    const avg = (data[i] + data[i+1] + data[i+2]) / 3;
+                    const val = avg > 120 ? 255 : 0; // Simple binary threshold
+                    data[i] = data[i+1] = data[i+2] = val;
+                }
+                this.ctx.putImageData(imageData, 0, 0);
+            }
+
+            async startBatchLoop() {
+                if (this.state !== 'VERIFYING') return;
+                
+                if (!this.isProcessing) {
+                    this.isProcessing = true;
+                    const scanned = await this.scanFrame();
+                    if (scanned) {
+                        this.validate(scanned);
                     }
-                    
-                    // 2. If no barcode, try OCR
-                    if (!barcode && this.tesseractWorker) {
-                        try {
-                            const result = await this.tesseractWorker.recognize(imageData);
-                            rawText = result.data.text;
-                            text = this.normalizeText(rawText);
-                            if (text.length > 2) {
-                                method = 'OCR';
-                                this.log('OCR: ' + text);
-                            }
-                        } catch(e) {}
-                    }
-                    
-                    // Skip if nothing found
-                    if (!barcode && text.length < 2) {
-                        this.isProcessing = false;
-                        return;
-                    }
-                    
-                    // Debounce
-                    const now = Date.now();
-                    const scanKey = barcode || text;
-                    if (scanKey === (this.lastScannedBarcode || this.lastScannedText) && (now - this.lastScanTime) < this.minScanInterval) {
-                        this.isProcessing = false;
-                        return;
-                    }
-                    
-                    // Compare
-                    const result = this.compareLabels({ barcode, text, rawText });
-                    
-                    if (result.confidence > 0.1) {
-                        this.lastScanTime = now;
-                        this.lastScannedBarcode = barcode;
-                        this.lastScannedText = text;
-                        this.handleResult(result, barcode, text, rawText, method);
-                    }
-                    
-                } catch (err) {
-                    this.log('Scan error: ' + err.message);
-                } finally {
                     this.isProcessing = false;
                 }
-            }
-            
-            captureFrame() {
-                return new Promise((resolve) => {
-                    this.canvas.width = this.video.videoWidth || 640;
-                    this.canvas.height = this.video.videoHeight || 480;
-                    this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-                    resolve(this.canvas.toDataURL('image/jpeg', 0.9));
-                });
-            }
-            
-            async readBarcode(imageData) {
-                try {
-                    const result = await this.codeReader.decodeFromImage(undefined, imageData);
-                    return result ? result.getText() : null;
-                } catch { return null; }
-            }
-            
-            normalizeText(text) {
-                if (!text) return '';
-                return text.toUpperCase().replace(/[^A-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
-            }
-            
-            extractNumbers(text) {
-                if (!text) return [];
-                const matches = text.match(/\d+/g);
-                return matches || [];
-            }
-            
-            compareLabels(current) {
-                if (!this.referenceData) return { match: false, confidence: 0, method: 'NONE' };
                 
-                const ref = this.referenceData;
-                let score = 0;
-                let maxScore = 0;
-                let method = 'TEXT';
+                setTimeout(() => this.startBatchLoop(), 300);
+            }
+
+            validate(scanned) {
+                const ref = this.referenceData.toUpperCase();
+                const cur = scanned.toUpperCase();
                 
-                // BARCODE: If both have barcode, exact match = instant pass
-                if (ref.barcode && current.barcode) {
-                    maxScore += 100;
-                    if (ref.barcode === current.barcode) {
-                        score += 100;
-                        method = 'BARCODE';
-                        this.log('BARCODE MATCH: ' + current.barcode);
-                        return { match: true, confidence: 1.0, method: 'BARCODE' };
+                // Fuzzy Match: Exact, Contains, or Levenshtein distance < 2
+                const isMatch = cur.includes(ref) || ref.includes(cur) || this.levenshtein(cur, ref) < 2;
+
+                if (isMatch) {
+                    this.matchCount++;
+                    document.getElementById('count-text').innerText = `MATCHES: ${this.matchCount}`;
+                    this.triggerUI('match');
+                    this.beep(800, 100);
+                } else {
+                    this.triggerUI('error');
+                    this.beep(200, 500);
+                }
+            }
+
+            levenshtein(s, t) {
+                if (!s.length) return t.length;
+                if (!t.length) return s.length;
+                const arr = [];
+                for (let i = 0; i <= t.length; i++) { arr[i] = [i]; }
+                for (let j = 0; j <= s.length; j++) { arr[0][j] = j; }
+                for (let i = 1; i <= t.length; i++) {
+                    for (let j = 1; j <= s.length; j++) {
+                        arr[i][j] = t.charAt(i-1) === s.charAt(j-1) ? arr[i-1][j-1] : Math.min(arr[i-1][j-1]+1, arr[i][j-1]+1, arr[i-1][j]+1);
                     }
                 }
-                
-                // TEXT comparison
-                const refText = ref.text;
-                const curText = current.text;
-                
-                // Exact match
-                maxScore += 30;
-                if (refText === curText) score += 30;
-                
-                // Contains
-                maxScore += 25;
-                if (refText.length > 3 && curText.length > 3) {
-                    const minLen = Math.min(refText.length, curText.length);
-                    const subLen = Math.min(20, minLen);
-                    if (refText.includes(curText.substring(0, subLen)) || curText.includes(refText.substring(0, subLen))) {
-                        score += 25;
-                    }
-                }
-                
-                // Similarity
-                maxScore += 25;
-                const sim = this.calcSimilarity(refText, curText);
-                if (sim > 0.35) score += 25 * sim;
-                
-                // Numbers
-                const refNums = ref.numbers || this.extractNumbers(refText);
-                const curNums = this.extractNumbers(curText);
-                if (refNums.length > 0 && curNums.length > 0) {
-                    maxScore += 20;
-                    const common = refNums.filter(n => curNums.includes(n));
-                    if (common.length > 0) {
-                        score += 20 * (common.length / Math.max(refNums.length, curNums.length));
-                    }
-                }
-                
-                const confidence = maxScore > 0 ? score / maxScore : 0;
-                
-                return {
-                    match: confidence >= this.matchThreshold,
-                    confidence: confidence,
-                    method: method
-                };
+                return arr[t.length][s.length];
             }
-            
-            calcSimilarity(s1, s2) {
-                if (!s1 || !s2) return 0;
-                const longer = s1.length > s2.length ? s1 : s2;
-                const shorter = s1.length > s2.length ? s2 : s1;
-                if (longer.length === 0) return 1;
-                const dist = this.levenshtein(longer, shorter);
-                return (longer.length - dist) / longer.length;
+
+            triggerUI(type) {
+                this.flash.className = `match-flash ${type}`;
+                setTimeout(() => this.flash.className = 'match-flash', 400);
             }
-            
-            levenshtein(s1, s2) {
-                const m = [];
-                for (let i = 0; i <= s2.length; i++) m[i] = [i];
-                for (let j = 0; j <= s1.length; j++) m[0][j] = j;
-                for (let i = 1; i <= s2.length; i++) {
-                    for (let j = 1; j <= s1.length; j++) {
-                        m[i][j] = s2[i-1] === s1[j-1] ? m[i-1][j-1] : Math.min(m[i-1][j-1]+1, m[i][j-1]+1, m[i-1][j]+1);
-                    }
-                }
-                return m[s2.length][s1.length];
+
+            beep(freq, dur) {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + (dur/1000));
             }
-            
-            handleResult(result, barcode, text, rawText, method) {
-                this.totalCount++;
-                const time = new Date().toLocaleTimeString();
-                const displayText = barcode || text.substring(0, 40);
-                
-                this.updateInfo('Last Read', displayText, (result.confidence*100).toFixed(0)+'%', method);
-                
-                // Flash effect
-                this.els.resultFlash.className = 'result-flash ' + (result.match ? 'match' : 'mismatch');
-                setTimeout(() => {
-                    this.els.resultFlash.className = 'result-flash';
-                }, 200);
-                
-                // Scan frame color
-                this.els.scanFrame.classList.remove('match', 'mismatch');
-                this.els.scanFrame.classList.add(result.match ? 'match' : 'mismatch');
-                setTimeout(() => {
-                    this.els.scanFrame.classList.remove('match', 'mismatch');
-                }, 800);
-                
-                // Center result
-                this.els.resultCenter.classList.remove('show', 'match', 'mismatch');
-                void this.els.resultCenter.offsetWidth; // force reflow
-                this.els.resultCenter.classList.add('show', result.match ? 'match' : 'mismatch');
-                this.els.bigIcon.textContent = result.match ? '✓' : '✗';
-                this.els.bigText.textContent = result.match ? 'MATCH' : 'MISMATCH';
-                
-                setTimeout(() => {
-                    this.els.resultCenter.classList.remove('show');
-                }, result.match ? 600 : 900);
-                
-                // Audio
-                if (this.audioEnabled) {
-                    if (result.match) this.playTick();
-                    else this.playBuzz();
-                }
-                
-                // Vibration
-                if (this.vibrationEnabled && navigator.vibrate) {
-                    navigator.vibrate(result.match ? [50, 30, 50] : [200, 100, 200]);
-                }
-                
-                // Update counts
-                if (result.match) this.matchCount++;
-                else this.mismatchCount++;
-                this.updateCounters();
-                
-                // Log
-                this.scanLog.unshift({
-                    type: result.match ? 'match' : 'mismatch',
-                    time: time,
-                    text: displayText,
-                    confidence: result.confidence,
-                    method: method
-                });
-                
-                this.log((result.match ? 'MATCH' : 'MISMATCH') + ' | ' + method + ' | ' + displayText + ' | ' + (result.confidence*100).toFixed(0) + '%');
-            }
-            
-            playTick() {
-                if (!this.audioCtx) return;
-                try {
-                    const t = this.audioCtx.currentTime;
-                    // Tick 1
-                    const o1 = this.audioCtx.createOscillator();
-                    const g1 = this.audioCtx.createGain();
-                    o1.connect(g1);
-                    g1.connect(this.audioCtx.destination);
-                    o1.type = 'sine';
-                    o1.frequency.setValueAtTime(1500, t);
-                    o1.frequency.exponentialRampToValueAtTime(2000, t + 0.06);
-                    g1.gain.setValueAtTime(0.5, t);
-                    g1.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
-                    o1.start(t);
-                    o1.stop(t + 0.1);
-                    
-                    // Tick 2 (slightly higher)
-                    const o2 = this.audioCtx.createOscillator();
-                    const g2 = this.audioCtx.createGain();
-                    o2.connect(g2);
-                    g2.connect(this.audioCtx.destination);
-                    o2.type = 'sine';
-                    o2.frequency.setValueAtTime(1800, t + 0.08);
-                    o2.frequency.exponentialRampToValueAtTime(2400, t + 0.14);
-                    g2.gain.setValueAtTime(0.4, t + 0.08);
-                    g2.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
-                    o2.start(t + 0.08);
-                    o2.stop(t + 0.18);
-                } catch(e) {}
-            }
-            
-            playBuzz() {
-                if (!this.audioCtx) return;
-                try {
-                    const t = this.audioCtx.currentTime;
-                    // Low buzz
-                    const o = this.audioCtx.createOscillator();
-                    const g = this.audioCtx.createGain();
-                    o.connect(g);
-                    g.connect(this.audioCtx.destination);
-                    o.type = 'sawtooth';
-                    o.frequency.setValueAtTime(200, t);
-                    o.frequency.linearRampToValueAtTime(100, t + 0.3);
-                    g.gain.setValueAtTime(0.4, t);
-                    g.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-                    o.start(t);
-                    o.stop(t + 0.4);
-                } catch(e) {}
-            }
-            
-            updateCounters() {
-                this.els.matchCount.textContent = '✓ ' + this.matchCount;
-                this.els.mismatchCount.textContent = '✗ ' + this.mismatchCount;
-                this.els.totalCount.textContent = '∑ ' + this.totalCount;
-            }
-            
-            updateInfo(read, ref, score, method) {
-                this.els.infoRead.textContent = read.substring(0, 25);
-                this.els.infoRef.textContent = ref.substring(0, 25);
-                this.els.infoScore.textContent = score;
-                this.els.infoMethod.textContent = method;
-                this.els.infoScore.className = 'info-value ' + (score.includes && score.includes('MATCH') ? 'match' : '');
-            }
-            
-            openSettings() {
-                this.els.settingsPanel.classList.add('open');
-                this.els.settingsBackdrop.classList.add('show');
-            }
-            
-            closeSettings() {
-                this.els.settingsPanel.classList.remove('open');
-                this.els.settingsBackdrop.classList.remove('show');
-            }
-            
-            updateThreshold(val) {
-                this.matchThreshold = val / 100;
-                document.getElementById('settingThreshold').textContent = val + '%';
-            }
-            
-            updateInterval(val) {
-                this.scanIntervalMs = parseInt(val);
-                document.getElementById('settingInterval').textContent = val + 'ms';
-                if (this.isVerifying && this.scanInterval) {
-                    clearInterval(this.scanInterval);
-                    this.scanInterval = setInterval(() => this.scanFrame(), this.scanIntervalMs);
-                }
-            }
-            
-            openLog() {
-                this.renderLog();
-                this.els.logPanel.classList.add('open');
-                this.els.logBackdrop.classList.add('show');
-            }
-            
-            closeLog() {
-                this.els.logPanel.classList.remove('open');
-                this.els.logBackdrop.classList.remove('show');
-            }
-            
-            renderLog() {
-                this.els.logMatch.textContent = this.matchCount;
-                this.els.logMismatch.textContent = this.mismatchCount;
-                this.els.logTotal.textContent = this.totalCount;
-                
-                this.els.logEntries.innerHTML = this.scanLog.slice(0, 50).map((entry, i) => `
-                    <div class="log-entry ${entry.type}">
-                        <div class="log-entry-icon">${entry.type === 'match' ? '✓' : '✗'}</div>
-                        <div class="log-entry-info">
-                            <div class="log-entry-time">#${this.scanLog.length - i} • ${entry.time} • ${entry.method}</div>
-                            <div class="log-entry-text">${entry.text}</div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            
-            clearLog() {
-                if (confirm('Clear all scan history?')) {
-                    this.scanLog = [];
-                    this.matchCount = 0;
-                    this.mismatchCount = 0;
-                    this.totalCount = 0;
-                    this.updateCounters();
-                    this.renderLog();
-                    this.showToast('Log cleared', 'success');
-                }
-            }
-            
-            exportCSV() {
-                if (this.scanLog.length === 0) {
-                    this.showToast('No data to export', 'error');
-                    return;
-                }
-                const headers = ['No', 'Time', 'Result', 'Method', 'Confidence', 'Text'];
-                const rows = this.scanLog.map((entry, i) => [
-                    this.scanLog.length - i,
-                    entry.time,
-                    entry.type.toUpperCase(),
-                    entry.method,
-                    (entry.confidence * 100).toFixed(1) + '%',
-                    entry.text
-                ]);
-                const csv = [headers, ...rows].map(r => r.map(c => '"' + c + '"').join(',')).join('\n');
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'label_verify_' + new Date().toISOString().slice(0,10) + '.csv';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                this.showToast('CSV exported!', 'success');
-            }
-            
-            showToast(msg, type) {
-                this.els.toast.textContent = msg;
-                this.els.toast.className = 'toast show ' + (type || '');
-                setTimeout(() => this.els.toast.classList.remove('show'), 2500);
-            }
+
+            updateStatus(msg) { document.getElementById('mode-text').innerText = msg.toUpperCase(); }
+
+            reset() { location.reload(); }
         }
-        
-        const app = new LabelVerifyPro();
-        
-        // Resume audio on visibility change
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && app.audioCtx?.state === 'suspended') {
-                app.audioCtx.resume();
-            }
-        });
+
+        const app = new LabelVerifyApp();
     </script>
 </body>
-</html>'''
-
-with open('/mnt/agents/output/sticker_label_verification.html', 'w', encoding='utf-8') as f:
-    f.write(html_content)
-
-print("✅ ALL-ANGLE PRODUCTION VERSION BUILT")
-print(f"📁 File: /mnt/agents/output/sticker_label_verification.html")
-print(f"📊 Size: {len(html_content):,} characters")
+</html>
