@@ -4,1110 +4,814 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
     <title>Label Verify Pro</title>
     <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+        :root{
+            --g:#00e676;--r:#ff1744;--y:#ffd600;--b:#2979ff;
+            --bg:#080c10;--s1:#0d1520;--s2:#131d2b;--br:#1e2d3d;
+            --tx:#e8f0f8;--mu:#5a7a99;
+        }
+        html,body{font-family:'SF Mono','Courier New',monospace;background:var(--bg);color:var(--tx);overflow:hidden;height:100%;width:100%;position:fixed}
+        #app{width:100%;height:100%;display:flex;flex-direction:column}
 
-        :root {
-            --green: #00e676;
-            --red: #ff1744;
-            --yellow: #ffd600;
-            --blue: #2979ff;
-            --bg: #080c10;
-            --surface: #0d1520;
-            --surface2: #131d2b;
-            --border: #1e2d3d;
-            --text: #e8f0f8;
-            --muted: #5a7a99;
-        }
+        .hdr{background:var(--s1);border-bottom:1px solid var(--br);padding:8px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;min-height:48px}
+        .hdr-t{font-size:13px;font-weight:700;letter-spacing:2px;color:var(--b)}
+        .hdr-s{font-size:9px;color:var(--mu);letter-spacing:1px;margin-top:1px}
+        .pills{display:flex;gap:5px}
+        .pill{padding:4px 7px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:1px}
+        .pm{background:rgba(0,230,118,.15);color:var(--g);border:1px solid rgba(0,230,118,.3)}
+        .pr{background:rgba(255,23,68,.15);color:var(--r);border:1px solid rgba(255,23,68,.3)}
+        .py{background:rgba(255,214,0,.12);color:var(--y);border:1px solid rgba(255,214,0,.25)}
 
-        html, body {
-            font-family: 'SF Mono', 'Courier New', monospace;
-            background: var(--bg);
-            color: var(--text);
-            overflow: hidden;
-            height: 100%; width: 100%;
-            position: fixed;
-        }
+        .main{flex:1;position:relative;overflow:hidden;min-height:0;display:flex;flex-direction:column}
+        .cam{flex:1;position:relative;background:#000;overflow:hidden;min-height:0}
+        #video{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:none}
+        #video.on{display:block}
+        #c1,#c2,#c3{display:none}
 
-        #app { width:100%; height:100%; display:flex; flex-direction:column; }
+        .sbox{position:absolute;top:8%;left:6%;right:6%;bottom:20%;z-index:10;pointer-events:none;transition:all .2s}
+        .sbox::before,.sbox::after,.sbox .ca,.sbox .cb{content:'';position:absolute;width:26px;height:26px;border-style:solid;border-color:rgba(255,255,255,.4)}
+        .sbox::before{top:-2px;left:-2px;border-width:3px 0 0 3px;border-radius:5px 0 0 0}
+        .sbox::after{bottom:-2px;right:-2px;border-width:0 3px 3px 0;border-radius:0 0 5px 0}
+        .sbox .ca{top:-2px;right:-2px;border-width:3px 3px 0 0;border-radius:0 5px 0 0}
+        .sbox .cb{bottom:-2px;left:-2px;border-width:0 0 3px 3px;border-radius:0 0 0 5px}
+        .sbox.ok::before,.sbox.ok::after,.sbox.ok .ca,.sbox.ok .cb{border-color:var(--g);box-shadow:0 0 10px var(--g)}
+        .sbox.bad::before,.sbox.bad::after,.sbox.bad .ca,.sbox.bad .cb{border-color:var(--r);box-shadow:0 0 10px var(--r)}
 
-        /* HEADER */
-        .hdr {
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            padding: 8px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-shrink: 0;
-            min-height: 48px;
-        }
-        .hdr-title { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--blue); }
-        .hdr-sub { font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 1px; }
-        .hdr-pills { display:flex; gap:6px; }
-        .hdr-pill {
-            padding: 4px 8px; border-radius: 4px;
-            font-size: 10px; font-weight: 700; letter-spacing: 1px;
-        }
-        .pill-match { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
-        .pill-mis { background: rgba(255,23,68,0.15); color: var(--red); border: 1px solid rgba(255,23,68,0.3); }
-        .pill-tot { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.25); }
+        .sline{position:absolute;left:6%;right:6%;height:2px;background:linear-gradient(90deg,transparent,var(--b),transparent);animation:sl 2s ease-in-out infinite;z-index:11;pointer-events:none;top:8%}
+        @keyframes sl{0%{top:8%;opacity:.7}50%{top:76%;opacity:1}100%{top:8%;opacity:.7}}
 
-        /* MAIN */
-        .main { flex:1; position:relative; overflow:hidden; min-height:0; display:flex; flex-direction:column; }
+        .flash{position:absolute;inset:0;z-index:50;pointer-events:none;opacity:0;transition:opacity .1s}
+        .flash.ok{background:rgba(0,230,118,.22);opacity:1}
+        .flash.bad{background:rgba(255,23,68,.22);opacity:1}
 
-        /* CAMERA */
-        .cam-wrap { flex:1; position:relative; background:#000; overflow:hidden; min-height:0; }
-        #video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:none; }
-        #video.on { display:block; }
-        #canvas, #procCanvas, #rotCanvas { display:none; }
+        .bigr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(.8);z-index:40;pointer-events:none;text-align:center;opacity:0;transition:all .15s cubic-bezier(.34,1.56,.64,1)}
+        .bigr.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+        .bic{font-size:90px;line-height:1}
+        .blbl{font-size:32px;font-weight:900;letter-spacing:4px;padding:8px 28px;border-radius:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px)}
+        .bigr.ok .blbl{color:var(--g)}
+        .bigr.bad .blbl{color:var(--r)}
 
-        /* SCAN BOX */
-        .scan-box {
-            position: absolute;
-            top: 10%; left: 8%; right: 8%; bottom: 22%;
-            z-index: 10; pointer-events: none;
-            transition: all 0.25s;
-        }
-        .scan-box::before, .scan-box::after,
-        .scan-box .c1, .scan-box .c2 {
-            content: '';
-            position: absolute;
-            width: 28px; height: 28px;
-            border-style: solid;
-            border-color: rgba(255,255,255,0.5);
-        }
-        .scan-box::before { top:-2px; left:-2px; border-width:3px 0 0 3px; border-radius:6px 0 0 0; }
-        .scan-box::after  { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-radius:0 0 6px 0; }
-        .scan-box .c1 { top:-2px; right:-2px; border-width:3px 3px 0 0; border-radius:0 6px 0 0; }
-        .scan-box .c2 { bottom:-2px; left:-2px; border-width:0 0 3px 3px; border-radius:0 0 0 6px; }
+        .info{position:absolute;bottom:0;left:0;right:0;background:rgba(8,12,16,.93);border-top:1px solid var(--br);padding:6px 10px;display:none;grid-template-columns:1fr 1fr;gap:3px;z-index:15;font-size:10px}
+        .info.on{display:grid}
+        .ir{display:flex;justify-content:space-between;gap:6px}
+        .il{color:var(--mu)}
+        .iv{color:var(--b);font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:115px}
+        .iv.ok{color:var(--g)}.iv.bad{color:var(--r)}
 
-        .scan-box.ok::before, .scan-box.ok::after, .scan-box.ok .c1, .scan-box.ok .c2 {
-            border-color: var(--green);
-            box-shadow: 0 0 12px var(--green);
-        }
-        .scan-box.bad::before, .scan-box.bad::after, .scan-box.bad .c1, .scan-box.bad .c2 {
-            border-color: var(--red);
-            box-shadow: 0 0 12px var(--red);
-        }
+        .rthumb{position:absolute;top:8px;right:8px;width:60px;height:60px;border:2px solid rgba(255,255,255,.35);border-radius:7px;overflow:hidden;background:#222;z-index:15;display:none}
+        .rthumb img{width:100%;height:100%;object-fit:cover}
+        .rtlbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.8);font-size:8px;text-align:center;padding:2px;font-weight:700;letter-spacing:1px;color:var(--y)}
 
-        /* Scan line animation */
-        .scan-line {
-            position: absolute;
-            left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--blue), transparent);
-            animation: scanAnim 2s ease-in-out infinite;
-            z-index: 11; pointer-events: none;
-            top: 10%; margin-top: 5%;
-        }
-        @keyframes scanAnim {
-            0%   { top: 10%; opacity:0.8; }
-            50%  { top: 72%; opacity:1; }
-            100% { top: 10%; opacity:0.8; }
-        }
+        /* CAPTURE PROGRESS */
+        .caprog{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:40;text-align:center;display:none;background:rgba(8,12,16,.95);border:1px solid var(--br);border-radius:12px;padding:22px 28px;min-width:230px}
+        .caprog.on{display:block}
+        .cap-title{font-size:10px;letter-spacing:2px;color:var(--mu);margin-bottom:14px}
+        .cap-dots{display:flex;gap:10px;justify-content:center;margin-bottom:14px}
+        .adot{width:38px;height:38px;border-radius:50%;border:2px solid var(--br);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--mu);transition:all .3s}
+        .adot.done{border-color:var(--g);color:var(--g);background:rgba(0,230,118,.1)}
+        .adot.active{border-color:var(--b);color:var(--b);background:rgba(41,121,255,.15);animation:pu .7s ease-in-out infinite}
+        @keyframes pu{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+        .cap-msg{font-size:12px;color:var(--tx);letter-spacing:.5px}
 
-        /* FLASH */
-        .flash {
-            position: absolute; inset: 0; z-index: 50;
-            pointer-events: none; opacity: 0;
-            transition: opacity 0.1s;
-        }
-        .flash.ok  { background: rgba(0,230,118,0.25); opacity:1; }
-        .flash.bad { background: rgba(255,23,68,0.25); opacity:1; }
+        .proc{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;text-align:center;display:none}
+        .proc.on{display:block}
+        .spin{width:40px;height:40px;margin:0 auto 8px;border:3px solid rgba(41,121,255,.2);border-top-color:var(--b);border-radius:50%;animation:sp .7s linear infinite}
+        @keyframes sp{to{transform:rotate(360deg)}}
 
-        /* BIG RESULT */
-        .big-result {
-            position: absolute; top:50%; left:50%;
-            transform: translate(-50%,-50%) scale(0.8);
-            z-index: 40; pointer-events: none;
-            text-align: center; opacity:0;
-            transition: all 0.15s cubic-bezier(0.34,1.56,0.64,1);
-        }
-        .big-result.show { opacity:1; transform: translate(-50%,-50%) scale(1); }
-        .big-icon { font-size: 100px; line-height:1; }
-        .big-label {
-            font-size: 36px; font-weight: 900;
-            letter-spacing: 4px;
-            padding: 8px 32px; border-radius: 8px;
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(8px);
-        }
-        .big-result.ok .big-label  { color: var(--green); }
-        .big-result.bad .big-label { color: var(--red); }
+        .start{position:absolute;inset:0;background:linear-gradient(180deg,#080c10,#0d1520);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:24px;text-align:center}
+        .start.gone{display:none}
+        .sic{font-size:64px;margin-bottom:14px}
+        .stitle{font-size:20px;font-weight:900;letter-spacing:3px;color:var(--b);margin-bottom:8px}
+        .sdesc{font-size:11px;color:var(--mu);line-height:1.7;margin-bottom:24px;max-width:270px;letter-spacing:.3px}
+        .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:290px;margin-bottom:24px}
+        .fi{background:var(--s2);border:1px solid var(--br);padding:10px 8px;border-radius:8px;font-size:10px;color:var(--tx);letter-spacing:.5px}
+        .fic{font-size:20px;margin-bottom:4px}
 
-        /* CONFIDENCE BADGE */
-        .conf-badge {
-            position: absolute; bottom: 24%; left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            border: 1px solid var(--border);
-            padding: 5px 14px; border-radius: 20px;
-            font-size: 11px; font-weight: 700;
-            z-index: 15; pointer-events: none;
-            letter-spacing: 1px;
-            display: none;
-        }
+        .ctrl{background:var(--s1);border-top:1px solid var(--br);padding:10px 12px 16px;display:none;flex-direction:column;gap:8px;flex-shrink:0}
+        .ctrl.on{display:flex}
+        .btn{width:100%;padding:14px 16px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;text-transform:uppercase;letter-spacing:1.5px;display:flex;align-items:center;justify-content:center;gap:7px;min-height:50px;-webkit-appearance:none;font-family:inherit;transition:transform .1s,opacity .1s}
+        .btn:active{transform:scale(.97)}
+        .btn:disabled{opacity:.3;cursor:not-allowed}
+        .bb{background:linear-gradient(135deg,#2979ff,#1a4fd6);color:#fff;box-shadow:0 4px 14px rgba(41,121,255,.3)}
+        .bg{background:linear-gradient(135deg,#00c853,#007a2f);color:#fff;box-shadow:0 4px 14px rgba(0,200,83,.3)}
+        .ba{background:linear-gradient(135deg,#ff9100,#b35a00);color:#fff;box-shadow:0 4px 14px rgba(255,145,0,.3)}
+        .br2{background:linear-gradient(135deg,#ff1744,#8b0000);color:#fff;box-shadow:0 4px 14px rgba(255,23,68,.3)}
+        .brow{display:flex;gap:8px}
+        .brow .btn{flex:1;font-size:10px;padding:11px 4px;min-height:44px}
 
-        /* INFO STRIP */
-        .info-strip {
-            position: absolute; bottom: 0; left: 0; right: 0;
-            background: rgba(8,12,16,0.92);
-            border-top: 1px solid var(--border);
-            padding: 6px 10px;
-            display: none;
-            z-index: 15;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            font-size: 10px;
-        }
-        .info-strip.on { display: grid; }
-        .info-row { display:flex; justify-content:space-between; gap:8px; }
-        .info-lbl { color: var(--muted); }
-        .info-val { color: var(--blue); font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 120px; }
-        .info-val.ok  { color: var(--green); }
-        .info-val.bad { color: var(--red); }
+        .bd{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:55;display:none;backdrop-filter:blur(2px)}
+        .bd.on{display:block}
+        .panel{position:absolute;top:0;right:-100%;width:82%;max-width:330px;height:100%;background:var(--s1);z-index:60;transition:right .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;border-left:1px solid var(--br)}
+        .panel.open{right:0}
+        .phdr{padding:13px 16px;background:var(--s2);border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+        .phdr h2{font-size:12px;font-weight:800;letter-spacing:2px}
+        .pcls{background:none;border:none;color:var(--tx);font-size:26px;cursor:pointer;line-height:1}
+        .pbody{flex:1;padding:16px;overflow-y:auto}
+        .si{margin-bottom:20px}
+        .sl2{font-size:10px;color:var(--mu);margin-bottom:5px;letter-spacing:2px}
+        .sv{font-size:18px;font-weight:900;color:var(--b)}
+        .sd{font-size:10px;color:#445;margin-top:4px;line-height:1.5}
+        input[type=range]{width:100%;margin-top:9px;accent-color:var(--b);height:4px;cursor:pointer}
 
-        /* REF THUMB */
-        .ref-thumb {
-            position: absolute; top: 8px; right: 8px;
-            width: 64px; height: 64px;
-            border: 2px solid rgba(255,255,255,0.4);
-            border-radius: 8px; overflow:hidden;
-            background: #222; z-index: 15; display:none;
-        }
-        .ref-thumb img { width:100%; height:100%; object-fit:cover; }
-        .ref-thumb-lbl {
-            position:absolute; bottom:0; left:0; right:0;
-            background: rgba(0,0,0,0.8); font-size:8px;
-            text-align:center; padding:2px; font-weight:700;
-            letter-spacing:1px; color: var(--yellow);
-        }
+        .lstats{display:flex;gap:8px;padding:10px 12px;border-bottom:1px solid var(--br);flex-shrink:0}
+        .lstat{flex:1;text-align:center;padding:9px 5px;border-radius:7px;background:var(--s2)}
+        .lnum{font-size:21px;font-weight:900}
+        .llbl{font-size:9px;color:var(--mu);margin-top:2px;letter-spacing:1px}
+        .gn{color:var(--g)}.rn{color:var(--r)}.yn{color:var(--y)}
+        .lents{flex:1;overflow-y:auto;padding:7px}
+        .lent{display:flex;align-items:center;gap:9px;padding:9px 11px;margin-bottom:5px;border-radius:7px;background:rgba(255,255,255,.02);border-left:3px solid transparent;font-size:11px}
+        .lent.ok{border-left-color:var(--g)}.lent.bad{border-left-color:var(--r)}
+        .lic{font-size:18px;width:26px;text-align:center}
+        .linf{flex:1}
+        .ltime{font-size:9px;color:var(--mu)}
+        .ltxt{font-size:11px;color:var(--tx);margin-top:2px;word-break:break-all}
+        .lacts{padding:10px 12px;border-top:1px solid var(--br);display:flex;gap:8px;flex-shrink:0}
+        .lacts .btn{font-size:10px;padding:10px;min-height:40px}
 
-        /* PROCESSING */
-        .proc {
-            position:absolute; top:50%; left:50%;
-            transform:translate(-50%,-50%);
-            z-index:30; text-align:center; display:none;
-        }
-        .proc.on { display:block; }
-        .spinner {
-            width:44px; height:44px; margin:0 auto 8px;
-            border:3px solid rgba(41,121,255,0.2);
-            border-top-color: var(--blue);
-            border-radius:50%;
-            animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform:rotate(360deg); } }
-        .proc-txt { font-size:11px; color:var(--muted); letter-spacing:2px; }
-
-        /* START SCREEN */
-        .start-scr {
-            position:absolute; inset:0;
-            background: linear-gradient(180deg, #080c10 0%, #0d1520 100%);
-            display:flex; flex-direction:column;
-            align-items:center; justify-content:center;
-            z-index:50; padding:24px; text-align:center;
-        }
-        .start-scr.gone { display:none; }
-        .start-icon { font-size:72px; margin-bottom:16px; }
-        .start-title {
-            font-size:22px; font-weight:900; letter-spacing:3px;
-            color: var(--blue); margin-bottom:8px;
-        }
-        .start-desc { font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:28px; max-width:280px; letter-spacing:0.5px; }
-        .feat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; max-width:300px; margin-bottom:28px; }
-        .feat {
-            background: var(--surface2); border:1px solid var(--border);
-            padding:10px 8px; border-radius:8px;
-            font-size:11px; color:var(--text); letter-spacing:0.5px;
-        }
-        .feat-ic { font-size:22px; margin-bottom:4px; }
-
-        /* CONTROLS */
-        .ctrl {
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            padding: 10px 12px 16px;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-        .ctrl.on { display:flex; }
-
-        .btn {
-            width:100%; padding:14px 20px; border:none; border-radius:10px;
-            font-size:13px; font-weight:800; cursor:pointer;
-            text-transform:uppercase; letter-spacing:1.5px;
-            display:flex; align-items:center; justify-content:center; gap:8px;
-            min-height:50px; -webkit-appearance:none;
-            font-family: inherit;
-            transition: transform 0.1s, opacity 0.1s;
-        }
-        .btn:active { transform:scale(0.97); }
-        .btn:disabled { opacity:0.35; cursor:not-allowed; }
-
-        .btn-blue  { background:linear-gradient(135deg,#2979ff,#1a4fd6); color:#fff; box-shadow:0 4px 16px rgba(41,121,255,0.3); }
-        .btn-green { background:linear-gradient(135deg,#00c853,#007a2f); color:#fff; box-shadow:0 4px 16px rgba(0,200,83,0.3); }
-        .btn-amber { background:linear-gradient(135deg,#ff9100,#b35a00); color:#fff; box-shadow:0 4px 16px rgba(255,145,0,0.3); }
-        .btn-red   { background:linear-gradient(135deg,#ff1744,#8b0000); color:#fff; box-shadow:0 4px 16px rgba(255,23,68,0.3); }
-
-        .btn-row { display:flex; gap:8px; }
-        .btn-row .btn { flex:1; font-size:11px; padding:12px 6px; min-height:44px; }
-
-        /* PANELS */
-        .backdrop {
-            position:absolute; inset:0;
-            background:rgba(0,0,0,0.65); z-index:55; display:none;
-            backdrop-filter: blur(2px);
-        }
-        .backdrop.on { display:block; }
-
-        .panel {
-            position:absolute; top:0; right:-100%;
-            width:82%; max-width:340px; height:100%;
-            background: var(--surface); z-index:60;
-            transition:right 0.28s cubic-bezier(0.4,0,0.2,1);
-            display:flex; flex-direction:column;
-            border-left:1px solid var(--border);
-        }
-        .panel.open { right:0; }
-        .panel-hdr {
-            padding:14px 16px;
-            background: var(--surface2);
-            border-bottom:1px solid var(--border);
-            display:flex; justify-content:space-between; align-items:center;
-            flex-shrink:0;
-        }
-        .panel-hdr h2 { font-size:13px; font-weight:800; letter-spacing:2px; }
-        .panel-close { background:none; border:none; color:var(--text); font-size:26px; cursor:pointer; line-height:1; }
-        .panel-body { flex:1; padding:16px; overflow-y:auto; }
-
-        /* SETTINGS */
-        .set-item { margin-bottom:22px; }
-        .set-lbl { font-size:10px; color:var(--muted); margin-bottom:6px; letter-spacing:2px; }
-        .set-val { font-size:20px; font-weight:900; color:var(--blue); }
-        .set-desc { font-size:10px; color:#445; margin-top:4px; line-height:1.5; }
-        input[type=range] {
-            width:100%; margin-top:10px; accent-color:var(--blue);
-            height:4px; cursor:pointer;
-        }
-
-        /* LOG */
-        .log-stats { display:flex; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
-        .log-stat { flex:1; text-align:center; padding:10px 6px; border-radius:8px; background:var(--surface2); }
-        .log-num { font-size:22px; font-weight:900; }
-        .log-lbl { font-size:10px; color:var(--muted); margin-top:2px; letter-spacing:1px; }
-        .ok-num  { color: var(--green); }
-        .bad-num { color: var(--red); }
-        .tot-num { color: var(--yellow); }
-        .log-entries { flex:1; overflow-y:auto; padding:8px; }
-        .log-entry {
-            display:flex; align-items:center; gap:10px;
-            padding:10px 12px; margin-bottom:5px; border-radius:8px;
-            background:rgba(255,255,255,0.02);
-            border-left:3px solid transparent; font-size:12px;
-        }
-        .log-entry.ok  { border-left-color:var(--green); }
-        .log-entry.bad { border-left-color:var(--red); }
-        .log-ic { font-size:20px; width:28px; text-align:center; }
-        .log-info { flex:1; }
-        .log-time { font-size:10px; color:var(--muted); }
-        .log-txt  { font-size:11px; color:var(--text); margin-top:2px; word-break:break-all; }
-        .log-acts { padding:10px 12px; border-top:1px solid var(--border); display:flex; gap:8px; flex-shrink:0; }
-        .log-acts .btn { font-size:11px; padding:10px; min-height:40px; }
-
-        /* TOAST */
-        .toast {
-            position:fixed; bottom:110px; left:50%;
-            transform:translateX(-50%) translateY(80px);
-            background:var(--surface2); color:var(--text);
-            padding:10px 22px; border-radius:8px; font-size:13px; font-weight:700;
-            z-index:200; transition:transform 0.25s; white-space:nowrap;
-            border:1px solid var(--border); letter-spacing:0.5px;
-            box-shadow:0 4px 20px rgba(0,0,0,0.5);
-        }
-        .toast.up { transform:translateX(-50%) translateY(0); }
-        .toast.err { background:#2a0008; border-color:var(--red); color:#ff8a80; }
-        .toast.win { background:#002410; border-color:var(--green); color:#69f0ae; }
+        .toast{position:fixed;bottom:105px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--s2);color:var(--tx);padding:9px 20px;border-radius:7px;font-size:12px;font-weight:700;z-index:200;transition:transform .25s;white-space:nowrap;border:1px solid var(--br);letter-spacing:.5px;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+        .toast.up{transform:translateX(-50%) translateY(0)}
+        .toast.err{background:#2a0008;border-color:var(--r);color:#ff8a80}
+        .toast.win{background:#002410;border-color:var(--g);color:#69f0ae}
     </style>
 </head>
 <body>
 <div id="app">
-    <!-- HEADER -->
     <div class="hdr">
-        <div>
-            <div class="hdr-title">LABEL VERIFY PRO</div>
-            <div class="hdr-sub">ANY ANGLE · SMART MATCH</div>
-        </div>
-        <div class="hdr-pills">
-            <div class="hdr-pill pill-match" id="hMatch">✓ 0</div>
-            <div class="hdr-pill pill-mis"   id="hMis">✗ 0</div>
-            <div class="hdr-pill pill-tot"   id="hTot">∑ 0</div>
+        <div><div class="hdr-t">LABEL VERIFY PRO</div><div class="hdr-s">MULTI-ANGLE · SMART MATCH</div></div>
+        <div class="pills">
+            <div class="pill pm" id="hM">✓ 0</div>
+            <div class="pill pr" id="hR">✗ 0</div>
+            <div class="pill py" id="hT">∑ 0</div>
         </div>
     </div>
 
-    <!-- MAIN -->
     <div class="main">
-        <!-- CAMERA AREA -->
-        <div class="cam-wrap">
+        <div class="cam">
             <video id="video" autoplay playsinline muted></video>
-            <canvas id="canvas"></canvas>
-            <canvas id="procCanvas"></canvas>
-            <canvas id="rotCanvas"></canvas>
+            <canvas id="c1"></canvas><canvas id="c2"></canvas><canvas id="c3"></canvas>
 
-            <!-- Start Screen -->
-            <div id="startScr" class="start-scr">
-                <div class="start-icon">🔍</div>
-                <div class="start-title">LABEL VERIFY PRO</div>
-                <div class="start-desc">Smart barcode + OCR matching. Hold at any angle — auto-corrects rotation. Works on any label.</div>
-                <div class="feat-grid">
-                    <div class="feat"><div class="feat-ic">🔄</div>Auto Rotate</div>
-                    <div class="feat"><div class="feat-ic">🧠</div>Smart Match</div>
-                    <div class="feat"><div class="feat-ic">⚡</div>Fast Barcode</div>
-                    <div class="feat"><div class="feat-ic">🔊</div>Audio Alert</div>
+            <div id="startScr" class="start">
+                <div class="sic">🔍</div>
+                <div class="stitle">LABEL VERIFY PRO</div>
+                <div class="sdesc">Captures your reference label at ALL 4 angles automatically — then matches from any direction, any tilt.</div>
+                <div class="fgrid">
+                    <div class="fi"><div class="fic">🔄</div>4-Angle Ref</div>
+                    <div class="fi"><div class="fic">🧠</div>Smart Match</div>
+                    <div class="fi"><div class="fic">⚡</div>Fast Barcode</div>
+                    <div class="fi"><div class="fic">🔊</div>Audio Alert</div>
                 </div>
-                <button class="btn btn-blue" id="startBtn" onclick="app.start()" style="max-width:300px;">
-                    <span>📷</span> START CAMERA
-                </button>
+                <button class="btn bb" id="startBtn" onclick="app.start()" style="max-width:280px"><span>📷</span> START CAMERA</button>
             </div>
 
-            <!-- Scan box -->
-            <div class="scan-box" id="scanBox">
-                <div class="c1"></div>
-                <div class="c2"></div>
-            </div>
-            <div class="scan-line" id="scanLine" style="display:none;"></div>
+            <div class="sbox" id="sbox"><div class="ca"></div><div class="cb"></div></div>
+            <div class="sline" id="sline" style="display:none"></div>
 
-            <!-- Flash & result -->
+            <!-- Multi-angle capture progress -->
+            <div class="caprog" id="caprog">
+                <div class="cap-title">BUILDING REFERENCE FINGERPRINT</div>
+                <div class="cap-dots">
+                    <div class="adot" id="ad0">0°</div>
+                    <div class="adot" id="ad1">90°</div>
+                    <div class="adot" id="ad2">180°</div>
+                    <div class="adot" id="ad3">270°</div>
+                </div>
+                <div class="cap-msg" id="capMsg">Starting...</div>
+            </div>
+
             <div class="flash" id="flash"></div>
-            <div class="big-result" id="bigResult">
-                <div class="big-icon" id="bigIc">✓</div>
-                <div class="big-label" id="bigLbl">MATCH</div>
-            </div>
+            <div class="bigr" id="bigr"><div class="bic" id="bic">✓</div><div class="blbl" id="blbl">MATCH</div></div>
+            <div class="rthumb" id="rthumb"><img id="rimg" src="" alt="REF"><div class="rtlbl">REF</div></div>
+            <div class="proc" id="proc"><div class="spin"></div></div>
 
-            <!-- Confidence badge -->
-            <div class="conf-badge" id="confBadge"></div>
-
-            <!-- Ref thumbnail -->
-            <div class="ref-thumb" id="refThumb">
-                <img id="refImg" src="" alt="REF">
-                <div class="ref-thumb-lbl">REF</div>
-            </div>
-
-            <!-- Processing -->
-            <div class="proc" id="proc">
-                <div class="spinner"></div>
-                <div class="proc-txt">READING...</div>
-            </div>
-
-            <!-- Info strip -->
-            <div class="info-strip" id="infoStrip">
-                <div class="info-row">
-                    <span class="info-lbl">READ:</span>
-                    <span class="info-val" id="iRead">--</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-lbl">METHOD:</span>
-                    <span class="info-val" id="iMethod">--</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-lbl">SCORE:</span>
-                    <span class="info-val" id="iScore">--</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-lbl">STATUS:</span>
-                    <span class="info-val" id="iStatus">READY</span>
-                </div>
+            <div class="info" id="info">
+                <div class="ir"><span class="il">READ:</span><span class="iv" id="iRead">--</span></div>
+                <div class="ir"><span class="il">METHOD:</span><span class="iv" id="iMeth">--</span></div>
+                <div class="ir"><span class="il">SCORE:</span><span class="iv" id="iScore">--</span></div>
+                <div class="ir"><span class="il">STATUS:</span><span class="iv" id="iStat">READY</span></div>
             </div>
         </div>
 
-        <!-- CONTROLS -->
-        <div class="ctrl on" id="ctrl" style="display:none;">
-            <button class="btn btn-blue" id="captBtn" onclick="app.captureRef()">
-                <span>📸</span> CAPTURE REFERENCE LABEL
-            </button>
-            <button class="btn btn-green" id="scanBtn" onclick="app.startScan()" style="display:none;">
-                <span>▶️</span> START BATCH SCAN
-            </button>
-            <div class="btn-row" id="batchRow" style="display:none;">
-                <button class="btn btn-amber" id="pauseBtn" onclick="app.togglePause()">
-                    <span id="pauseIc">⏸️</span><span id="pauseTxt">PAUSE</span>
-                </button>
-                <button class="btn btn-blue" onclick="app.openLog()"><span>📋</span>LOG</button>
-                <button class="btn btn-blue" onclick="app.openSettings()"><span>⚙️</span>SET</button>
+        <div class="ctrl" id="ctrl">
+            <button class="btn bb" id="captBtn" onclick="app.captureRef()"><span>📸</span> CAPTURE REFERENCE (ALL ANGLES)</button>
+            <button class="btn bg" id="scanBtn" onclick="app.startScan()" style="display:none"><span>▶️</span> START BATCH SCAN</button>
+            <div class="brow" id="brow" style="display:none">
+                <button class="btn ba" id="pauseBtn" onclick="app.togglePause()"><span id="pic">⏸️</span><span id="ptxt">PAUSE</span></button>
+                <button class="btn bb" onclick="app.openLog()"><span>📋</span>LOG</button>
+                <button class="btn bb" onclick="app.openSettings()"><span>⚙️</span>SET</button>
             </div>
-            <button class="btn btn-red" id="resetBtn" onclick="app.reset()" style="display:none;">
-                <span>🔄</span> RESET ALL
-            </button>
+            <button class="btn br2" id="resetBtn" onclick="app.reset()" style="display:none"><span>🔄</span> RESET ALL</button>
         </div>
     </div>
 </div>
 
-<!-- SETTINGS PANEL -->
-<div class="backdrop" id="setBd" onclick="app.closeSettings()"></div>
-<div class="panel" id="setPanel">
-    <div class="panel-hdr">
-        <h2>⚙️ SETTINGS</h2>
-        <button class="panel-close" onclick="app.closeSettings()">×</button>
-    </div>
-    <div class="panel-body">
-        <div class="set-item">
-            <div class="set-lbl">MATCH THRESHOLD</div>
-            <div class="set-val" id="sThresh">40%</div>
-            <div class="set-desc">Lower = more lenient. Raise if too many false matches. Default 40% works well for OCR.</div>
-            <input type="range" min="20" max="85" value="40" id="thSlider" oninput="app.setThreshold(this.value)">
+<!-- SETTINGS -->
+<div class="bd" id="sBd" onclick="app.closeSettings()"></div>
+<div class="panel" id="sPanel">
+    <div class="phdr"><h2>⚙️ SETTINGS</h2><button class="pcls" onclick="app.closeSettings()">×</button></div>
+    <div class="pbody">
+        <div class="si">
+            <div class="sl2">MATCH THRESHOLD</div>
+            <div class="sv" id="svThr">35%</div>
+            <div class="sd">Lower = more lenient. 35% is recommended for OCR multi-angle.</div>
+            <input type="range" min="15" max="80" value="35" id="thrSlider" oninput="app.setThr(this.value)">
         </div>
-        <div class="set-item">
-            <div class="set-lbl">SCAN INTERVAL</div>
-            <div class="set-val" id="sInterval">1000ms</div>
-            <div class="set-desc">Time between scans. Slower = more stable reads.</div>
-            <input type="range" min="500" max="3000" value="1000" step="100" id="intSlider" oninput="app.setInterval(this.value)">
+        <div class="si">
+            <div class="sl2">SCAN INTERVAL</div>
+            <div class="sv" id="svInt">1200ms</div>
+            <div class="sd">Time between scans. Slower = more stable.</div>
+            <input type="range" min="600" max="3000" value="1200" step="100" id="intSlider" oninput="app.setInt(this.value)">
         </div>
-        <div class="set-item">
-            <div class="set-lbl">DEBOUNCE</div>
-            <div class="set-val" id="sDebounce">1500ms</div>
-            <div class="set-desc">Minimum time before counting the same label again. Prevents double-counting.</div>
-            <input type="range" min="500" max="5000" value="1500" step="250" id="dbSlider" oninput="app.setDebounce(this.value)">
+        <div class="si">
+            <div class="sl2">DEBOUNCE</div>
+            <div class="sv" id="svDeb">2000ms</div>
+            <div class="sd">Min time before counting same label again.</div>
+            <input type="range" min="500" max="5000" value="2000" step="250" id="debSlider" oninput="app.setDeb(this.value)">
         </div>
-        <div class="set-item">
-            <div class="set-lbl">AUTO-ROTATE</div>
-            <div class="set-val" style="color:var(--green)">ON</div>
-            <div class="set-desc">Tries 0°, 90°, 180°, 270° for barcode. Uses device tilt for OCR correction.</div>
-        </div>
-        <div class="set-item">
-            <div class="set-lbl">AUDIO + VIBRATION</div>
-            <div class="set-val" style="color:var(--green)">ON</div>
-            <div class="set-desc">Tick = match. Buzz = mismatch.</div>
+        <div class="si">
+            <div class="sl2">HOW IT WORKS</div>
+            <div class="sd" style="color:var(--mu);font-size:11px;line-height:1.7">
+                1. Tap CAPTURE — app reads your label at 0°, 90°, 180°, 270° and saves all 4 fingerprints.<br><br>
+                2. During batch scan, each frame is compared against ALL 4 stored fingerprints.<br><br>
+                3. The best score wins — so any angle you hold the phone will match.
+            </div>
         </div>
     </div>
 </div>
 
-<!-- LOG PANEL -->
-<div class="backdrop" id="logBd" onclick="app.closeLog()"></div>
-<div class="panel" id="logPanel">
-    <div class="panel-hdr">
-        <h2>📋 SCAN LOG</h2>
-        <button class="panel-close" onclick="app.closeLog()">×</button>
+<!-- LOG -->
+<div class="bd" id="lBd" onclick="app.closeLog()"></div>
+<div class="panel" id="lPanel">
+    <div class="phdr"><h2>📋 SCAN LOG</h2><button class="pcls" onclick="app.closeLog()">×</button></div>
+    <div class="lstats">
+        <div class="lstat"><div class="lnum gn" id="lM">0</div><div class="llbl">MATCH</div></div>
+        <div class="lstat"><div class="lnum rn" id="lR">0</div><div class="llbl">MISMATCH</div></div>
+        <div class="lstat"><div class="lnum yn" id="lT">0</div><div class="llbl">TOTAL</div></div>
     </div>
-    <div class="log-stats">
-        <div class="log-stat"><div class="log-num ok-num"  id="lMatch">0</div><div class="log-lbl">MATCH</div></div>
-        <div class="log-stat"><div class="log-num bad-num" id="lMis">0</div><div class="log-lbl">MISMATCH</div></div>
-        <div class="log-stat"><div class="log-num tot-num" id="lTot">0</div><div class="log-lbl">TOTAL</div></div>
-    </div>
-    <div class="log-entries" id="logList"></div>
-    <div class="log-acts">
-        <button class="btn btn-blue"  onclick="app.exportCSV()"><span>💾</span>EXPORT</button>
-        <button class="btn btn-red"   onclick="app.clearLog()"><span>🗑️</span>CLEAR</button>
+    <div class="lents" id="lList"></div>
+    <div class="lacts">
+        <button class="btn bb" onclick="app.exportCSV()"><span>💾</span>EXPORT</button>
+        <button class="btn br2" onclick="app.clearLog()"><span>🗑️</span>CLEAR</button>
     </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-class LabelVerify {
+class LV {
     constructor() {
-        this.video      = document.getElementById('video');
-        this.canvas     = document.getElementById('canvas');
-        this.procCanvas = document.getElementById('procCanvas');
-        this.rotCanvas  = document.getElementById('rotCanvas');
-        this.ctx        = this.canvas.getContext('2d');
-        this.procCtx    = this.procCanvas.getContext('2d');
-        this.rotCtx     = this.rotCanvas.getContext('2d');
+        this.v  = document.getElementById('video');
+        this.c1 = document.getElementById('c1');
+        this.c2 = document.getElementById('c2');
+        this.c3 = document.getElementById('c3');
+        this.x1 = this.c1.getContext('2d');
+        this.x2 = this.c2.getContext('2d');
+        this.x3 = this.c3.getContext('2d');
 
-        this.stream         = null;
-        this.isScanning     = false;
-        this.isPaused       = false;
-        this.refData        = null;
-        this.matchCount     = 0;
-        this.misCount       = 0;
-        this.total          = 0;
-        this.intervalTimer  = null;
-        this.intervalMs     = 1000;
-        this.codeReader     = null;
-        this.tessWorker     = null;
-        this.isProc         = false;
-        this.log            = [];
-        this.lastScanTime   = 0;
-        this.debounceMs     = 1500;
-        this.lastKey        = '';
-        this.threshold      = 0.40;
-        this.audioCtx       = null;
-        this.orientation    = 0;
+        this.stream   = null;
+        this.scanning = false;
+        this.paused   = false;
+        this.refData  = null;
+        this.mc = this.rc = this.tc = 0;
+        this.timer    = null;
+        this.intMs    = 1200;
+        this.debMs    = 2000;
+        this.thr      = 0.35;
+        this.zx       = null;
+        this.tess     = null;
+        this.busy     = false;
+        this.lastKey  = '';
+        this.lastTime = 0;
+        this.scanLog  = [];
+        this.orient   = 0;
+        this.ac       = null;
 
-        // Cache DOM
-        this.el = {};
-        ['startScr','scanBox','flash','bigResult','bigIc','bigLbl','confBadge',
-         'refThumb','refImg','proc','infoStrip','iRead','iMethod','iScore','iStatus',
-         'ctrl','captBtn','scanBtn','batchRow','pauseBtn','pauseIc','pauseTxt','resetBtn',
-         'setPanel','setBd','logPanel','logBd','logList','lMatch','lMis','lTot',
-         'toast','scanLine','hMatch','hMis','hTot','startBtn'
-        ].forEach(id => this.el[id] = document.getElementById(id));
+        this.$ = id => document.getElementById(id);
 
-        window.addEventListener('deviceorientation', e => this.onOrientation(e), true);
-    }
-
-    onOrientation(e) {
-        const g = e.gamma, b = e.beta;
-        if (Math.abs(g) > 45)      this.orientation = g > 0 ? 90  : 270;
-        else if (Math.abs(b) > 45) this.orientation = b > 0 ? 0   : 180;
+        window.addEventListener('deviceorientation', e => {
+            const g = e.gamma, b = e.beta;
+            if (Math.abs(g) > 45)      this.orient = g > 0 ? 90  : 270;
+            else if (Math.abs(b) > 45) this.orient = b > 0 ? 0   : 180;
+        }, true);
     }
 
     initAudio() {
-        if (!this.audioCtx) {
-            try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
-        }
-        if (this.audioCtx?.state === 'suspended') this.audioCtx.resume();
+        if (!this.ac) try { this.ac = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){}
+        if (this.ac?.state==='suspended') this.ac.resume();
     }
 
-    // ─── START ────────────────────────────────────────────────────────────────
+    // ── START CAMERA ────────────────────────────────────────────────────────
     async start() {
-        this.el.startBtn.disabled = true;
-        this.el.startBtn.innerHTML = '<span>⏳</span> STARTING...';
+        const btn = this.$('startBtn');
+        btn.disabled = true; btn.innerHTML = '<span>⏳</span> STARTING...';
         this.initAudio();
-
         try {
             this.stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: { ideal: 'environment' },
-                    width:  { min: 1280, ideal: 1920 },
-                    height: { min: 720,  ideal: 1080 }
-                }, audio: false
+                video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
+                audio:false
             });
-            this.video.srcObject = this.stream;
-            await new Promise((res, rej) => {
-                this.video.onloadedmetadata = res;
+            this.v.srcObject = this.stream;
+            await new Promise((res,rej) => {
+                this.v.onloadedmetadata = res;
                 setTimeout(() => rej(new Error('Timeout')), 8000);
             });
-            this.video.classList.add('on');
-
+            this.v.classList.add('on');
             if (typeof ZXing !== 'undefined') {
-                try { this.codeReader = new ZXing.BrowserMultiFormatReader(); } catch(e) {}
+                try { this.zx = new ZXing.BrowserMultiFormatReader(); } catch(e){}
             }
             this.initTess();
-
-            this.el.startScr.classList.add('gone');
-            this.el.ctrl.style.display = 'flex';
-            this.el.infoStrip.classList.add('on');
-            this.el.scanLine.style.display = 'block';
-            this.toast('Camera ready — capture a reference label', 'win');
+            this.$('startScr').classList.add('gone');
+            this.$('ctrl').classList.add('on');
+            this.$('info').classList.add('on');
+            this.$('sline').style.display = 'block';
+            this.toast('Camera ready — tap CAPTURE REFERENCE', 'win');
         } catch(err) {
             this.toast('Camera error: ' + err.message, 'err');
-            this.el.startBtn.disabled = false;
-            this.el.startBtn.innerHTML = '<span>📷</span> START CAMERA';
+            btn.disabled = false; btn.innerHTML = '<span>📷</span> START CAMERA';
         }
     }
 
     async initTess() {
         if (typeof Tesseract === 'undefined') return;
         try {
-            this.tessWorker = await Tesseract.createWorker();
-            await this.tessWorker.load();
-            await this.tessWorker.loadLanguage('eng');
-            await this.tessWorker.initialize('eng');
-        } catch(e) {}
+            this.tess = await Tesseract.createWorker();
+            await this.tess.load();
+            await this.tess.loadLanguage('eng');
+            await this.tess.initialize('eng');
+        } catch(e){}
     }
 
-    // ─── FRAME CAPTURE ────────────────────────────────────────────────────────
-    captureFrame() {
-        const w = this.video.videoWidth  || 640;
-        const h = this.video.videoHeight || 480;
-        this.canvas.width = w; this.canvas.height = h;
-        this.ctx.drawImage(this.video, 0, 0, w, h);
-        const corrected = this.rotateCanvas(this.canvas, this.orientation);
-        return corrected.toDataURL('image/jpeg', 0.92);
+    // ── FRAME / ROTATION UTILS ──────────────────────────────────────────────
+
+    // Snap current video frame, apply live orientation correction
+    snap() {
+        const w = this.v.videoWidth||640, h = this.v.videoHeight||480;
+        this.c1.width = w; this.c1.height = h;
+        this.x1.drawImage(this.v, 0, 0, w, h);
+        return this.rotateCanvas(this.c1, this.orient).toDataURL('image/jpeg', 0.88);
     }
 
-    rotateCanvas(src, angle) {
-        if (angle === 0) return src;
+    // Rotate a canvas by angle, return rotated canvas
+    rotateCanvas(src, ang) {
+        if (ang === 0) return src;
         const w = src.width, h = src.height;
-        const sw = (angle === 90 || angle === 270) ? h : w;
-        const sh = (angle === 90 || angle === 270) ? w : h;
-        this.rotCanvas.width = sw; this.rotCanvas.height = sh;
-        this.rotCtx.save();
-        this.rotCtx.translate(sw/2, sh/2);
-        this.rotCtx.rotate(angle * Math.PI / 180);
-        this.rotCtx.drawImage(src, -w/2, -h/2);
-        this.rotCtx.restore();
-        return this.rotCanvas;
+        const sw = (ang===90||ang===270) ? h : w;
+        const sh = (ang===90||ang===270) ? w : h;
+        this.c3.width = sw; this.c3.height = sh;
+        this.x3.save();
+        this.x3.translate(sw/2, sh/2);
+        this.x3.rotate(ang * Math.PI/180);
+        this.x3.drawImage(src, -w/2, -h/2);
+        this.x3.restore();
+        return this.c3;
     }
 
-    // Try barcode at 0, 90, 180, 270
-    async readBarcode(imageData) {
-        if (!this.codeReader) return null;
-        const angles = [0, 90, 180, 270];
-        for (const ang of angles) {
+    // Rotate an image dataURL by angle, return new dataURL
+    async rotateImg(src, ang) {
+        if (ang === 0) return src;
+        const img = new Image(); img.src = src;
+        await new Promise(r => img.onload = r);
+        const w = img.width, h = img.height;
+        const sw = (ang===90||ang===270) ? h : w;
+        const sh = (ang===90||ang===270) ? w : h;
+        this.c2.width = sw; this.c2.height = sh;
+        this.x2.save();
+        this.x2.translate(sw/2, sh/2);
+        this.x2.rotate(ang * Math.PI/180);
+        this.x2.drawImage(img, -w/2, -h/2);
+        this.x2.restore();
+        return this.c2.toDataURL('image/jpeg', 0.88);
+    }
+
+    // Try barcode at all 4 rotations
+    async readBarcode(imgData) {
+        if (!this.zx) return null;
+        for (const ang of [0, 90, 180, 270]) {
             try {
-                const img = new Image();
-                img.src = imageData;
-                await new Promise(r => img.onload = r);
-                this.procCanvas.width = img.width;
-                this.procCanvas.height = img.height;
-                if (ang !== 0) {
-                    const sw = (ang===90||ang===270) ? img.height : img.width;
-                    const sh = (ang===90||ang===270) ? img.width  : img.height;
-                    this.procCanvas.width = sw; this.procCanvas.height = sh;
-                    this.procCtx.save();
-                    this.procCtx.translate(sw/2, sh/2);
-                    this.procCtx.rotate(ang * Math.PI/180);
-                    this.procCtx.drawImage(img, -img.width/2, -img.height/2);
-                    this.procCtx.restore();
-                } else {
-                    this.procCtx.drawImage(img, 0, 0);
-                }
-                const res = await this.codeReader.decodeFromImage(undefined, this.procCanvas.toDataURL());
+                const rotated = await this.rotateImg(imgData, ang);
+                const res = await this.zx.decodeFromImage(undefined, rotated);
                 if (res) return res.getText();
-            } catch(e) {}
+            } catch(e){}
         }
         return null;
     }
 
-    // ─── CAPTURE REFERENCE ────────────────────────────────────────────────────
+    // OCR one image, return normalised text
+    async readOCR(imgData) {
+        if (!this.tess) return '';
+        try {
+            const r = await this.tess.recognize(imgData);
+            return this.norm(r.data.text);
+        } catch(e){ return ''; }
+    }
+
+    // ── CAPTURE REFERENCE — THE KEY FIX ────────────────────────────────────
+    //
+    // Instead of reading the label once and hoping the scan angle matches,
+    // we rotate the captured image to 0°, 90°, 180°, 270° and run OCR on
+    // each rotation. This produces 4 fingerprints stored in refData.prints[].
+    //
+    // During batch scan, each frame is compared against ALL 4 fingerprints
+    // and the best score wins — so whatever angle you hold the phone, one of
+    // the 4 stored fingerprints will always be close to what OCR reads.
+    //
     async captureRef() {
-        if (this.isProc) return;
-        this.isProc = true;
-        this.el.proc.classList.add('on');
-        this.el.captBtn.disabled = true;
-        this.el.iStatus.textContent = 'READING REF...';
-        this.el.iStatus.className = 'info-val';
+        if (this.busy) return;
+        this.busy = true;
+        this.$('captBtn').disabled = true;
+        this.$('caprog').classList.add('on');
+        [0,1,2,3].forEach(i => {
+            const d = this.$('ad'+i);
+            d.classList.remove('active','done');
+        });
 
         try {
-            const img = this.captureFrame();
+            // Grab raw frame — no orientation applied, we rotate manually below
+            const w = this.v.videoWidth||640, h = this.v.videoHeight||480;
+            this.c1.width = w; this.c1.height = h;
+            this.x1.drawImage(this.v, 0, 0, w, h);
+            const rawImg = this.c1.toDataURL('image/jpeg', 0.9);
 
-            const barcode = await this.readBarcode(img);
-
-            let text = '', rawText = '';
-            if (this.tessWorker) {
-                try {
-                    const r = await this.tessWorker.recognize(img);
-                    rawText = r.data.text;
-                    text = this.normalise(rawText);
-                } catch(e) {}
-            }
-
-            const nums = this.getNumbers(text);
-
-            if (!barcode && text.length < 3) {
-                this.toast('Nothing read — move closer!', 'err');
-                this.el.iStatus.textContent = 'NO DATA';
+            // ── Try barcode first (fast path) ──
+            this.$('capMsg').textContent = 'Checking for barcode...';
+            const barcode = await this.readBarcode(rawImg);
+            if (barcode) {
+                this.refData = { barcode, prints: [] };
+                [0,1,2,3].forEach(i => this.$('ad'+i).classList.add('done'));
+                this.$('capMsg').textContent = '✓ Barcode found!';
+                await new Promise(r => setTimeout(r, 500));
+                this.finishCapture(rawImg, barcode, null);
                 return;
             }
 
-            // Store reference fingerprint
-            this.refData = {
-                barcode,
-                text,
-                rawText,
-                nums,
-                image: img,
-                words: this.getWords(text),
-                ngrams: this.getNgrams(text, 3)
-            };
+            // ── No barcode — OCR at all 4 rotations ──
+            const angles = [0, 90, 180, 270];
+            const prints = [];
 
-            this.el.refImg.src = img;
-            this.el.refThumb.style.display = 'block';
-            this.el.captBtn.style.display   = 'none';
-            this.el.scanBtn.style.display    = 'flex';
-            this.el.iStatus.textContent = 'REF SET';
-            this.el.iStatus.className = 'info-val ok';
-            this.el.iRead.textContent = (barcode || text.substring(0,25));
-            this.el.iMethod.textContent = barcode ? 'BARCODE' : 'OCR';
-            this.toast('Reference captured! ' + (barcode ? '📊 Barcode' : '🔤 Text'), 'win');
+            for (let i = 0; i < angles.length; i++) {
+                const ang = angles[i];
+                this.$('ad'+i).classList.add('active');
+                this.$('capMsg').textContent = 'Reading ' + ang + '°...';
+
+                const rotated = await this.rotateImg(rawImg, ang);
+                const text    = await this.readOCR(rotated);
+
+                this.$('ad'+i).classList.remove('active');
+                this.$('ad'+i).classList.add('done');
+
+                if (text.length > 1) {
+                    prints.push({
+                        angle:  ang,
+                        text,
+                        words:  this.words(text),
+                        nums:   this.nums(text),
+                        ngrams: this.ngrams(text, 3)
+                    });
+                }
+                await new Promise(r => setTimeout(r, 60));
+            }
+
+            if (prints.length === 0) {
+                this.toast('Nothing read — move closer or improve lighting!', 'err');
+                this.$('capMsg').textContent = 'No text found.';
+                await new Promise(r => setTimeout(r, 1500));
+                this.$('caprog').classList.remove('on');
+                return;
+            }
+
+            this.refData = { barcode: null, prints };
+            this.$('capMsg').textContent = '✓ ' + prints.length + ' angles saved!';
+            await new Promise(r => setTimeout(r, 600));
+            this.finishCapture(rawImg, null, prints);
 
         } finally {
-            this.isProc = false;
-            this.el.proc.classList.remove('on');
-            this.el.captBtn.disabled = false;
+            this.busy = false;
+            this.$('captBtn').disabled = false;
         }
     }
 
-    // ─── BATCH SCAN ───────────────────────────────────────────────────────────
+    finishCapture(img, barcode, prints) {
+        this.$('caprog').classList.remove('on');
+        this.$('rimg').src = img;
+        this.$('rthumb').style.display = 'block';
+        this.$('captBtn').style.display = 'none';
+        this.$('scanBtn').style.display = 'flex';
+        this.$('iStat').textContent = 'REF SET';
+        this.$('iStat').className = 'iv ok';
+        const label = barcode || (prints && prints[0]?.text.substring(0,20)) || 'OK';
+        this.$('iRead').textContent = label;
+        this.$('iMeth').textContent = barcode ? 'BARCODE' : 'OCR×' + (prints?.length||0);
+        this.toast('Reference ready! ' + (barcode ? '📊 Barcode' : '🔤 ' + prints.length + ' angle fingerprints'), 'win');
+    }
+
+    // ── BATCH SCAN ──────────────────────────────────────────────────────────
     startScan() {
         if (!this.refData) { this.toast('Capture reference first!', 'err'); return; }
-        this.isScanning = true; this.isPaused = false;
-        this.el.scanBtn.style.display   = 'none';
-        this.el.batchRow.style.display  = 'flex';
-        this.el.resetBtn.style.display  = 'flex';
-        this.el.iStatus.textContent = 'SCANNING';
-        this.el.iStatus.className = 'info-val';
-        this.intervalTimer = setInterval(() => this.doScan(), this.intervalMs);
+        this.scanning = true; this.paused = false;
+        this.$('scanBtn').style.display = 'none';
+        this.$('brow').style.display    = 'flex';
+        this.$('resetBtn').style.display = 'flex';
+        this.$('iStat').textContent = 'SCANNING';
+        this.$('iStat').className   = 'iv';
+        this.timer = setInterval(() => this.doScan(), this.intMs);
         this.toast('Batch scan started', 'win');
     }
 
     togglePause() {
-        this.isPaused = !this.isPaused;
-        this.el.pauseIc.textContent  = this.isPaused ? '▶️' : '⏸️';
-        this.el.pauseTxt.textContent = this.isPaused ? 'RESUME' : 'PAUSE';
-        this.el.iStatus.textContent  = this.isPaused ? 'PAUSED' : 'SCANNING';
+        this.paused = !this.paused;
+        this.$('pic').textContent  = this.paused ? '▶️' : '⏸️';
+        this.$('ptxt').textContent = this.paused ? 'RESUME' : 'PAUSE';
+        this.$('iStat').textContent = this.paused ? 'PAUSED' : 'SCANNING';
     }
 
     reset() {
-        this.isScanning = false; this.isPaused = false;
-        clearInterval(this.intervalTimer); this.intervalTimer = null;
-        this.refData = null;
-        this.matchCount = this.misCount = this.total = 0;
-        this.log = []; this.lastKey = '';
-        this.el.captBtn.style.display  = 'flex';
-        this.el.captBtn.style.display  = '';
-        this.el.scanBtn.style.display   = 'none';
-        this.el.batchRow.style.display  = 'none';
-        this.el.resetBtn.style.display  = 'none';
-        this.el.refThumb.style.display  = 'none';
-        this.el.scanBox.className = 'scan-box';
-        this.el.flash.className = 'flash';
-        this.el.bigResult.classList.remove('show','ok','bad');
-        this.el.iStatus.textContent = 'READY';
-        this.el.iStatus.className = 'info-val';
-        this.updateCounters();
+        this.scanning = false; this.paused = false;
+        clearInterval(this.timer); this.timer = null;
+        this.refData = null; this.mc = this.rc = this.tc = 0;
+        this.scanLog = []; this.lastKey = '';
+        this.$('captBtn').style.display  = '';
+        this.$('scanBtn').style.display  = 'none';
+        this.$('brow').style.display     = 'none';
+        this.$('resetBtn').style.display = 'none';
+        this.$('rthumb').style.display   = 'none';
+        this.$('sbox').className = 'sbox';
+        this.$('flash').className = 'flash';
+        this.$('bigr').classList.remove('show','ok','bad');
+        this.$('iStat').textContent = 'READY';
+        this.$('iStat').className   = 'iv';
+        this.updC();
         this.toast('Reset complete', 'win');
     }
 
-    // ─── SCAN FRAME ───────────────────────────────────────────────────────────
+    // ── SCAN FRAME ──────────────────────────────────────────────────────────
     async doScan() {
-        if (this.isProc || !this.isScanning || this.isPaused) return;
-        this.isProc = true;
+        if (this.busy || !this.scanning || this.paused) return;
+        this.busy = true;
         try {
-            const img = this.captureFrame();
-            let barcode = null, text = '', rawText = '', method = 'NONE';
+            const img = this.snap();
+            let barcode = null, text = '', method = 'NONE';
 
             barcode = await this.readBarcode(img);
             if (barcode) method = 'BARCODE';
 
-            if (!barcode && this.tessWorker) {
-                try {
-                    const r = await this.tessWorker.recognize(img);
-                    rawText = r.data.text;
-                    text = this.normalise(rawText);
-                    if (text.length > 2) method = 'OCR';
-                } catch(e) {}
+            if (!barcode && this.tess) {
+                text = await this.readOCR(img);
+                if (text.length > 2) method = 'OCR';
             }
 
             if (!barcode && text.length < 2) return;
 
-            // Debounce — don't re-count same label rapidly
+            // Debounce
             const key = barcode || text;
             const now = Date.now();
-            if (key === this.lastKey && (now - this.lastScanTime) < this.debounceMs) return;
+            if (key === this.lastKey && (now - this.lastTime) < this.debMs) return;
 
-            const result = this.compare({ barcode, text, rawText });
-            if (result.confidence < 0.05) return; // nothing readable
+            const result = this.compare(barcode, text);
+            if (result.conf < 0.05) return;
 
-            this.lastKey = key;
-            this.lastScanTime = now;
-            this.handleResult(result, barcode, text, method);
+            this.lastKey = key; this.lastTime = now;
+            this.showResult(result, barcode || text, method);
 
-        } catch(e) {} finally { this.isProc = false; }
+        } catch(e){} finally { this.busy = false; }
     }
 
-    // ─── SMART COMPARE ────────────────────────────────────────────────────────
-    compare(cur) {
-        if (!this.refData) return { match:false, confidence:0 };
+    // ── COMPARE — best-of-4-fingerprints ────────────────────────────────────
+    compare(barcode, text) {
         const ref = this.refData;
+        if (!ref) return { match:false, conf:0 };
 
-        // ── BARCODE: exact match wins immediately ──
-        if (ref.barcode && cur.barcode) {
-            const match = ref.barcode.trim() === cur.barcode.trim();
-            return { match, confidence: match ? 1.0 : 0.0, method:'BARCODE' };
+        // Barcode: exact match only
+        if (ref.barcode) {
+            const m = barcode && barcode.trim() === ref.barcode.trim();
+            return { match:m, conf: m ? 1 : 0 };
         }
 
-        // ── OCR SMART SCORING ──
-        // We use multiple weighted signals and pick the best
-        const refT = ref.text;
-        const curT = this.normalise(cur.text);
-
-        if (!refT || !curT) return { match:false, confidence:0, method:'OCR' };
-
-        let scores = [];
-
-        // 1. Character-level Levenshtein similarity
-        const levSim = this.levSimilarity(refT, curT);
-        scores.push({ w: 3.0, v: levSim });
-
-        // 2. Token (word) overlap — Jaccard
-        const refWords = ref.words;
-        const curWords = this.getWords(curT);
-        const wordJaccard = this.jaccard(refWords, curWords);
-        scores.push({ w: 3.5, v: wordJaccard });
-
-        // 3. Trigram overlap
-        const refNg = ref.ngrams;
-        const curNg = this.getNgrams(curT, 3);
-        const ngJaccard = this.jaccard(refNg, curNg);
-        scores.push({ w: 2.5, v: ngJaccard });
-
-        // 4. Number overlap (critical for part numbers)
-        const refNums = ref.nums;
-        const curNums = this.getNumbers(curT);
-        if (refNums.length > 0 && curNums.length > 0) {
-            const numMatch = this.jaccard(refNums, curNums);
-            scores.push({ w: 5.0, v: numMatch }); // highest weight — numbers are precise
-        }
-
-        // 5. Longest common substring ratio
-        const lcs = this.lcsRatio(refT, curT);
-        scores.push({ w: 2.0, v: lcs });
-
-        // 6. Contains key tokens (partial match bonus)
-        const containsBonus = this.containsBonus(refWords, curWords);
-        scores.push({ w: 2.0, v: containsBonus });
-
-        // Weighted average
-        const totalW = scores.reduce((s, x) => s + x.w, 0);
-        const weighted = scores.reduce((s, x) => s + x.w * x.v, 0) / totalW;
-
-        // Boost: if any single strong signal is very high, trust it more
-        const maxSingle = Math.max(...scores.map(x => x.v));
-        const confidence = weighted * 0.75 + maxSingle * 0.25;
-
-        return {
-            match: confidence >= this.threshold,
-            confidence: Math.min(confidence, 1.0),
-            method: 'OCR',
-            detail: { levSim, wordJaccard, ngJaccard, lcs, maxSingle }
+        // OCR: compare against ALL stored angle fingerprints, take best score
+        const cur = {
+            text,
+            words:  this.words(text),
+            nums:   this.nums(text),
+            ngrams: this.ngrams(text, 3)
         };
+
+        let best = 0;
+        for (const fp of ref.prints) {
+            const c = this.scoreAgainst(fp, cur);
+            if (c > best) best = c;
+        }
+
+        return { match: best >= this.thr, conf: Math.min(best, 1) };
     }
 
-    // ─── STRING UTILS ─────────────────────────────────────────────────────────
+    // Weighted multi-signal similarity between one fingerprint and current read
+    scoreAgainst(ref, cur) {
+        const rt = ref.text, ct = cur.text;
+        if (!rt || !ct) return 0;
 
-    normalise(t) {
-        if (!t) return '';
-        return t.toUpperCase()
-                .replace(/[^A-Z0-9\s\-]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
+        const signals = [
+            { w:3.5, v: this.jaccard(ref.words,  cur.words)  },  // word overlap
+            { w:3.0, v: this.levSim(rt, ct)                  },  // edit distance
+            { w:2.5, v: this.jaccard(ref.ngrams, cur.ngrams) },  // trigram overlap
+            { w:2.0, v: this.lcsR(rt, ct)                    },  // longest common substr
+            { w:2.0, v: this.containB(ref.words, cur.words)  },  // key word presence
+        ];
+
+        // Numbers get highest weight — part numbers are precise identifiers
+        if (ref.nums.length > 0 && cur.nums.length > 0) {
+            signals.push({ w:5.0, v: this.jaccard(ref.nums, cur.nums) });
+        }
+
+        const tw = signals.reduce((a,x) => a + x.w, 0);
+        const wv = signals.reduce((a,x) => a + x.w * x.v, 0) / tw;
+        const mx = Math.max(...signals.map(x => x.v));
+
+        // Blend weighted avg with best single signal
+        return wv * 0.72 + mx * 0.28;
     }
 
-    getWords(t) {
-        if (!t) return [];
-        return [...new Set(t.split(/\s+/).filter(w => w.length > 1))];
+    // ── STRING / SET UTILS ──────────────────────────────────────────────────
+    norm(t) {
+        return t ? t.toUpperCase().replace(/[^A-Z0-9\s\-]/g,' ').replace(/\s+/g,' ').trim() : '';
     }
-
-    getNumbers(t) {
-        if (!t) return [];
-        return [...new Set((t.match(/\d{2,}/g) || []))]; // 2+ digit sequences
-    }
-
-    getNgrams(t, n) {
+    words(t)  { return t ? [...new Set(t.split(/\s+/).filter(w => w.length > 1))] : []; }
+    nums(t)   { return t ? [...new Set((t.match(/\d{2,}/g) || []))] : []; }
+    ngrams(t, n) {
         if (!t || t.length < n) return [];
-        const out = new Set();
-        const s = t.replace(/\s+/g,'');
-        for (let i = 0; i <= s.length - n; i++) out.add(s.substring(i, i+n));
-        return [...out];
+        const s = t.replace(/\s+/g,''), o = new Set();
+        for (let i = 0; i <= s.length - n; i++) o.add(s.substring(i, i+n));
+        return [...o];
     }
-
     jaccard(a, b) {
         if (!a.length && !b.length) return 1;
         if (!a.length || !b.length) return 0;
         const sa = new Set(a), sb = new Set(b);
-        const intersection = [...sa].filter(x => sb.has(x)).length;
-        const union = new Set([...sa, ...sb]).size;
-        return intersection / union;
+        const inter = [...sa].filter(x => sb.has(x)).length;
+        return inter / new Set([...sa, ...sb]).size;
     }
-
-    levSimilarity(s1, s2) {
-        if (!s1 || !s2) return 0;
-        if (s1 === s2) return 1;
-        const longer = s1.length > s2.length ? s1 : s2;
-        const shorter = s1.length > s2.length ? s2 : s1;
-        const dist = this.levenshtein(longer, shorter);
-        return (longer.length - dist) / longer.length;
+    levSim(a, b) {
+        if (!a || !b) return 0; if (a === b) return 1;
+        const lo = a.length > b.length ? a : b;
+        const sh = a.length > b.length ? b : a;
+        return (lo.length - this.lev(lo, sh)) / lo.length;
     }
-
-    levenshtein(a, b) {
-        // Optimised — only keep 2 rows
-        const la = a.length, lb = b.length;
-        let prev = Array.from({length: lb+1}, (_,i) => i);
-        for (let i = 1; i <= la; i++) {
-            const cur = [i];
-            for (let j = 1; j <= lb; j++) {
-                cur[j] = a[i-1] === b[j-1]
-                    ? prev[j-1]
-                    : 1 + Math.min(prev[j-1], prev[j], cur[j-1]);
-            }
-            prev = cur;
+    lev(a, b) {
+        let p = Array.from({length: b.length+1}, (_,i) => i);
+        for (let i = 1; i <= a.length; i++) {
+            const c = [i];
+            for (let j = 1; j <= b.length; j++)
+                c[j] = a[i-1]===b[j-1] ? p[j-1] : 1 + Math.min(p[j-1], p[j], c[j-1]);
+            p = c;
         }
-        return prev[lb];
+        return p[b.length];
     }
-
-    lcsRatio(s1, s2) {
-        // Longest common substring / shorter length
-        if (!s1 || !s2) return 0;
-        const m = s1.length, n = s2.length;
-        let best = 0;
+    lcsR(a, b) {
+        if (!a || !b) return 0;
+        const m = a.length, n = b.length; let best = 0;
         const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
-        for (let i = 1; i <= m; i++) {
+        for (let i = 1; i <= m; i++)
             for (let j = 1; j <= n; j++) {
-                if (s1[i-1] === s2[j-1]) {
-                    dp[i][j] = dp[i-1][j-1] + 1;
-                    if (dp[i][j] > best) best = dp[i][j];
-                }
+                if (a[i-1]===b[j-1]) { dp[i][j]=dp[i-1][j-1]+1; if(dp[i][j]>best) best=dp[i][j]; }
             }
-        }
         return best / Math.min(m, n);
     }
-
-    containsBonus(refWords, curWords) {
-        // How many ref words appear in cur?
-        if (!refWords.length) return 0;
-        const curSet = new Set(curWords);
-        const hits = refWords.filter(w => curSet.has(w)).length;
-        return hits / refWords.length;
+    containB(rw, cw) {
+        if (!rw.length) return 0;
+        const cs = new Set(cw);
+        return rw.filter(w => cs.has(w)).length / rw.length;
     }
 
-    // ─── HANDLE RESULT ────────────────────────────────────────────────────────
-    handleResult(result, barcode, text, method) {
-        this.total++;
-        const ok = result.match;
-        const pct = (result.confidence * 100).toFixed(0) + '%';
-        const displayText = (barcode || text).substring(0, 40);
+    // ── SHOW RESULT ─────────────────────────────────────────────────────────
+    showResult(result, text, method) {
+        this.tc++;
+        const ok  = result.match;
+        const pct = (result.conf * 100).toFixed(0) + '%';
+        const disp = text.substring(0, 35);
         const time = new Date().toLocaleTimeString();
 
-        // Info strip
-        this.el.iRead.textContent   = displayText.substring(0,22);
-        this.el.iMethod.textContent = method;
-        this.el.iScore.textContent  = pct;
-        this.el.iStatus.textContent = ok ? 'MATCH' : 'MISMATCH';
-        this.el.iStatus.className   = 'info-val ' + (ok ? 'ok' : 'bad');
+        this.$('iRead').textContent  = disp.substring(0,22);
+        this.$('iMeth').textContent  = method;
+        this.$('iScore').textContent = pct;
+        this.$('iStat').textContent  = ok ? 'MATCH' : 'MISMATCH';
+        this.$('iStat').className    = 'iv ' + (ok ? 'ok' : 'bad');
 
-        // Flash
-        this.el.flash.className = 'flash ' + (ok ? 'ok' : 'bad');
-        setTimeout(() => this.el.flash.className = 'flash', 180);
+        const fl = this.$('flash');
+        fl.className = 'flash ' + (ok ? 'ok' : 'bad');
+        setTimeout(() => fl.className = 'flash', 160);
 
-        // Scan box
-        this.el.scanBox.className = 'scan-box ' + (ok ? 'ok' : 'bad');
-        setTimeout(() => this.el.scanBox.className = 'scan-box', 700);
+        const sb = this.$('sbox');
+        sb.className = 'sbox ' + (ok ? 'ok' : 'bad');
+        setTimeout(() => sb.className = 'sbox', 600);
 
-        // Big result
-        this.el.bigIc.textContent  = ok ? '✓' : '✗';
-        this.el.bigLbl.textContent = ok ? 'MATCH' : 'MISMATCH';
-        this.el.bigResult.classList.remove('show','ok','bad');
-        void this.el.bigResult.offsetWidth;
-        this.el.bigResult.classList.add('show', ok ? 'ok' : 'bad');
-        setTimeout(() => this.el.bigResult.classList.remove('show'), ok ? 600 : 1000);
+        const br = this.$('bigr');
+        this.$('bic').textContent  = ok ? '✓' : '✗';
+        this.$('blbl').textContent = ok ? 'MATCH' : 'MISMATCH';
+        br.classList.remove('show','ok','bad');
+        void br.offsetWidth;
+        br.classList.add('show', ok ? 'ok' : 'bad');
+        setTimeout(() => br.classList.remove('show'), ok ? 550 : 950);
 
-        // Confidence badge
-        this.el.confBadge.textContent = method + ' · ' + pct;
-        this.el.confBadge.style.display = 'block';
-        this.el.confBadge.style.color = ok ? 'var(--green)' : 'var(--red)';
-        setTimeout(() => this.el.confBadge.style.display = 'none', 1200);
+        if (ok) this.tick(); else this.buzz();
+        if (navigator.vibrate) navigator.vibrate(ok ? [35,20,35] : [160,70,160]);
 
-        // Audio
-        if (ok) this.playTick(); else this.playBuzz();
-        if (navigator.vibrate) navigator.vibrate(ok ? [40,20,40] : [180,80,180]);
-
-        if (ok) this.matchCount++; else this.misCount++;
-        this.updateCounters();
-
-        this.log.unshift({ ok, time, text: displayText, pct, method });
+        if (ok) this.mc++; else this.rc++;
+        this.updC();
+        this.scanLog.unshift({ ok, time, text:disp, pct, method });
     }
 
-    updateCounters() {
-        this.el.hMatch.textContent = '✓ ' + this.matchCount;
-        this.el.hMis.textContent   = '✗ ' + this.misCount;
-        this.el.hTot.textContent   = '∑ ' + this.total;
+    updC() {
+        this.$('hM').textContent = '✓ ' + this.mc;
+        this.$('hR').textContent = '✗ ' + this.rc;
+        this.$('hT').textContent = '∑ ' + this.tc;
     }
 
-    // ─── AUDIO ────────────────────────────────────────────────────────────────
-    playTick() {
-        if (!this.audioCtx) return;
+    // ── AUDIO ────────────────────────────────────────────────────────────────
+    tick() {
+        if (!this.ac) return;
         try {
-            const t = this.audioCtx.currentTime;
-            [[1400,1900,0,0.08,0.5],[1700,2300,0.07,0.15,0.35]].forEach(([f1,f2,start,end,gain]) => {
-                const o = this.audioCtx.createOscillator();
-                const g = this.audioCtx.createGain();
-                o.connect(g); g.connect(this.audioCtx.destination);
-                o.type = 'sine';
-                o.frequency.setValueAtTime(f1, t+start);
-                o.frequency.exponentialRampToValueAtTime(f2, t+end);
-                g.gain.setValueAtTime(gain, t+start);
-                g.gain.exponentialRampToValueAtTime(0.001, t+end+0.05);
-                o.start(t+start); o.stop(t+end+0.06);
+            const t = this.ac.currentTime;
+            [[1400,1900,0,0.07,0.45],[1700,2300,0.06,0.13,0.35]].forEach(([f1,f2,s,e,g]) => {
+                const o=this.ac.createOscillator(), gn=this.ac.createGain();
+                o.connect(gn); gn.connect(this.ac.destination);
+                o.type='sine';
+                o.frequency.setValueAtTime(f1,t+s);
+                o.frequency.exponentialRampToValueAtTime(f2,t+e);
+                gn.gain.setValueAtTime(g,t+s);
+                gn.gain.exponentialRampToValueAtTime(0.001,t+e+0.04);
+                o.start(t+s); o.stop(t+e+0.05);
             });
-        } catch(e) {}
+        } catch(e){}
     }
-
-    playBuzz() {
-        if (!this.audioCtx) return;
+    buzz() {
+        if (!this.ac) return;
         try {
-            const t = this.audioCtx.currentTime;
-            const o = this.audioCtx.createOscillator();
-            const g = this.audioCtx.createGain();
-            o.connect(g); g.connect(this.audioCtx.destination);
-            o.type = 'sawtooth';
-            o.frequency.setValueAtTime(220, t);
-            o.frequency.linearRampToValueAtTime(90, t+0.35);
-            g.gain.setValueAtTime(0.4, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t+0.45);
-            o.start(t); o.stop(t+0.46);
-        } catch(e) {}
+            const t=this.ac.currentTime, o=this.ac.createOscillator(), g=this.ac.createGain();
+            o.connect(g); g.connect(this.ac.destination);
+            o.type='sawtooth';
+            o.frequency.setValueAtTime(200,t);
+            o.frequency.linearRampToValueAtTime(80,t+0.3);
+            g.gain.setValueAtTime(0.35,t);
+            g.gain.exponentialRampToValueAtTime(0.001,t+0.4);
+            o.start(t); o.stop(t+0.41);
+        } catch(e){}
     }
 
-    // ─── SETTINGS ─────────────────────────────────────────────────────────────
-    openSettings() { this.el.setPanel.classList.add('open'); this.el.setBd.classList.add('on'); }
-    closeSettings() { this.el.setPanel.classList.remove('open'); this.el.setBd.classList.remove('on'); }
-    setThreshold(v) { this.threshold = v/100; document.getElementById('sThresh').textContent = v+'%'; }
-    setInterval(v)  {
-        this.intervalMs = +v; document.getElementById('sInterval').textContent = v+'ms';
-        if (this.isScanning) { clearInterval(this.intervalTimer); this.intervalTimer = setInterval(() => this.doScan(), this.intervalMs); }
+    // ── SETTINGS ─────────────────────────────────────────────────────────────
+    openSettings()  { this.$('sPanel').classList.add('open');    this.$('sBd').classList.add('on'); }
+    closeSettings() { this.$('sPanel').classList.remove('open'); this.$('sBd').classList.remove('on'); }
+    setThr(v) { this.thr=v/100; this.$('svThr').textContent=v+'%'; }
+    setInt(v) {
+        this.intMs=+v; this.$('svInt').textContent=v+'ms';
+        if (this.scanning) { clearInterval(this.timer); this.timer=setInterval(()=>this.doScan(),this.intMs); }
     }
-    setDebounce(v)  { this.debounceMs = +v; document.getElementById('sDebounce').textContent = v+'ms'; }
+    setDeb(v) { this.debMs=+v; this.$('svDeb').textContent=v+'ms'; }
 
-    // ─── LOG ──────────────────────────────────────────────────────────────────
-    openLog() { this.renderLog(); this.el.logPanel.classList.add('open'); this.el.logBd.classList.add('on'); }
-    closeLog() { this.el.logPanel.classList.remove('open'); this.el.logBd.classList.remove('on'); }
-
+    // ── LOG ──────────────────────────────────────────────────────────────────
+    openLog()  { this.renderLog(); this.$('lPanel').classList.add('open');    this.$('lBd').classList.add('on'); }
+    closeLog() {                   this.$('lPanel').classList.remove('open'); this.$('lBd').classList.remove('on'); }
     renderLog() {
-        this.el.lMatch.textContent = this.matchCount;
-        this.el.lMis.textContent   = this.misCount;
-        this.el.lTot.textContent   = this.total;
-        this.el.logList.innerHTML  = this.log.slice(0,60).map((e,i) => `
-            <div class="log-entry ${e.ok?'ok':'bad'}">
-                <div class="log-ic">${e.ok?'✓':'✗'}</div>
-                <div class="log-info">
-                    <div class="log-time">#${this.log.length-i} · ${e.time} · ${e.method} · ${e.pct}</div>
-                    <div class="log-txt">${e.text}</div>
+        this.$('lM').textContent = this.mc;
+        this.$('lR').textContent = this.rc;
+        this.$('lT').textContent = this.tc;
+        this.$('lList').innerHTML = this.scanLog.slice(0,60).map((e,i) => `
+            <div class="lent ${e.ok?'ok':'bad'}">
+                <div class="lic">${e.ok?'✓':'✗'}</div>
+                <div class="linf">
+                    <div class="ltime">#${this.scanLog.length-i} · ${e.time} · ${e.method} · ${e.pct}</div>
+                    <div class="ltxt">${e.text}</div>
                 </div>
             </div>`).join('');
     }
-
     clearLog() {
-        if (!confirm('Clear scan log?')) return;
-        this.log = []; this.matchCount = this.misCount = this.total = 0;
-        this.updateCounters(); this.renderLog();
-        this.toast('Log cleared', 'win');
+        if (!confirm('Clear log?')) return;
+        this.scanLog=[]; this.mc=this.rc=this.tc=0;
+        this.updC(); this.renderLog(); this.toast('Cleared','win');
     }
-
     exportCSV() {
-        if (!this.log.length) { this.toast('No data yet', 'err'); return; }
-        const rows = [['No','Time','Result','Method','Score','Text'],
-            ...this.log.map((e,i) => [this.log.length-i, e.time, e.ok?'MATCH':'MISMATCH', e.method, e.pct, e.text])];
-        const csv = rows.map(r => r.map(c => '"'+c+'"').join(',')).join('\n');
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-        a.download = 'label_verify_' + new Date().toISOString().slice(0,10) + '.csv';
+        if (!this.scanLog.length) { this.toast('No data','err'); return; }
+        const rows=[['No','Time','Result','Method','Score','Text'],
+            ...this.scanLog.map((e,i)=>[this.scanLog.length-i,e.time,e.ok?'MATCH':'MISMATCH',e.method,e.pct,e.text])];
+        const csv=rows.map(r=>r.map(c=>'"'+c+'"').join(',')).join('\n');
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+        a.download='label_verify_'+new Date().toISOString().slice(0,10)+'.csv';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        this.toast('CSV exported!', 'win');
+        this.toast('CSV exported!','win');
     }
 
-    // ─── TOAST ────────────────────────────────────────────────────────────────
+    // ── TOAST ─────────────────────────────────────────────────────────────────
     toast(msg, type) {
-        const t = this.el.toast;
-        t.textContent = msg;
-        t.className = 'toast up ' + (type||'');
-        clearTimeout(this._toastTimer);
-        this._toastTimer = setTimeout(() => t.classList.remove('up'), 2500);
+        const t = this.$('toast');
+        t.textContent = msg; t.className = 'toast up ' + (type||'');
+        clearTimeout(this._tt);
+        this._tt = setTimeout(() => t.classList.remove('up'), 2600);
     }
 }
 
-const app = new LabelVerify();
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) app.audioCtx?.resume?.();
-});
+const app = new LV();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) app.ac?.resume?.(); });
 </script>
 </body>
 </html>
