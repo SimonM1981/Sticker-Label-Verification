@@ -35,7 +35,7 @@
             position: relative;
         }
 
-        /* Header - compact */
+        /* Header */
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 8px 12px;
@@ -59,7 +59,7 @@
             line-height: 1.2;
         }
 
-        /* Main Content Area */
+        /* Main Content */
         .main-content {
             flex: 1;
             display: flex;
@@ -131,11 +131,11 @@
 
         .corner-frame {
             position: absolute;
-            top: 20%;
-            left: 10%;
-            right: 10%;
-            bottom: 20%;
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            top: 15%;
+            left: 8%;
+            right: 8%;
+            bottom: 25%;
+            border: 2px solid rgba(255, 255, 255, 0.6);
             border-radius: 8px;
         }
 
@@ -143,8 +143,8 @@
         .corner-frame::after {
             content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border-color: #00ff88;
             border-style: solid;
             transition: all 0.3s;
@@ -167,31 +167,32 @@
         .corner-frame.match::before,
         .corner-frame.match::after {
             border-color: #00ff88;
-            box-shadow: 0 0 15px #00ff88;
+            box-shadow: 0 0 20px #00ff88;
         }
 
         .corner-frame.mismatch::before,
         .corner-frame.mismatch::after {
             border-color: #ff4444;
-            box-shadow: 0 0 15px #ff4444;
+            box-shadow: 0 0 20px #ff4444;
         }
 
-        /* Result Overlay */
+        /* Result Overlay - BIGGER */
         .result-overlay {
             position: absolute;
-            top: 40%;
+            top: 35%;
             left: 50%;
             transform: translate(-50%, -50%);
-            padding: 14px 24px;
-            border-radius: 14px;
-            font-size: 20px;
-            font-weight: 800;
+            padding: 24px 36px;
+            border-radius: 20px;
+            font-size: 28px;
+            font-weight: 900;
             text-align: center;
             z-index: 20;
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
-            min-width: 160px;
+            min-width: 220px;
+            backdrop-filter: blur(10px);
         }
 
         .result-overlay.show {
@@ -199,22 +200,31 @@
         }
 
         .result-overlay.match {
-            background: rgba(0, 200, 83, 0.92);
-            box-shadow: 0 0 30px rgba(0, 200, 83, 0.5);
+            background: rgba(0, 200, 83, 0.95);
+            box-shadow: 0 0 40px rgba(0, 200, 83, 0.6);
+            border: 2px solid #00ff88;
         }
 
         .result-overlay.mismatch {
-            background: rgba(244, 67, 54, 0.92);
-            box-shadow: 0 0 30px rgba(244, 67, 54, 0.5);
+            background: rgba(244, 67, 54, 0.95);
+            box-shadow: 0 0 40px rgba(244, 67, 54, 0.6);
+            border: 2px solid #ff4444;
         }
 
         .result-overlay .result-icon {
-            font-size: 40px;
-            margin-bottom: 4px;
+            font-size: 56px;
+            margin-bottom: 8px;
         }
 
         .result-overlay .result-text {
-            font-size: 16px;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .result-overlay .result-confidence {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 600;
         }
 
         /* Status Bar */
@@ -231,13 +241,14 @@
         }
 
         .status-pill {
-            background: rgba(0,0,0,0.75);
-            padding: 4px 8px;
+            background: rgba(0,0,0,0.8);
+            padding: 5px 10px;
             border-radius: 16px;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             backdrop-filter: blur(10px);
             white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .status-pill.match-count {
@@ -263,8 +274,8 @@
             position: absolute;
             top: 6px;
             right: 6px;
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             border-radius: 6px;
             overflow: hidden;
             border: 2px solid rgba(255,255,255,0.5);
@@ -283,13 +294,14 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             font-size: 8px;
             text-align: center;
             padding: 1px;
+            font-weight: 600;
         }
 
-        /* Controls - FIXED for mobile */
+        /* Controls */
         .controls {
             background: #1a1a2a;
             padding: 8px 10px 12px 10px;
@@ -649,25 +661,66 @@
             opacity: 1;
         }
 
-        /* Extracted Text Display */
-        .extracted-text {
+        /* OCR Result Display - ALWAYS VISIBLE */
+        .ocr-result-box {
             position: absolute;
-            bottom: 80px;
+            bottom: 85px;
             left: 6px;
             right: 6px;
-            background: rgba(0,0,0,0.8);
-            padding: 6px;
-            border-radius: 6px;
-            font-size: 10px;
+            background: rgba(0,0,0,0.9);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 11px;
             font-family: 'Courier New', monospace;
-            max-height: 50px;
-            overflow-y: auto;
             z-index: 15;
             display: none;
             word-break: break-all;
+            border: 1px solid rgba(255,255,255,0.2);
+            max-height: 70px;
+            overflow-y: auto;
         }
 
-        .extracted-text.active {
+        .ocr-result-box.active {
+            display: block;
+        }
+
+        .ocr-result-box .ocr-label {
+            color: #888;
+            font-size: 9px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .ocr-result-box .ocr-text {
+            color: #0f0;
+            font-weight: 600;
+        }
+
+        .ocr-result-box .ocr-compare {
+            color: #ffd700;
+            margin-top: 2px;
+        }
+
+        /* Debug panel */
+        .debug-panel {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            right: 4px;
+            background: rgba(0,0,0,0.9);
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-family: monospace;
+            color: #0f0;
+            z-index: 15;
+            max-height: 50px;
+            overflow-y: auto;
+            display: none;
+            border: 1px solid rgba(0,255,0,0.3);
+        }
+
+        .debug-panel.active {
             display: block;
         }
 
@@ -679,14 +732,15 @@
             transform: translateX(-50%) translateY(100px);
             background: #333;
             color: white;
-            padding: 8px 16px;
+            padding: 10px 18px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 13px;
             z-index: 200;
             transition: transform 0.3s;
             white-space: nowrap;
             max-width: 90vw;
             text-align: center;
+            font-weight: 600;
         }
 
         .toast.show {
@@ -703,41 +757,50 @@
             bottom: 70px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             padding: 4px 12px;
             border-radius: 16px;
             font-size: 11px;
-            font-weight: 600;
+            font-weight: 700;
             color: #ffd700;
             z-index: 15;
             display: none;
             animation: pulse 1s infinite;
+            border: 1px solid rgba(255,215,0,0.3);
         }
 
         .batch-indicator.active {
             display: block;
         }
 
-        /* Debug panel */
-        .debug-panel {
+        /* Manual scan button overlay */
+        .manual-scan-btn {
             position: absolute;
-            bottom: 4px;
-            left: 4px;
-            right: 4px;
-            background: rgba(0,0,0,0.85);
-            padding: 6px;
-            border-radius: 6px;
-            font-size: 9px;
-            font-family: monospace;
-            color: #0f0;
-            z-index: 15;
-            max-height: 60px;
-            overflow-y: auto;
+            bottom: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 30;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
             display: none;
         }
 
-        .debug-panel.active {
-            display: block;
+        .manual-scan-btn.active {
+            display: flex;
+        }
+
+        .manual-scan-btn:active {
+            transform: translateX(-50%) scale(0.95);
         }
     </style>
 <base target="_blank">
@@ -747,7 +810,7 @@
         <!-- Header -->
         <div class="header">
             <h1>📦 Sticker Label Verification</h1>
-            <div class="subtitle">Batch Mode | Continuous Scanning</div>
+            <div class="subtitle">Batch Mode | Smart OCR Matching</div>
         </div>
 
         <!-- Main Content -->
@@ -756,16 +819,16 @@
             <div id="startScreen" class="start-screen">
                 <div class="logo-icon">🏷️</div>
                 <div class="start-title">Label Verify</div>
-                <div class="start-desc">Capture a reference sticker, then scan multiple labels continuously without stopping</div>
+                <div class="start-desc">Point camera at sticker label, capture reference, then scan continuously</div>
                 <ul class="feature-list">
-                    <li>Continuous Batch Scanning</li>
-                    <li>Auto-match without stopping</li>
-                    <li>Full scan history log</li>
-                    <li>Export results to CSV</li>
-                    <li>Angle-Independent OCR</li>
+                    <li>Smart OCR text recognition</li>
+                    <li>Barcode/QR code reading</li>
+                    <li>Continuous batch scanning</li>
+                    <li>Auto match/mismatch detect</li>
+                    <li>Export scan history to CSV</li>
                 </ul>
                 <button class="btn btn-primary" id="startBtn" onclick="app.start()" style="max-width: 300px;">
-                    <span>📷</span> Start Verification
+                    <span>📷</span> Start Camera
                 </button>
             </div>
 
@@ -779,6 +842,11 @@
                     <div class="corner-frame" id="cornerFrame"></div>
                     <div class="scan-line" id="scanLine"></div>
                 </div>
+
+                <!-- Manual Scan Button -->
+                <button class="manual-scan-btn" id="manualScanBtn" onclick="app.manualScan()">
+                    📸
+                </button>
 
                 <!-- Status Bar -->
                 <div class="status-bar" id="statusBar" style="display: none;">
@@ -795,28 +863,35 @@
 
                 <!-- Batch Indicator -->
                 <div class="batch-indicator" id="batchIndicator">
-                    BATCH MODE - Scanning...
+                    ⚡ BATCH MODE
                 </div>
 
                 <!-- Processing Indicator -->
                 <div class="processing-indicator" id="processing">
                     <div class="spinner"></div>
-                    <div class="processing-text">Processing...</div>
+                    <div class="processing-text">Reading label...</div>
                 </div>
 
                 <!-- Result Overlay -->
                 <div class="result-overlay" id="resultOverlay">
                     <div class="result-icon" id="resultIcon">✓</div>
                     <div class="result-text" id="resultText">MATCH</div>
+                    <div class="result-confidence" id="resultConfidence">85%</div>
                 </div>
 
-                <!-- Extracted Text Debug -->
-                <div class="extracted-text" id="extractedText"></div>
+                <!-- OCR Result Box -->
+                <div class="ocr-result-box" id="ocrResultBox">
+                    <div class="ocr-label">Last OCR Read:</div>
+                    <div class="ocr-text" id="ocrText">Waiting...</div>
+                    <div class="ocr-compare" id="ocrCompare">Compare: --</div>
+                </div>
+
+                <!-- Debug Panel -->
                 <div class="debug-panel" id="debugPanel"></div>
             </div>
         </div>
 
-        <!-- Controls - FIXED BOTTOM -->
+        <!-- Controls -->
         <div class="controls" id="controls" style="display: none;">
             <div class="step-indicator">
                 <div class="step-dot active" id="step1"></div>
@@ -900,10 +975,12 @@
                 this.isProcessing = false;
                 this.scanLog = [];
                 this.lastScanTime = 0;
-                this.minScanInterval = 2000;
+                this.minScanInterval = 1500;
                 this.lastScannedText = '';
                 this.isDemoMode = false;
+                this.matchThreshold = 0.60; // Lowered from 0.75
 
+                // DOM elements
                 this.startScreen = document.getElementById('startScreen');
                 this.controls = document.getElementById('controls');
                 this.captureBtn = document.getElementById('captureBtn');
@@ -925,10 +1002,10 @@
                 this.resultOverlay = document.getElementById('resultOverlay');
                 this.resultIcon = document.getElementById('resultIcon');
                 this.resultText = document.getElementById('resultText');
+                this.resultConfidence = document.getElementById('resultConfidence');
                 this.processing = document.getElementById('processing');
                 this.step1 = document.getElementById('step1');
                 this.step2 = document.getElementById('step2');
-                this.extractedText = document.getElementById('extractedText');
                 this.toast = document.getElementById('toast');
                 this.batchIndicator = document.getElementById('batchIndicator');
                 this.logCount = document.getElementById('logCount');
@@ -940,6 +1017,10 @@
                 this.statTotal = document.getElementById('statTotal');
                 this.debugPanel = document.getElementById('debugPanel');
                 this.startBtn = document.getElementById('startBtn');
+                this.ocrResultBox = document.getElementById('ocrResultBox');
+                this.ocrText = document.getElementById('ocrText');
+                this.ocrCompare = document.getElementById('ocrCompare');
+                this.manualScanBtn = document.getElementById('manualScanBtn');
             }
 
             log(msg) {
@@ -958,44 +1039,69 @@
                         throw new Error('Camera API not supported');
                     }
 
-                    this.log('Requesting camera...');
+                    this.log('Requesting camera (HD)...');
+                    // Use higher resolution for better OCR [^1^][^2^]
                     this.stream = await navigator.mediaDevices.getUserMedia({
-                        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                        video: {
+                            facingMode: { ideal: 'environment' },
+                            width: { min: 1280, ideal: 1920 },
+                            height: { min: 720, ideal: 1080 }
+                        },
                         audio: false
                     });
 
-                    this.log('Camera stream OK');
+                    this.log('Camera stream obtained');
                     this.video.srcObject = this.stream;
 
                     await new Promise((resolve, reject) => {
-                        this.video.onloadedmetadata = () => { this.log('Video ready'); resolve(); };
+                        this.video.onloadedmetadata = () => {
+                            this.log('Video ready: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
+                            resolve();
+                        };
                         this.video.onerror = (e) => reject(new Error('Video error'));
-                        setTimeout(() => reject(new Error('Timeout')), 5000);
+                        setTimeout(() => reject(new Error('Video timeout')), 8000);
                     });
 
                     this.video.classList.add('active');
+                    this.log('Video playing at ' + this.video.videoWidth + 'x' + this.video.videoHeight);
 
+                    // Initialize ZXing
                     if (typeof ZXing !== 'undefined') {
-                        this.codeReader = new ZXing.BrowserMultiFormatReader();
-                        this.log('ZXing OK');
+                        try {
+                            this.codeReader = new ZXing.BrowserMultiFormatReader();
+                            this.log('ZXing barcode reader ready');
+                        } catch(e) {
+                            this.log('ZXing init failed: ' + e.message);
+                        }
+                    } else {
+                        this.log('ZXing library not loaded');
                     }
 
-                    this.log('Loading Tesseract...');
+                    // Initialize Tesseract
+                    this.log('Loading Tesseract OCR...');
                     if (typeof Tesseract !== 'undefined') {
-                        this.tesseractWorker = await Tesseract.createWorker();
-                        await this.tesseractWorker.load();
-                        await this.tesseractWorker.loadLanguage('eng');
-                        await this.tesseractWorker.initialize('eng');
-                        this.log('Tesseract OK');
+                        try {
+                            this.tesseractWorker = await Tesseract.createWorker();
+                            await this.tesseractWorker.load();
+                            await this.tesseractWorker.loadLanguage('eng');
+                            await this.tesseractWorker.initialize('eng');
+                            this.log('Tesseract OCR ready');
+                        } catch(e) {
+                            this.log('Tesseract init failed: ' + e.message);
+                        }
+                    } else {
+                        this.log('Tesseract library not loaded');
                     }
 
+                    // Show camera UI
                     this.startScreen.classList.add('hidden');
                     this.controls.style.display = 'flex';
                     this.statusBar.style.display = 'flex';
                     this.scanOverlay.style.display = 'block';
                     this.debugPanel.classList.add('active');
+                    this.ocrResultBox.classList.add('active');
 
-                    this.showToast('Camera ready! Tap Capture Reference', 'success');
+                    this.showToast('Camera ON! Point at label & tap Capture', 'success');
                     this.log('=== APP READY ===');
 
                 } catch (err) {
@@ -1003,9 +1109,9 @@
                     this.log('ERROR: ' + err.message);
                     this.showToast('Camera error: ' + err.message, 'error');
                     this.startBtn.disabled = false;
-                    this.startBtn.innerHTML = '<span>📷</span> Start Verification';
+                    this.startBtn.innerHTML = '<span>📷</span> Start Camera';
 
-                    if (confirm('Camera not available. Start DEMO mode?')) {
+                    if (confirm('Camera failed. Start DEMO mode to test UI?')) {
                         this.startDemoMode();
                     }
                 }
@@ -1013,25 +1119,29 @@
 
             startDemoMode() {
                 this.isDemoMode = true;
-                this.log('DEMO MODE');
+                this.log('DEMO MODE ACTIVE');
                 this.canvas.width = 640;
                 this.canvas.height = 480;
-                this.ctx.fillStyle = '#333';
+                this.ctx.fillStyle = '#222';
                 this.ctx.fillRect(0, 0, 640, 480);
                 this.ctx.fillStyle = 'white';
                 this.ctx.font = 'bold 30px Arial';
                 this.ctx.fillText('DEMO MODE', 200, 200);
+                this.ctx.font = '18px Arial';
+                this.ctx.fillText('Simulated camera feed', 190, 250);
 
                 this.startScreen.classList.add('hidden');
                 this.controls.style.display = 'flex';
                 this.statusBar.style.display = 'flex';
                 this.scanOverlay.style.display = 'block';
                 this.debugPanel.classList.add('active');
+                this.ocrResultBox.classList.add('active');
 
+                // Pre-set reference for demo
                 this.referenceData = {
-                    barcode: 'DEMO123',
-                    text: 'DEMOLABEL12345',
-                    rawText: 'DEMO LABEL 12345',
+                    barcode: 'DEMO123456',
+                    text: 'DEMOLABEL123456789',
+                    rawText: 'DEMO LABEL 123456789',
                     image: this.canvas.toDataURL('image/jpeg'),
                     timestamp: Date.now()
                 };
@@ -1043,16 +1153,21 @@
                 this.step2.classList.add('active');
                 this.captureBtn.style.display = 'none';
                 this.verifyBtn.style.display = 'flex';
-                this.showToast('DEMO MODE ready', 'info');
+
+                this.ocrText.textContent = 'DEMO LABEL 123456789';
+                this.ocrCompare.textContent = 'Reference set (DEMO)';
+
+                this.showToast('DEMO MODE: Reference pre-loaded', 'info');
+                this.log('Demo ready - tap Start Batch Scan');
             }
 
             async captureReference() {
-                this.log('=== CAPTURE REFERENCE ===');
-                if (this.isProcessing) { this.log('Already processing'); return; }
+                this.log('=== CAPTURING REFERENCE ===');
+                if (this.isProcessing) { this.log('Busy, skip'); return; }
                 this.isProcessing = true;
                 this.processing.classList.add('active');
-                this.statusText.textContent = 'Processing...';
-                this.log('Capturing frame...');
+                this.statusText.textContent = 'Reading...';
+                this.captureBtn.disabled = true;
 
                 try {
                     let imageData;
@@ -1063,31 +1178,51 @@
                     }
                     this.log('Frame captured');
 
+                    // Try barcode first (fast)
                     let barcode = null;
-                    let text = '';
-
                     if (this.codeReader) {
-                        try { barcode = await this.readBarcode(imageData); } catch(e) {}
-                        this.log('Barcode: ' + (barcode || 'none'));
+                        try {
+                            barcode = await this.readBarcode(imageData);
+                            if (barcode) this.log('Barcode found: ' + barcode);
+                        } catch(e) { this.log('No barcode'); }
                     }
 
+                    // OCR text
+                    let text = '';
+                    let rawText = '';
                     if (this.tesseractWorker) {
                         try {
+                            this.log('Running OCR...');
                             const ocrResult = await this.tesseractWorker.recognize(imageData);
-                            text = this.normalizeText(ocrResult.data.text);
-                            this.log('OCR: ' + text.substring(0, 40));
+                            rawText = ocrResult.data.text;
+                            text = this.normalizeText(rawText);
+                            this.log('OCR result: [' + text + ']');
+                            this.log('Raw: [' + rawText.substring(0, 50) + ']');
                         } catch(e) {
-                            this.log('OCR failed: ' + e.message);
-                            text = 'NO_TEXT_' + Date.now();
+                            this.log('OCR error: ' + e.message);
+                            text = 'OCR_FAILED_' + Date.now();
+                            rawText = text;
                         }
                     } else {
-                        text = 'DEMO_REF_' + Date.now();
+                        text = 'NO_OCR_' + Date.now();
+                        rawText = text;
                     }
 
+                    if (text.length < 3) {
+                        this.log('WARNING: Text too short!');
+                        this.showToast('No text detected! Try closer/higher contrast', 'error');
+                        this.isProcessing = false;
+                        this.processing.classList.remove('active');
+                        this.captureBtn.disabled = false;
+                        this.statusText.textContent = 'No text found';
+                        return;
+                    }
+
+                    // Save reference
                     this.referenceData = {
                         barcode: barcode,
                         text: text,
-                        rawText: text,
+                        rawText: rawText,
                         image: imageData,
                         timestamp: Date.now()
                     };
@@ -1102,12 +1237,12 @@
                     this.captureBtn.style.display = 'none';
                     this.verifyBtn.style.display = 'flex';
 
-                    this.statusText.textContent = 'Reference captured';
-                    this.showToast('Reference captured! Now Start Batch Scan', 'success');
-                    this.log('Reference saved: ' + text.substring(0, 30));
+                    this.statusText.textContent = 'Reference OK';
+                    this.showToast('Reference captured! Text: ' + text.substring(0, 20), 'success');
+                    this.log('Reference saved: ' + text);
 
-                    this.extractedText.textContent = 'REF: ' + text.substring(0, 80);
-                    this.extractedText.classList.add('active');
+                    this.ocrText.textContent = text.substring(0, 60);
+                    this.ocrCompare.textContent = 'Reference captured!';
 
                 } catch (err) {
                     this.log('CAPTURE ERROR: ' + err.message);
@@ -1115,6 +1250,7 @@
                 } finally {
                     this.isProcessing = false;
                     this.processing.classList.remove('active');
+                    this.captureBtn.disabled = false;
                 }
             }
 
@@ -1132,12 +1268,20 @@
                 this.stopBtn.style.display = 'flex';
                 this.scanLine.style.display = 'block';
                 this.batchIndicator.classList.add('active');
+                this.manualScanBtn.classList.add('active');
                 this.statusText.textContent = 'Scanning...';
                 this.statusText.classList.add('scanning');
 
+                this.log('Auto-scan every 1.5s + manual scan available');
                 this.scanInterval = setInterval(() => this.scanFrame(), 1500);
-                this.showToast('Batch scanning ON!', 'success');
-                this.log('Batch scan running');
+                this.showToast('Batch scanning! Show labels to camera', 'success');
+            }
+
+            // MANUAL SCAN - for testing
+            async manualScan() {
+                this.log('=== MANUAL SCAN ===');
+                if (this.isProcessing) return;
+                await this.scanFrame();
             }
 
             togglePause() {
@@ -1149,6 +1293,7 @@
                     this.statusText.classList.remove('scanning');
                     this.batchIndicator.classList.remove('active');
                     this.scanLine.style.display = 'none';
+                    this.manualScanBtn.classList.remove('active');
                     this.log('Paused');
                     this.showToast('Paused', 'info');
                 } else {
@@ -1158,13 +1303,14 @@
                     this.statusText.classList.add('scanning');
                     this.batchIndicator.classList.add('active');
                     this.scanLine.style.display = 'block';
+                    this.manualScanBtn.classList.add('active');
                     this.log('Resumed');
                     this.showToast('Resumed', 'success');
                 }
             }
 
             stopVerification() {
-                this.log('=== STOP / RESET ===');
+                this.log('=== RESET ===');
                 this.isVerifying = false;
                 this.isPaused = false;
                 if (this.scanInterval) { clearInterval(this.scanInterval); this.scanInterval = null; }
@@ -1177,6 +1323,7 @@
                 this.captureBtn.style.display = 'flex';
                 this.scanLine.style.display = 'none';
                 this.batchIndicator.classList.remove('active');
+                this.manualScanBtn.classList.remove('active');
                 this.statusText.textContent = 'Ready';
                 this.statusText.classList.remove('scanning');
                 this.cornerFrame.classList.remove('match', 'mismatch');
@@ -1193,9 +1340,10 @@
                 this.step1.classList.add('active');
                 this.step1.classList.remove('completed');
                 this.step2.classList.remove('active');
-                this.extractedText.classList.remove('active');
+                this.ocrText.textContent = 'Waiting...';
+                this.ocrCompare.textContent = 'Compare: --';
                 this.logCount.textContent = '0';
-                this.log('Reset done');
+
                 this.showToast('Reset complete', 'success');
             }
 
@@ -1204,38 +1352,79 @@
                 this.isProcessing = true;
 
                 try {
-                    let imageData, barcode, text;
+                    let imageData, barcode, text, rawText;
 
                     if (this.isDemoMode) {
+                        // Simulate with random results for demo testing
                         imageData = this.canvas.toDataURL('image/jpeg');
                         barcode = null;
-                        const isMatch = Math.random() > 0.3;
-                        text = isMatch ? this.referenceData.text : 'WRONG_LABEL_' + Math.floor(Math.random() * 1000);
-                    } else {
-                        imageData = await this.captureFrame();
-                        barcode = this.codeReader ? await this.readBarcode(imageData) : null;
-                        if (this.tesseractWorker) {
-                            const ocrResult = await this.tesseractWorker.recognize(imageData);
-                            text = this.normalizeText(ocrResult.data.text);
+                        const rand = Math.random();
+                        if (rand > 0.4) {
+                            // Match
+                            text = this.referenceData.text;
+                            rawText = this.referenceData.rawText;
+                        } else if (rand > 0.2) {
+                            // Partial match (similar)
+                            text = this.referenceData.text.substring(0, Math.floor(this.referenceData.text.length * 0.7)) + 'XYZ';
+                            rawText = text;
                         } else {
-                            text = 'NO_OCR_' + Date.now();
+                            // Mismatch
+                            text = 'WRONG_LABEL_' + Math.floor(Math.random() * 9999);
+                            rawText = text;
+                        }
+                        this.log('DEMO scan: ' + text.substring(0, 30));
+                    } else {
+                        // Real camera scan
+                        imageData = await this.captureFrame();
+
+                        // Try barcode
+                        barcode = null;
+                        if (this.codeReader) {
+                            try { barcode = await this.readBarcode(imageData); } catch(e) {}
+                        }
+
+                        // OCR
+                        text = '';
+                        rawText = '';
+                        if (this.tesseractWorker) {
+                            try {
+                                const ocrResult = await this.tesseractWorker.recognize(imageData);
+                                rawText = ocrResult.data.text;
+                                text = this.normalizeText(rawText);
+                                this.log('OCR read: [' + text + ']');
+                            } catch(e) {
+                                this.log('OCR failed: ' + e.message);
+                                text = '';
+                            }
                         }
                     }
 
-                    if (text.length < 3) { this.isProcessing = false; return; }
-
-                    const now = Date.now();
-                    if (text === this.lastScannedText && (now - this.lastScanTime) < this.minScanInterval) {
+                    // Skip if no meaningful text
+                    if (!text || text.length < 2) {
+                        this.log('No text detected in frame');
                         this.isProcessing = false;
                         return;
                     }
 
-                    const result = this.compareLabels({ barcode: barcode, text: text });
+                    // Debounce - skip duplicates
+                    const now = Date.now();
+                    if (text === this.lastScannedText && (now - this.lastScanTime) < this.minScanInterval) {
+                        this.log('Duplicate scan, skip');
+                        this.isProcessing = false;
+                        return;
+                    }
 
-                    if (result.confidence > 0.3) {
+                    // Compare
+                    const result = this.compareLabels({ barcode: barcode, text: text });
+                    this.log('Compare result: match=' + result.match + ' conf=' + (result.confidence*100).toFixed(1) + '%');
+
+                    // ALWAYS show result if confidence > 0.2 (was 0.3)
+                    if (result.confidence > 0.2) {
                         this.lastScanTime = now;
                         this.lastScannedText = text;
-                        this.handleResult(result, text, imageData);
+                        this.handleResult(result, text, rawText, imageData);
+                    } else {
+                        this.log('Too low confidence, ignored');
                     }
 
                 } catch (err) {
@@ -1247,11 +1436,21 @@
 
             captureFrame() {
                 return new Promise((resolve, reject) => {
-                    if (!this.video.videoWidth) { reject(new Error('Video not ready')); return; }
+                    if (!this.video.videoWidth) {
+                        reject(new Error('Video not ready'));
+                        return;
+                    }
                     this.canvas.width = this.video.videoWidth;
                     this.canvas.height = this.video.videoHeight;
                     this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-                    resolve(this.canvas.toDataURL('image/jpeg', 0.8));
+
+                    // Optional: draw a crop region for better OCR
+                    // const cropX = this.canvas.width * 0.1;
+                    // const cropY = this.canvas.height * 0.15;
+                    // const cropW = this.canvas.width * 0.8;
+                    // const cropH = this.canvas.height * 0.6;
+
+                    resolve(this.canvas.toDataURL('image/jpeg', 0.9));
                 });
             }
 
@@ -1263,7 +1462,12 @@
             }
 
             normalizeText(text) {
-                return text.toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/\s+/g, ' ').trim();
+                if (!text) return '';
+                return text
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9\s]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
             }
 
             compareLabels(current) {
@@ -1272,29 +1476,45 @@
                 let score = 0;
                 let maxScore = 0;
 
+                // Barcode comparison (highest weight)
                 if (this.referenceData.barcode && current.barcode) {
                     maxScore += 50;
-                    if (this.referenceData.barcode === current.barcode) score += 50;
+                    if (this.referenceData.barcode === current.barcode) {
+                        score += 50;
+                        this.log('Barcode MATCH!');
+                    }
                 }
 
                 const refText = this.referenceData.text;
                 const curText = current.text;
 
-                maxScore += 30;
-                if (refText === curText) score += 30;
+                // Exact match
+                maxScore += 25;
+                if (refText === curText) {
+                    score += 25;
+                    this.log('Exact text match');
+                }
 
+                // Contains check (one contains the other)
                 maxScore += 20;
-                if (refText.length > 10 && curText.length > 10) {
-                    if (refText.includes(curText.substring(0, Math.min(20, curText.length))) ||
-                        curText.includes(refText.substring(0, Math.min(20, refText.length)))) {
+                if (refText.length > 5 && curText.length > 5) {
+                    const shorter = refText.length < curText.length ? refText : curText;
+                    const longer = refText.length < curText.length ? curText : refText;
+                    if (longer.includes(shorter.substring(0, Math.min(15, shorter.length)))) {
                         score += 20;
+                        this.log('Contains match');
                     }
                 }
 
+                // Similarity ratio (Levenshtein)
                 maxScore += 20;
                 const similarity = this.calculateSimilarity(refText, curText);
-                if (similarity > 0.7) score += 20 * similarity;
+                if (similarity > 0.5) { // Lowered from 0.7
+                    score += 20 * similarity;
+                    this.log('Similarity: ' + (similarity*100).toFixed(0) + '%');
+                }
 
+                // Key numbers comparison
                 const refNumbers = this.extractNumbers(refText);
                 const curNumbers = this.extractNumbers(curText);
                 if (refNumbers.length > 0 && curNumbers.length > 0) {
@@ -1302,14 +1522,24 @@
                     const commonNumbers = refNumbers.filter(n => curNumbers.includes(n));
                     if (commonNumbers.length > 0) {
                         score += 10 * (commonNumbers.length / Math.max(refNumbers.length, curNumbers.length));
+                        this.log('Numbers match: ' + commonNumbers.join(','));
                     }
                 }
 
                 const confidence = maxScore > 0 ? score / maxScore : 0;
-                return { match: confidence > 0.75, confidence: confidence, barcodeMatch: this.referenceData.barcode === current.barcode && !!this.referenceData.barcode, textSimilarity: similarity };
+
+                this.log('Final score: ' + score + '/' + maxScore + ' = ' + (confidence*100).toFixed(1) + '%');
+
+                return {
+                    match: confidence >= this.matchThreshold, // 60% threshold
+                    confidence: confidence,
+                    barcodeMatch: this.referenceData.barcode === current.barcode && !!this.referenceData.barcode,
+                    textSimilarity: similarity
+                };
             }
 
             calculateSimilarity(str1, str2) {
+                if (!str1 || !str2) return 0;
                 const longer = str1.length > str2.length ? str1 : str2;
                 const shorter = str1.length > str2.length ? str2 : str1;
                 if (longer.length === 0) return 1.0;
@@ -1326,7 +1556,11 @@
                         if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
                             matrix[i][j] = matrix[i - 1][j - 1];
                         } else {
-                            matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
+                            matrix[i][j] = Math.min(
+                                matrix[i - 1][j - 1] + 1,
+                                matrix[i][j - 1] + 1,
+                                matrix[i - 1][j] + 1
+                            );
                         }
                     }
                 }
@@ -1334,50 +1568,80 @@
             }
 
             extractNumbers(text) {
+                if (!text) return [];
                 const matches = text.match(/\d+/g);
                 return matches || [];
             }
 
-            handleResult(result, extractedText, imageData) {
+            handleResult(result, extractedText, rawText, imageData) {
                 if (this.resultTimeout) clearTimeout(this.resultTimeout);
 
                 this.totalCount++;
                 const timestamp = new Date().toLocaleTimeString();
-                const shortText = extractedText.substring(0, 30);
+                const shortText = extractedText.substring(0, 40);
 
-                this.extractedText.textContent = 'CUR: ' + shortText + ' | Conf: ' + (result.confidence * 100).toFixed(1) + '% | Total: ' + this.totalCount;
-                this.log((result.match ? 'MATCH' : 'MISMATCH') + ' - ' + shortText + ' - ' + (result.confidence * 100).toFixed(0) + '%');
+                // Update OCR display
+                this.ocrText.textContent = shortText || 'NO TEXT';
+                this.ocrCompare.textContent = 'Conf: ' + (result.confidence * 100).toFixed(0) + '% | ' + 
+                    (result.match ? 'MATCH' : 'MISMATCH') + ' | Threshold: ' + (this.matchThreshold * 100).toFixed(0) + '%';
+
+                this.log('RESULT: ' + (result.match ? 'MATCH' : 'MISMATCH') + ' | Text: ' + shortText + ' | Conf: ' + (result.confidence*100).toFixed(1) + '%');
 
                 if (result.match) {
                     this.matchCount++;
+
                     this.cornerFrame.classList.remove('mismatch');
                     this.cornerFrame.classList.add('match');
+
                     this.resultOverlay.classList.remove('mismatch');
                     this.resultOverlay.classList.add('match');
                     this.resultIcon.textContent = '✓';
                     this.resultText.textContent = 'MATCH #' + this.matchCount;
+                    this.resultConfidence.textContent = (result.confidence * 100).toFixed(0) + '% confidence';
                     this.resultOverlay.classList.add('show');
-                    this.playBeep(800, 0.1);
-                    this.addToLog({ type: 'match', time: timestamp, text: shortText, confidence: result.confidence, image: imageData });
+
+                    this.playBeep(800, 0.15);
+
+                    this.addToLog({
+                        type: 'match',
+                        time: timestamp,
+                        text: shortText,
+                        confidence: result.confidence,
+                        image: imageData
+                    });
+
                     this.resultTimeout = setTimeout(() => {
                         this.resultOverlay.classList.remove('show');
                         this.cornerFrame.classList.remove('match');
-                    }, 1200);
+                    }, 1500);
+
                 } else {
                     this.mismatchCount++;
+
                     this.cornerFrame.classList.remove('match');
                     this.cornerFrame.classList.add('mismatch');
+
                     this.resultOverlay.classList.remove('match');
                     this.resultOverlay.classList.add('mismatch');
                     this.resultIcon.textContent = '✗';
                     this.resultText.textContent = 'MISMATCH';
+                    this.resultConfidence.textContent = (result.confidence * 100).toFixed(0) + '% confidence';
                     this.resultOverlay.classList.add('show');
-                    this.playBeep(300, 0.2);
-                    this.addToLog({ type: 'mismatch', time: timestamp, text: shortText, confidence: result.confidence, image: imageData });
+
+                    this.playBeep(300, 0.25);
+
+                    this.addToLog({
+                        type: 'mismatch',
+                        time: timestamp,
+                        text: shortText,
+                        confidence: result.confidence,
+                        image: imageData
+                    });
+
                     this.resultTimeout = setTimeout(() => {
                         this.resultOverlay.classList.remove('show');
                         this.cornerFrame.classList.remove('mismatch');
-                    }, 1500);
+                    }, 1800);
                 }
 
                 this.updateCounters();
