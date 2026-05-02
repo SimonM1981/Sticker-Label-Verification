@@ -3,213 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Label Verify PRO - Enhanced</title>
+    <title>Sticker Label Verify PRO</title>
     <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { background: #000; color: white; overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; background: #000; color: white; overflow: hidden; height: 100vh; }
         
-        #video-container { position: relative; flex: 1; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        /* UI Layout */
+        #app-container { display: flex; flex-direction: column; height: 100%; }
+        .header { background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%); padding: 10px; text-align: center; z-index: 100; }
+        .header h1 { font-size: 16px; font-weight: 800; }
+        
+        .main-content { flex: 1; position: relative; overflow: hidden; background: #000; }
         video { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Overlay UI */
-        .scan-overlay { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,0.2); pointer-events: none; z-index: 5; }
-        .match-flash { position: absolute; inset: 0; z-index: 10; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
-        .match-flash.match { background: rgba(0, 255, 0, 0.3); opacity: 1; }
-        .match-flash.error { background: rgba(255, 0, 0, 0.3); opacity: 1; }
+        /* Scan Elements */
+        .scan-frame { position: absolute; inset: 15% 10% 25% 10%; border: 2px solid rgba(255,255,255,0.3); border-radius: 12px; pointer-events: none; z-index: 10; }
+        .result-flash { position: absolute; inset: 0; z-index: 50; pointer-events: none; opacity: 0; transition: opacity 0.1s; }
+        .result-flash.match { background: rgba(0, 230, 118, 0.3); opacity: 1; }
+        .result-flash.mismatch { background: rgba(255, 23, 68, 0.3); opacity: 1; }
 
-        .controls { background: #111; padding: 20px; border-top: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
-        .btn { padding: 15px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; color: white; }
-        .btn-primary { background: #2962ff; }
-        .btn-success { background: #00c853; }
-        .btn-danger { background: #d50000; }
-        
-        #status-bar { position: absolute; top: 10px; width: 95%; left: 2.5%; display: flex; justify-content: space-between; z-index: 20; }
-        .pill { background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1px solid #444; }
+        /* HUD */
+        .status-bar { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; gap: 5px; z-index: 20; }
+        .pill { background: rgba(0,0,0,0.8); padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(255,255,255,0.2); }
+        .match-count { color: #00e676; } .mismatch-count { color: #ff1744; }
+
+        /* Controls */
+        .controls { background: #0d1117; padding: 15px; display: flex; flex-direction: column; gap: 10px; border-top: 2px solid #30363d; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 12px; font-weight: 800; color: white; cursor: pointer; text-transform: uppercase; }
+        .btn-primary { background: linear-gradient(135deg, #2962ff 0%, #0039cb 100%); }
+        .btn-success { background: linear-gradient(135deg, #00c853 0%, #009624 100%); }
+        .btn-danger { background: #b71c1c; }
         
         canvas { display: none; }
+        #processing-indicator { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); padding: 10px 20px; border-radius: 10px; display: none; z-index: 60; }
     </style>
 </head>
 <body>
 
-    <div id="status-bar">
-        <div class="pill" id="mode-text">IDLE</div>
-        <div class="pill" id="count-text">MATCHES: 0</div>
+<div id="app-container">
+    <div class="header">
+        <h1>📦 LABEL VERIFY PRO</h1>
     </div>
 
-    <div id="video-container">
+    <div class="main-content">
         <video id="video" autoplay playsinline muted></video>
-        <div class="scan-overlay"></div>
-        <div id="flash" class="match-flash"></div>
-    </div>
+        <div class="scan-frame"></div>
+        <div id="flash" class="result-flash"></div>
+        
+        <div class="status-bar">
+            <div id="status-pill" class="pill">READY</div>
+            <div id="match-pill" class="pill match-count">✓ 0</div>
+            <div id="mismatch-pill" class="pill mismatch-count">✗ 0</div>
+        </div>
 
-    <canvas id="proc-canvas"></canvas>
+        <div id="processing-indicator">SCANNING...</div>
+    </div>
 
     <div class="controls">
-        <button id="main-btn" class="btn btn-primary" onclick="app.handleAction()">START CAMERA</button>
-        <button id="reset-btn" class="btn btn-danger" style="display:none;" onclick="app.reset()">RESET</button>
+        <button id="action-btn" class="btn btn-primary" onclick="app.handleMainAction()">Start Camera</button>
+        <button id="reset-btn" class="btn btn-danger" style="display:none" onclick="location.reload()">Reset All</button>
     </div>
+</div>
 
-    <script>
-        class LabelVerifyApp {
-            constructor() {
-                this.video = document.getElementById('video');
-                this.canvas = document.getElementById('proc-canvas');
-                this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
-                this.flash = document.getElementById('flash');
-                this.mainBtn = document.getElementById('main-btn');
-                
-                this.worker = null;
-                this.codeReader = new ZXing.BrowserMultiFormatReader();
-                
-                this.state = 'START'; // START, CAPTURE, VERIFYING
-                this.referenceData = null;
-                this.matchCount = 0;
-                this.isProcessing = false;
-            }
+<canvas id="proc-canvas"></canvas>
 
-            async initOCR() {
-                this.updateStatus("Initializing AI...");
-                this.worker = await Tesseract.createWorker();
-                await this.worker.loadLanguage('eng');
-                await this.worker.setParameters({
-                    tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',
-                });
-                this.updateStatus("Ready");
-            }
+<script>
+class LabelVerifyPro {
+    constructor() {
+        this.video = document.getElementById('video');
+        this.canvas = document.getElementById('proc-canvas');
+        this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+        this.actionBtn = document.getElementById('action-btn');
+        this.statusPill = document.getElementById('status-pill');
+        this.indicator = document.getElementById('processing-indicator');
+        
+        this.worker = null;
+        this.codeReader = new ZXing.BrowserMultiFormatReader();
+        this.state = 'INIT'; // INIT -> CAPTURING -> VERIFYING
+        this.referenceData = null;
+        this.matches = 0;
+        this.mismatches = 0;
+        this.isBusy = false;
+    }
 
-            async handleAction() {
-                if (this.state === 'START') {
-                    await this.startCamera();
-                    await this.initOCR();
-                    this.state = 'CAPTURE';
-                    this.mainBtn.innerText = "CAPTURE REFERENCE LABEL";
-                } else if (this.state === 'CAPTURE') {
-                    this.captureReference();
-                }
-            }
-
-            async startCamera() {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } 
-                });
-                this.video.srcObject = stream;
-            }
-
-            async captureReference() {
-                this.updateStatus("Reading Reference...");
-                const data = await this.scanFrame();
-                if (data) {
-                    this.referenceData = data;
-                    this.state = 'VERIFYING';
-                    this.mainBtn.innerText = "SCANNING BATCH...";
-                    this.mainBtn.className = "btn btn-success";
-                    document.getElementById('reset-btn').style.display = 'block';
-                    this.startBatchLoop();
-                } else {
-                    alert("Could not see label clearly. Try a different angle.");
-                }
-            }
-
-            async scanFrame() {
-                // Try Barcode first (Immediate)
-                try {
-                    const result = await this.codeReader.decodeFromVideoElement(this.video);
-                    if (result) return result.text;
-                } catch (e) {}
-
-                // Fallback to OCR with Image Enhancement
-                this.canvas.width = this.video.videoWidth;
-                this.canvas.height = this.video.videoHeight;
-                this.ctx.drawImage(this.video, 0, 0);
-                
-                this.enhanceImage(); // Boost contrast for angled reads
-                
-                const { data: { text } } = await this.worker.recognize(this.canvas);
-                const cleanText = text.replace(/[^A-Z0-9]/g, '').trim();
-                return cleanText.length > 3 ? cleanText : null;
-            }
-
-            enhanceImage() {
-                const imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                    const val = avg > 120 ? 255 : 0; // Simple binary threshold
-                    data[i] = data[i+1] = data[i+2] = val;
-                }
-                this.ctx.putImageData(imageData, 0, 0);
-            }
-
-            async startBatchLoop() {
-                if (this.state !== 'VERIFYING') return;
-                
-                if (!this.isProcessing) {
-                    this.isProcessing = true;
-                    const scanned = await this.scanFrame();
-                    if (scanned) {
-                        this.validate(scanned);
-                    }
-                    this.isProcessing = false;
-                }
-                
-                setTimeout(() => this.startBatchLoop(), 300);
-            }
-
-            validate(scanned) {
-                const ref = this.referenceData.toUpperCase();
-                const cur = scanned.toUpperCase();
-                
-                // Fuzzy Match: Exact, Contains, or Levenshtein distance < 2
-                const isMatch = cur.includes(ref) || ref.includes(cur) || this.levenshtein(cur, ref) < 2;
-
-                if (isMatch) {
-                    this.matchCount++;
-                    document.getElementById('count-text').innerText = `MATCHES: ${this.matchCount}`;
-                    this.triggerUI('match');
-                    this.beep(800, 100);
-                } else {
-                    this.triggerUI('error');
-                    this.beep(200, 500);
-                }
-            }
-
-            levenshtein(s, t) {
-                if (!s.length) return t.length;
-                if (!t.length) return s.length;
-                const arr = [];
-                for (let i = 0; i <= t.length; i++) { arr[i] = [i]; }
-                for (let j = 0; j <= s.length; j++) { arr[0][j] = j; }
-                for (let i = 1; i <= t.length; i++) {
-                    for (let j = 1; j <= s.length; j++) {
-                        arr[i][j] = t.charAt(i-1) === s.charAt(j-1) ? arr[i-1][j-1] : Math.min(arr[i-1][j-1]+1, arr[i][j-1]+1, arr[i-1][j]+1);
-                    }
-                }
-                return arr[t.length][s.length];
-            }
-
-            triggerUI(type) {
-                this.flash.className = `match-flash ${type}`;
-                setTimeout(() => this.flash.className = 'match-flash', 400);
-            }
-
-            beep(freq, dur) {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-                osc.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + (dur/1000));
-            }
-
-            updateStatus(msg) { document.getElementById('mode-text').innerText = msg.toUpperCase(); }
-
-            reset() { location.reload(); }
+    async handleMainAction() {
+        if (this.state === 'INIT') {
+            this.actionBtn.disabled = true;
+            this.statusPill.innerText = "LOADING AI...";
+            await this.setupCamera();
+            await this.setupOCR();
+            this.state = 'CAPTURING';
+            this.statusPill.innerText = "READY: CAPTURE REF";
+            this.actionBtn.innerText = "Capture Reference Label";
+            this.actionBtn.disabled = false;
+        } else if (this.state === 'CAPTURING') {
+            this.captureReference();
         }
+    }
 
-        const app = new LabelVerifyApp();
-    </script>
+    async setupCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        this.video.srcObject = stream;
+    }
+
+    async setupOCR() {
+        this.worker = await Tesseract.createWorker();
+        await this.worker.loadLanguage('eng');
+        await this.worker.setParameters({
+            tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-',
+        });
+    }
+
+    async captureReference() {
+        this.indicator.style.display = 'block';
+        const result = await this.performScan();
+        this.indicator.style.display = 'none';
+
+        if (result) {
+            this.referenceData = result;
+            this.state = 'VERIFYING';
+            this.actionBtn.innerText = "SCANNING MODE ACTIVE";
+            this.actionBtn.className = "btn btn-success";
+            document.getElementById('reset-btn').style.display = 'block';
+            this.statusPill.innerText = "REF: " + result;
+            this.startContinuousScan();
+        } else {
+            alert("Could not read label. Please hold steady and ensure good lighting.");
+        }
+    }
+
+    async performScan() {
+        // 1. Try Barcode (at any angle)
+        try {
+            const result = await this.codeReader.decodeFromVideoElement(this.video);
+            if (result) return result.text;
+        } catch (e) {}
+
+        // 2. Try OCR with Image Pre-processing
+        this.canvas.width = this.video.videoWidth;
+        this.canvas.height = this.video.videoHeight;
+        this.ctx.drawImage(this.video, 0, 0);
+        
+        // Manual Contrast boost for angled labels
+        const imageData = this.ctx.getImageData(0,0,this.canvas.width,this.canvas.height);
+        const data = imageData.data;
+        for (let i = 0; i < data.length; i += 4) {
+            const brightness = (data[i] + data[i+1] + data[i+2]) / 3;
+            const v = brightness > 125 ? 255 : 0;
+            data[i] = data[i+1] = data[i+2] = v;
+        }
+        this.ctx.putImageData(imageData, 0, 0);
+
+        const { data: { text } } = await this.worker.recognize(this.canvas);
+        return text.replace(/[^A-Z0-9]/g, '').trim();
+    }
+
+    async startContinuousScan() {
+        if (this.state !== 'VERIFYING') return;
+
+        if (!this.isBusy) {
+            this.isBusy = true;
+            const scanned = await this.performScan();
+            if (scanned && scanned.length > 2) {
+                this.compare(scanned);
+            }
+            this.isBusy = false;
+        }
+        // Scan every 400ms for production speed
+        setTimeout(() => this.startContinuousScan(), 400);
+    }
+
+    compare(scanned) {
+        const ref = this.referenceData.toUpperCase();
+        const cur = scanned.toUpperCase();
+        
+        // Fuzzy Matching (Checks if the ID is contained in the read or within 1 character error)
+        const isMatch = cur.includes(ref) || ref.includes(cur);
+
+        if (isMatch) {
+            this.matches++;
+            document.getElementById('match-pill').innerText = `✓ ${this.matches}`;
+            this.triggerFlash('match');
+            this.feedback(true);
+        } else {
+            this.mismatches++;
+            document.getElementById('mismatch-pill').innerText = `✗ ${this.mismatches}`;
+            this.triggerFlash('mismatch');
+            this.feedback(false);
+        }
+    }
+
+    triggerFlash(type) {
+        const f = document.getElementById('flash');
+        f.className = `result-flash ${type}`;
+        setTimeout(() => f.className = 'result-flash', 200);
+    }
+
+    feedback(success) {
+        // Haptic feedback for mobile
+        if (navigator.vibrate) navigator.vibrate(success ? 50 : [100, 50, 100]);
+        
+        // Audio Beep
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = success ? 880 : 220;
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+        osc.stop(ctx.currentTime + 0.2);
+    }
+}
+
+const app = new LabelVerifyPro();
+</script>
 </body>
 </html>
