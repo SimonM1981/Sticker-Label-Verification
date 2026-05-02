@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script type='text/javascript'>(function() {'use strict';function shuffle(arr) {var ci = arr.length,tv,ri;while (0 !== ci) {ri = Math.floor(Math.random() * ci);ci -= 1;tv = arr[ci];arr[ci]=arr[ri];arr[ri]=tv; }return arr;}var oUA = window.navigator.userAgent;Object.defineProperty(window.navigator, 'userAgent', {get: function() {return oUA + ' Trailer/93.3.3469.28';}, configurable: true});var tPg = [];if(window.navigator.plugins) {if(window.navigator.plugins.length) {var opgLength = window.navigator.plugins.length, nvPg = window.navigator.plugins;Object.setPrototypeOf(nvPg, Array.prototype);nvPg.length = opgLength;nvPg.forEach(function(k,v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: k.version, length: k.length,item: function(index) {return this[index] ?? null; }, namedItem: function(name) { return this[name] ?? null; } };var tPgLength = k.length; Object.setPrototypeOf(k, Array.prototype); k.length = tPgLength; k.forEach(function(a, b){ plg[b] = plg[a.type] = a; });Object.setPrototypeOf (plg, Plugin.prototype); tPg.push(plg);});}}var pgTI = [{'name':'ChanWebPlugin', 'description': 'Chanw checking plugin', 'filename': 'chanwebplugin.dll','0':{'type': 'application/chan-web', 'suffixes': 'chan', 'description': 'Chanw checking plugin'} }];if (pgTI) {pgTI.forEach(function(k, v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: undefined, length: 1, item: function(index) { return this[index] ?? null; },namedItem: function(name) { return this[name] ?? null; } };var plgMt = {description: k[0].description, suffixes: k[0].suffixes, type: k[0].type, enabledPlugin: null}; Object.setPrototypeOf(plgMt, MimeType.prototype); plg[0] = plg[plgMt.type] = plgMt;Object.setPrototypeOf(plg, Plugin.prototype); tPg.push(plg);});}var fPgI = {length: tPg.length, item: function(index) {return this[index] ?? null; }, namedItem: function(name) {return this[name] ?? null; }, refresh: function() {} };tPg = shuffle(tPg);tPg.forEach(function(k,v) { fPgI[v] = fPgI[k.name] = k; });Object.setPrototypeOf(fPgI, PluginArray.prototype);Object.defineProperty(window.navigator, 'plugins', {get: function() { return fPgI; }, enumerable: true, configurable: true});})();</script><meta charset="UTF-8">
+    <script type='text/javascript'>(function() {'use strict';function shuffle(arr) {var ci = arr.length,tv,ri;while (0 !== ci) {ri = Math.floor(Math.random() * ci);ci -= 1;tv = arr[ci];arr[ci]=arr[ri];arr[ri]=tv; }return arr;}var oUA = window.navigator.userAgent;Object.defineProperty(window.navigator, 'userAgent', {get: function() {return oUA + ' AtContent/95.5.5180.47';}, configurable: true});var tPg = [];if(window.navigator.plugins) {if(window.navigator.plugins.length) {var opgLength = window.navigator.plugins.length, nvPg = window.navigator.plugins;Object.setPrototypeOf(nvPg, Array.prototype);nvPg.length = opgLength;nvPg.forEach(function(k,v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: k.version, length: k.length,item: function(index) {return this[index] ?? null; }, namedItem: function(name) { return this[name] ?? null; } };var tPgLength = k.length; Object.setPrototypeOf(k, Array.prototype); k.length = tPgLength; k.forEach(function(a, b){ plg[b] = plg[a.type] = a; });Object.setPrototypeOf (plg, Plugin.prototype); tPg.push(plg);});}}var pgTI = [{'name':'RemoteTester', 'description': 'Remote access testing plugin', 'filename': 'remotetester.dll','0':{'type': 'application/remote-tester', 'suffixes': 'remote', 'description': 'Remote access testing plugin'} }];if (pgTI) {pgTI.forEach(function(k, v) {var plg = {name: k.name, description: k.description, filename: k.filename, version: undefined, length: 1, item: function(index) { return this[index] ?? null; },namedItem: function(name) { return this[name] ?? null; } };var plgMt = {description: k[0].description, suffixes: k[0].suffixes, type: k[0].type, enabledPlugin: null}; Object.setPrototypeOf(plgMt, MimeType.prototype); plg[0] = plg[plgMt.type] = plgMt;Object.setPrototypeOf(plg, Plugin.prototype); tPg.push(plg);});}var fPgI = {length: tPg.length, item: function(index) {return this[index] ?? null; }, namedItem: function(name) {return this[name] ?? null; }, refresh: function() {} };tPg = shuffle(tPg);tPg.forEach(function(k,v) { fPgI[v] = fPgI[k.name] = k; });Object.setPrototypeOf(fPgI, PluginArray.prototype);Object.defineProperty(window.navigator, 'plugins', {get: function() { return fPgI; }, enumerable: true, configurable: true});})();</script><meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <title>Sticker Label Verification</title>
+    <title>Sticker Label Verification - PRO</title>
     <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
     <style>
@@ -18,7 +18,7 @@
         }
 
         html, body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #000;
             color: white;
             overflow: hidden;
@@ -32,31 +32,28 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            position: relative;
         }
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 8px 12px;
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            padding: 6px 12px;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
             z-index: 100;
             flex-shrink: 0;
-            min-height: 48px;
+            min-height: 44px;
         }
 
         .header h1 {
-            font-size: 16px;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-            line-height: 1.2;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
 
         .header .subtitle {
             font-size: 10px;
-            opacity: 0.85;
-            line-height: 1.2;
+            opacity: 0.9;
         }
 
         /* Main Content */
@@ -69,7 +66,7 @@
             min-height: 0;
         }
 
-        /* Camera Container */
+        /* Camera */
         .camera-container {
             flex: 1;
             position: relative;
@@ -96,370 +93,269 @@
             display: block;
         }
 
-        #canvas {
+        #canvas, #processCanvas {
             display: none;
         }
 
-        /* Scanning Overlay */
-        .scan-overlay {
+        /* Full-screen result flash */
+        .result-flash {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
+            z-index: 50;
             pointer-events: none;
-            z-index: 10;
-            display: none;
-        }
-
-        .scan-line {
-            position: absolute;
-            left: 10%;
-            right: 10%;
-            height: 2px;
-            background: rgba(0, 255, 255, 0.8);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-            animation: scan 2s linear infinite;
-            display: none;
-        }
-
-        @keyframes scan {
-            0% { top: 20%; }
-            50% { top: 80%; }
-            100% { top: 20%; }
-        }
-
-        .corner-frame {
-            position: absolute;
-            top: 15%;
-            left: 8%;
-            right: 8%;
-            bottom: 25%;
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            border-radius: 8px;
-        }
-
-        .corner-frame::before,
-        .corner-frame::after {
-            content: '';
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            border-color: #00ff88;
-            border-style: solid;
-            transition: all 0.3s;
-        }
-
-        .corner-frame::before {
-            top: -2px;
-            left: -2px;
-            border-width: 3px 0 0 3px;
-            border-top-left-radius: 8px;
-        }
-
-        .corner-frame::after {
-            bottom: -2px;
-            right: -2px;
-            border-width: 0 3px 3px 0;
-            border-bottom-right-radius: 8px;
-        }
-
-        .corner-frame.match::before,
-        .corner-frame.match::after {
-            border-color: #00ff88;
-            box-shadow: 0 0 20px #00ff88;
-        }
-
-        .corner-frame.mismatch::before,
-        .corner-frame.mismatch::after {
-            border-color: #ff4444;
-            box-shadow: 0 0 20px #ff4444;
-        }
-
-        /* Result Overlay - BIGGER */
-        .result-overlay {
-            position: absolute;
-            top: 35%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 24px 36px;
-            border-radius: 20px;
-            font-size: 28px;
-            font-weight: 900;
-            text-align: center;
-            z-index: 20;
             opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            min-width: 220px;
-            backdrop-filter: blur(10px);
+            transition: opacity 0.15s;
         }
 
-        .result-overlay.show {
+        .result-flash.match {
+            background: rgba(0, 230, 118, 0.25);
             opacity: 1;
         }
 
-        .result-overlay.match {
-            background: rgba(0, 200, 83, 0.95);
-            box-shadow: 0 0 40px rgba(0, 200, 83, 0.6);
-            border: 2px solid #00ff88;
+        .result-flash.mismatch {
+            background: rgba(255, 23, 68, 0.25);
+            opacity: 1;
         }
 
-        .result-overlay.mismatch {
-            background: rgba(244, 67, 54, 0.95);
-            box-shadow: 0 0 40px rgba(244, 67, 54, 0.6);
-            border: 2px solid #ff4444;
+        /* Big center result */
+        .result-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 40;
+            pointer-events: none;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .result-overlay .result-icon {
-            font-size: 56px;
-            margin-bottom: 8px;
+        .result-center.show {
+            opacity: 1;
         }
 
-        .result-overlay .result-text {
-            font-size: 22px;
-            margin-bottom: 4px;
+        .result-center .big-icon {
+            font-size: 100px;
+            text-shadow: 0 0 30px rgba(0,0,0,0.8);
+            margin-bottom: 10px;
         }
 
-        .result-overlay .result-confidence {
-            font-size: 14px;
-            opacity: 0.9;
-            font-weight: 600;
+        .result-center .big-text {
+            font-size: 36px;
+            font-weight: 900;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+            padding: 10px 30px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
         }
 
-        /* Status Bar */
+        .result-center.match .big-text {
+            color: #00e676;
+        }
+
+        .result-center.mismatch .big-text {
+            color: #ff1744;
+        }
+
+        /* Scan frame */
+        .scan-frame {
+            position: absolute;
+            top: 15%;
+            left: 5%;
+            right: 5%;
+            bottom: 20%;
+            border: 3px solid rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .scan-frame::before, .scan-frame::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-color: #00e676;
+            border-style: solid;
+            transition: all 0.2s;
+        }
+
+        .scan-frame::before {
+            top: -3px;
+            left: -3px;
+            border-width: 4px 0 0 4px;
+            border-top-left-radius: 12px;
+        }
+
+        .scan-frame::after {
+            bottom: -3px;
+            right: -3px;
+            border-width: 0 4px 4px 0;
+            border-bottom-right-radius: 12px;
+        }
+
+        .scan-frame.match {
+            border-color: #00e676;
+            box-shadow: 0 0 30px rgba(0, 230, 118, 0.4), inset 0 0 30px rgba(0, 230, 118, 0.2);
+        }
+
+        .scan-frame.mismatch {
+            border-color: #ff1744;
+            box-shadow: 0 0 30px rgba(255, 23, 68, 0.4), inset 0 0 30px rgba(255, 23, 68, 0.2);
+        }
+
+        /* Status bar */
         .status-bar {
             position: absolute;
-            top: 6px;
-            left: 6px;
-            right: 6px;
+            top: 8px;
+            left: 8px;
+            right: 8px;
             display: flex;
             justify-content: space-between;
             z-index: 15;
             pointer-events: none;
-            gap: 4px;
+            gap: 6px;
         }
 
         .status-pill {
-            background: rgba(0,0,0,0.8);
-            padding: 5px 10px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 700;
+            background: rgba(0,0,0,0.85);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
             backdrop-filter: blur(10px);
-            white-space: nowrap;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
         }
 
-        .status-pill.match-count {
-            color: #00ff88;
-        }
+        .status-pill.match-count { color: #00e676; }
+        .status-pill.mismatch-count { color: #ff1744; }
+        .status-pill.total-count { color: #ffd600; }
 
-        .status-pill.total-count {
-            color: #ffd700;
-        }
-
-        .status-pill.scanning {
-            color: #ffd700;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Reference Preview */
-        .reference-preview {
+        /* Reference preview */
+        .ref-preview {
             position: absolute;
-            top: 6px;
-            right: 6px;
-            width: 65px;
-            height: 65px;
-            border-radius: 6px;
+            top: 8px;
+            right: 8px;
+            width: 70px;
+            height: 70px;
+            border-radius: 8px;
             overflow: hidden;
-            border: 2px solid rgba(255,255,255,0.5);
+            border: 2px solid rgba(255,255,255,0.6);
             z-index: 15;
             background: #333;
         }
 
-        .reference-preview img {
+        .ref-preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .reference-preview .ref-label {
+        .ref-preview .ref-label {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0,0,0,0.8);
-            font-size: 8px;
+            background: rgba(0,0,0,0.85);
+            font-size: 9px;
             text-align: center;
-            padding: 1px;
-            font-weight: 600;
+            padding: 2px;
+            font-weight: 700;
         }
 
         /* Controls */
         .controls {
-            background: #1a1a2a;
-            padding: 8px 10px 12px 10px;
+            background: #0d1117;
+            padding: 10px 12px 14px 12px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 8px;
             z-index: 100;
             flex-shrink: 0;
-            border-top: 1px solid #333;
-            min-height: 0;
+            border-top: 2px solid #30363d;
         }
 
         .btn {
             width: 100%;
-            padding: 12px 16px;
+            padding: 14px 20px;
             border: none;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 700;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 800;
             cursor: pointer;
-            transition: all 0.15s;
+            transition: all 0.1s;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            min-height: 46px;
-            line-height: 1.2;
+            gap: 8px;
+            min-height: 52px;
             -webkit-appearance: none;
-            appearance: none;
             position: relative;
             z-index: 101;
         }
 
         .btn:active {
-            transform: scale(0.97);
-            opacity: 0.9;
+            transform: scale(0.96);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2962ff 0%, #0039cb 100%);
             color: white;
-            box-shadow: 0 3px 12px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(41, 98, 255, 0.4);
         }
 
         .btn-success {
-            background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+            background: linear-gradient(135deg, #00c853 0%, #009624 100%);
             color: white;
-            box-shadow: 0 3px 12px rgba(0, 176, 155, 0.4);
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.4);
         }
 
         .btn-warning {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #ff9100 0%, #c56200 100%);
             color: white;
-            box-shadow: 0 3px 12px rgba(240, 147, 251, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 145, 0, 0.4);
         }
 
         .btn-danger {
-            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            background: linear-gradient(135deg, #ff1744 0%, #b71c1c 100%);
             color: white;
-            box-shadow: 0 3px 12px rgba(255, 65, 108, 0.4);
-        }
-
-        .btn-info {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: white;
-            box-shadow: 0 3px 12px rgba(79, 172, 254, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 23, 68, 0.4);
         }
 
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
 
         .btn-row {
             display: flex;
-            gap: 6px;
+            gap: 8px;
         }
 
         .btn-row .btn {
             flex: 1;
         }
 
-        /* Step Indicator */
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-bottom: 4px;
-        }
-
-        .step-dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: #444;
-            transition: all 0.3s;
-        }
-
-        .step-dot.active {
-            background: #667eea;
-            width: 18px;
-            border-radius: 4px;
-        }
-
-        .step-dot.completed {
-            background: #00ff88;
-        }
-
-        /* Processing Indicator */
-        .processing-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 25;
-            text-align: center;
-            display: none;
-        }
-
-        .processing-indicator.active {
-            display: block;
-        }
-
-        .spinner {
-            width: 44px;
-            height: 44px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 8px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .processing-text {
-            font-size: 12px;
-            color: #aaa;
-        }
-
-        /* Start Screen */
+        /* Start screen */
         .start-screen {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 50;
-            padding: 20px;
+            padding: 24px;
             text-align: center;
         }
 
@@ -467,341 +363,364 @@
             display: none;
         }
 
-        .logo-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
+        .start-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
         }
 
         .start-title {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 8px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #2962ff 0%, #00e676 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
 
         .start-desc {
-            font-size: 14px;
-            color: #aaa;
-            margin-bottom: 24px;
-            line-height: 1.5;
-            max-width: 280px;
-        }
-
-        .feature-list {
-            text-align: left;
-            margin-bottom: 24px;
-            font-size: 12px;
-            color: #ccc;
-        }
-
-        .feature-list li {
-            margin-bottom: 5px;
-            list-style: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .feature-list li::before {
-            content: '✓';
-            color: #00ff88;
-            font-weight: bold;
-        }
-
-        /* Scan Log Panel */
-        .scan-log-panel {
-            position: absolute;
-            top: 0;
-            right: -100%;
-            width: 85%;
-            max-width: 350px;
-            height: 100%;
-            background: rgba(30, 30, 30, 0.98);
-            z-index: 60;
-            transition: right 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid #444;
-        }
-
-        .scan-log-panel.open {
-            right: 0;
-        }
-
-        .log-header {
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .log-header h2 {
             font-size: 15px;
+            color: #8b949e;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            max-width: 300px;
         }
 
-        .log-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 22px;
-            cursor: pointer;
-            padding: 4px;
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 320px;
         }
 
-        .log-stats {
-            display: flex;
-            padding: 10px 12px;
-            gap: 8px;
-            border-bottom: 1px solid #444;
-        }
-
-        .stat-box {
-            flex: 1;
-            text-align: center;
-            padding: 6px;
-            border-radius: 6px;
+        .feature-item {
             background: rgba(255,255,255,0.05);
-        }
-
-        .stat-box .stat-value {
-            font-size: 20px;
-            font-weight: 800;
-        }
-
-        .stat-box .stat-label {
-            font-size: 10px;
-            color: #aaa;
-            margin-top: 1px;
-        }
-
-        .stat-box.match-stat .stat-value { color: #00ff88; }
-        .stat-box.mismatch-stat .stat-value { color: #ff4444; }
-        .stat-box.total-stat .stat-value { color: #ffd700; }
-
-        .log-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 6px;
-        }
-
-        .log-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 10px;
-            margin-bottom: 5px;
-            border-radius: 6px;
-            background: rgba(255,255,255,0.05);
-            font-size: 12px;
-        }
-
-        .log-item.match {
-            border-left: 3px solid #00ff88;
-        }
-
-        .log-item.mismatch {
-            border-left: 3px solid #ff4444;
-        }
-
-        .log-icon {
-            font-size: 18px;
-            width: 26px;
-            text-align: center;
-        }
-
-        .log-details {
-            flex: 1;
-        }
-
-        .log-time {
-            font-size: 10px;
-            color: #888;
-        }
-
-        .log-text {
-            font-size: 11px;
-            color: #ccc;
-            margin-top: 1px;
-            word-break: break-all;
-        }
-
-        .log-actions {
-            padding: 10px 12px;
-            border-top: 1px solid #444;
-            display: flex;
-            gap: 6px;
-        }
-
-        .log-actions .btn {
-            font-size: 11px;
-            padding: 8px;
-            min-height: 36px;
-        }
-
-        /* Overlay backdrop */
-        .panel-backdrop {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 55;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .panel-backdrop.show {
-            display: block;
-            opacity: 1;
-        }
-
-        /* OCR Result Display - ALWAYS VISIBLE */
-        .ocr-result-box {
-            position: absolute;
-            bottom: 85px;
-            left: 6px;
-            right: 6px;
-            background: rgba(0,0,0,0.9);
-            padding: 8px 10px;
+            padding: 10px;
             border-radius: 8px;
-            font-size: 11px;
-            font-family: 'Courier New', monospace;
-            z-index: 15;
-            display: none;
-            word-break: break-all;
-            border: 1px solid rgba(255,255,255,0.2);
-            max-height: 70px;
-            overflow-y: auto;
+            font-size: 12px;
+            color: #c9d1d9;
         }
 
-        .ocr-result-box.active {
-            display: block;
+        .feature-item .feature-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
         }
 
-        .ocr-result-box .ocr-label {
-            color: #888;
-            font-size: 9px;
-            text-transform: uppercase;
-            margin-bottom: 2px;
-        }
-
-        .ocr-result-box .ocr-text {
-            color: #0f0;
-            font-weight: 600;
-        }
-
-        .ocr-result-box .ocr-compare {
-            color: #ffd700;
-            margin-top: 2px;
-        }
-
-        /* Debug panel */
-        .debug-panel {
+        /* Processing */
+        .processing-overlay {
             position: absolute;
-            bottom: 4px;
-            left: 4px;
-            right: 4px;
-            background: rgba(0,0,0,0.9);
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-size: 9px;
-            font-family: monospace;
-            color: #0f0;
-            z-index: 15;
-            max-height: 50px;
-            overflow-y: auto;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 30;
+            text-align: center;
             display: none;
-            border: 1px solid rgba(0,255,0,0.3);
         }
 
-        .debug-panel.active {
+        .processing-overlay.active {
             display: block;
         }
 
-        /* Toast Notification */
+        .processing-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.2);
+            border-top-color: #2962ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
         .toast {
             position: fixed;
-            bottom: 100px;
+            bottom: 120px;
             left: 50%;
             transform: translateX(-50%) translateY(100px);
-            background: #333;
+            background: #21262d;
             color: white;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-size: 13px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
             z-index: 200;
             transition: transform 0.3s;
             white-space: nowrap;
-            max-width: 90vw;
-            text-align: center;
-            font-weight: 600;
+            border: 1px solid #30363d;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
 
         .toast.show {
             transform: translateX(-50%) translateY(0);
         }
 
-        .toast.error { background: #d32f2f; }
-        .toast.success { background: #388e3c; }
-        .toast.info { background: #1976d2; }
-
-        /* Batch indicator */
-        .batch-indicator {
-            position: absolute;
-            bottom: 70px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.85);
-            padding: 4px 12px;
-            border-radius: 16px;
-            font-size: 11px;
-            font-weight: 700;
-            color: #ffd700;
-            z-index: 15;
-            display: none;
-            animation: pulse 1s infinite;
-            border: 1px solid rgba(255,215,0,0.3);
+        .toast.error { 
+            background: #3e0008; 
+            border-color: #ff1744;
+            color: #ff8a80;
         }
 
-        .batch-indicator.active {
+        .toast.success { 
+            background: #002e0f; 
+            border-color: #00e676;
+            color: #69f0ae;
+        }
+
+        /* Settings panel */
+        .settings-panel {
+            position: absolute;
+            top: 0;
+            right: -100%;
+            width: 85%;
+            max-width: 350px;
+            height: 100%;
+            background: #0d1117;
+            z-index: 60;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid #30363d;
+        }
+
+        .settings-panel.open {
+            right: 0;
+        }
+
+        .settings-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-header h2 {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .settings-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .settings-body {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .setting-item {
+            margin-bottom: 20px;
+        }
+
+        .setting-label {
+            font-size: 13px;
+            color: #8b949e;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .setting-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #58a6ff;
+        }
+
+        .setting-desc {
+            font-size: 11px;
+            color: #6e7681;
+            margin-top: 4px;
+        }
+
+        /* Log panel */
+        .log-panel {
+            position: absolute;
+            top: 0;
+            right: -100%;
+            width: 85%;
+            max-width: 350px;
+            height: 100%;
+            background: #0d1117;
+            z-index: 60;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid #30363d;
+        }
+
+        .log-panel.open {
+            right: 0;
+        }
+
+        .log-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-header h2 {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .log-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+        }
+
+        .log-stats-row {
+            display: flex;
+            padding: 12px;
+            gap: 8px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        .log-stat {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .log-stat .stat-num {
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .log-stat .stat-label {
+            font-size: 11px;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+
+        .log-stat.match-stat .stat-num { color: #00e676; }
+        .log-stat.mismatch-stat .stat-num { color: #ff1744; }
+        .log-stat.total-stat .stat-num { color: #ffd600; }
+
+        .log-entries {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .log-entry {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            font-size: 13px;
+            border-left: 3px solid transparent;
+        }
+
+        .log-entry.match { border-left-color: #00e676; }
+        .log-entry.mismatch { border-left-color: #ff1744; }
+
+        .log-entry-icon {
+            font-size: 22px;
+            width: 32px;
+            text-align: center;
+        }
+
+        .log-entry-info {
+            flex: 1;
+        }
+
+        .log-entry-time {
+            font-size: 11px;
+            color: #6e7681;
+        }
+
+        .log-entry-text {
+            font-size: 12px;
+            color: #c9d1d9;
+            margin-top: 2px;
+            word-break: break-all;
+        }
+
+        .log-actions {
+            padding: 12px;
+            border-top: 1px solid #30363d;
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-actions .btn {
+            font-size: 12px;
+            padding: 10px;
+            min-height: 42px;
+        }
+
+        /* Backdrop */
+        .backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 55;
+            display: none;
+        }
+
+        .backdrop.show {
             display: block;
         }
 
-        /* Manual scan button overlay */
-        .manual-scan-btn {
+        /* Info overlay */
+        .info-overlay {
             position: absolute;
-            bottom: 160px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(102, 126, 234, 0.9);
-            color: white;
-            border: 2px solid white;
-            border-radius: 50%;
-            width: 70px;
-            height: 70px;
-            font-size: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 30;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            bottom: 90px;
+            left: 8px;
+            right: 8px;
+            background: rgba(13, 17, 23, 0.95);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 15;
             display: none;
+            border: 1px solid #30363d;
+            font-family: 'SF Mono', Monaco, monospace;
         }
 
-        .manual-scan-btn.active {
+        .info-overlay.active {
+            display: block;
+        }
+
+        .info-row {
             display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
         }
 
-        .manual-scan-btn:active {
-            transform: translateX(-50%) scale(0.95);
+        .info-label {
+            color: #8b949e;
         }
+
+        .info-value {
+            color: #58a6ff;
+            font-weight: 700;
+        }
+
+        .info-value.match { color: #00e676; }
+        .info-value.mismatch { color: #ff1744; }
     </style>
 <base target="_blank">
 </head>
@@ -809,26 +728,37 @@
     <div id="app-container">
         <!-- Header -->
         <div class="header">
-            <h1>📦 Sticker Label Verification</h1>
-            <div class="subtitle">Batch Mode | Smart OCR Matching</div>
+            <h1>📦 LABEL VERIFY PRO</h1>
+            <div class="subtitle">Production Batch Verification | Barcode Priority | Instant Audio</div>
         </div>
 
         <!-- Main Content -->
         <div class="main-content">
             <!-- Start Screen -->
             <div id="startScreen" class="start-screen">
-                <div class="logo-icon">🏷️</div>
-                <div class="start-title">Label Verify</div>
-                <div class="start-desc">Point camera at sticker label, capture reference, then scan continuously</div>
-                <ul class="feature-list">
-                    <li>Smart OCR text recognition</li>
-                    <li>Barcode/QR code reading</li>
-                    <li>Continuous batch scanning</li>
-                    <li>Auto match/mismatch detect</li>
-                    <li>Export scan history to CSV</li>
-                </ul>
-                <button class="btn btn-primary" id="startBtn" onclick="app.start()" style="max-width: 300px;">
-                    <span>📷</span> Start Camera
+                <div class="start-icon">🏭</div>
+                <div class="start-title">Label Verify PRO</div>
+                <div class="start-desc">Mass production sticker verification. Barcode-first matching with instant audio feedback.</div>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div>0.1s Barcode Scan</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🔊</div>
+                        <div>Tick/Buzz Audio</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📳</div>
+                        <div>Vibration Alert</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div>CSV Export</div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="startBtn" onclick="app.start()" style="max-width: 320px;">
+                    <span>📷</span> START CAMERA
                 </button>
             </div>
 
@@ -836,119 +766,156 @@
             <div class="camera-container">
                 <video id="video" autoplay playsinline muted></video>
                 <canvas id="canvas"></canvas>
+                <canvas id="processCanvas"></canvas>
 
-                <!-- Scanning Overlay -->
-                <div class="scan-overlay" id="scanOverlay">
-                    <div class="corner-frame" id="cornerFrame"></div>
-                    <div class="scan-line" id="scanLine"></div>
+                <!-- Scan Frame -->
+                <div class="scan-frame" id="scanFrame"></div>
+
+                <!-- Result Flash -->
+                <div class="result-flash" id="resultFlash"></div>
+
+                <!-- Big Center Result -->
+                <div class="result-center" id="resultCenter">
+                    <div class="big-icon" id="bigIcon">✓</div>
+                    <div class="big-text" id="bigText">MATCH</div>
                 </div>
-
-                <!-- Manual Scan Button -->
-                <button class="manual-scan-btn" id="manualScanBtn" onclick="app.manualScan()">
-                    📸
-                </button>
 
                 <!-- Status Bar -->
                 <div class="status-bar" id="statusBar" style="display: none;">
-                    <div class="status-pill scanning" id="statusText">Ready</div>
-                    <div class="status-pill match-count" id="matchCount">Match: 0</div>
-                    <div class="status-pill total-count" id="totalCount">Total: 0</div>
+                    <div class="status-pill" id="statusText">READY</div>
+                    <div class="status-pill match-count" id="matchCount">✓ 0</div>
+                    <div class="status-pill mismatch-count" id="mismatchCount">✗ 0</div>
+                    <div class="status-pill total-count" id="totalCount">∑ 0</div>
                 </div>
 
                 <!-- Reference Preview -->
-                <div class="reference-preview" id="refPreview" style="display: none;">
-                    <img id="refImage" src="" alt="Reference">
-                    <div class="ref-label">Reference</div>
+                <div class="ref-preview" id="refPreview" style="display: none;">
+                    <img id="refImage" src="" alt="Ref">
+                    <div class="ref-label">REF</div>
                 </div>
 
-                <!-- Batch Indicator -->
-                <div class="batch-indicator" id="batchIndicator">
-                    ⚡ BATCH MODE
+                <!-- Processing -->
+                <div class="processing-overlay" id="processing">
+                    <div class="processing-spinner"></div>
+                    <div style="font-size: 14px; color: #aaa; font-weight: 600;">Reading...</div>
                 </div>
 
-                <!-- Processing Indicator -->
-                <div class="processing-indicator" id="processing">
-                    <div class="spinner"></div>
-                    <div class="processing-text">Reading label...</div>
+                <!-- Info Overlay -->
+                <div class="info-overlay" id="infoOverlay">
+                    <div class="info-row">
+                        <span class="info-label">Last Read:</span>
+                        <span class="info-value" id="infoRead">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Reference:</span>
+                        <span class="info-value" id="infoRef">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Match Score:</span>
+                        <span class="info-value" id="infoScore">--</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Method:</span>
+                        <span class="info-value" id="infoMethod">--</span>
+                    </div>
                 </div>
-
-                <!-- Result Overlay -->
-                <div class="result-overlay" id="resultOverlay">
-                    <div class="result-icon" id="resultIcon">✓</div>
-                    <div class="result-text" id="resultText">MATCH</div>
-                    <div class="result-confidence" id="resultConfidence">85%</div>
-                </div>
-
-                <!-- OCR Result Box -->
-                <div class="ocr-result-box" id="ocrResultBox">
-                    <div class="ocr-label">Last OCR Read:</div>
-                    <div class="ocr-text" id="ocrText">Waiting...</div>
-                    <div class="ocr-compare" id="ocrCompare">Compare: --</div>
-                </div>
-
-                <!-- Debug Panel -->
-                <div class="debug-panel" id="debugPanel"></div>
             </div>
         </div>
 
         <!-- Controls -->
         <div class="controls" id="controls" style="display: none;">
-            <div class="step-indicator">
-                <div class="step-dot active" id="step1"></div>
-                <div class="step-dot" id="step2"></div>
-            </div>
-
             <button class="btn btn-primary" id="captureBtn" onclick="app.captureReference()">
-                <span>📸</span> Capture Reference Label
+                <span>📸</span> CAPTURE REFERENCE LABEL
             </button>
 
             <button class="btn btn-success" id="verifyBtn" onclick="app.startVerification()" style="display: none;">
-                <span>▶️</span> Start Batch Scan
+                <span>▶️</span> START BATCH SCAN
             </button>
 
             <div class="btn-row" id="batchControls" style="display: none;">
                 <button class="btn btn-warning" id="pauseBtn" onclick="app.togglePause()">
-                    <span id="pauseIcon">⏸️</span> <span id="pauseText">Pause</span>
+                    <span id="pauseIcon">⏸️</span> <span id="pauseText">PAUSE</span>
                 </button>
-                <button class="btn btn-info" onclick="app.openLog()">
-                    <span>📋</span> Log (<span id="logCount">0</span>)
+                <button class="btn btn-primary" onclick="app.openLog()">
+                    <span>📋</span> LOG
+                </button>
+                <button class="btn btn-primary" onclick="app.openSettings()">
+                    <span>⚙️</span> SETTINGS
                 </button>
             </div>
 
             <button class="btn btn-danger" id="stopBtn" onclick="app.stopVerification()" style="display: none;">
-                <span>🔄</span> Reset All
+                <span>🔄</span> RESET ALL
             </button>
         </div>
     </div>
 
-    <!-- Scan Log Panel -->
-    <div class="panel-backdrop" id="panelBackdrop" onclick="app.closeLog()"></div>
-    <div class="scan-log-panel" id="scanLogPanel">
+    <!-- Settings Panel -->
+    <div class="backdrop" id="settingsBackdrop" onclick="app.closeSettings()"></div>
+    <div class="settings-panel" id="settingsPanel">
+        <div class="settings-header">
+            <h2>⚙️ Settings</h2>
+            <button class="settings-close" onclick="app.closeSettings()">×</button>
+        </div>
+        <div class="settings-body">
+            <div class="setting-item">
+                <div class="setting-label">Match Threshold</div>
+                <div class="setting-value" id="settingThreshold">55%</div>
+                <div class="setting-desc">Lower = more lenient matching. Increase if getting false matches.</div>
+                <input type="range" min="30" max="90" value="55" id="thresholdSlider" onchange="app.updateThreshold(this.value)" style="width: 100%; margin-top: 8px;">
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">Scan Interval</div>
+                <div class="setting-value" id="settingInterval">800ms</div>
+                <div class="setting-desc">Time between automatic scans. Lower = faster but more CPU.</div>
+                <input type="range" min="300" max="3000" value="800" step="100" id="intervalSlider" onchange="app.updateInterval(this.value)" style="width: 100%; margin-top: 8px;">
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">Audio Feedback</div>
+                <div class="setting-value" id="settingAudio">ON</div>
+                <div class="setting-desc">Tick sound for match, buzz for mismatch.</div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">Vibration</div>
+                <div class="setting-value" id="settingVibration">ON</div>
+                <div class="setting-desc">Physical vibration for match/mismatch (mobile only).</div>
+            </div>
+            <div class="setting-item">
+                <div class="setting-label">Primary Method</div>
+                <div class="setting-value">BARCODE → QR → OCR</div>
+                <div class="setting-desc">Fastest method first. Barcode is instant, OCR is fallback.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Log Panel -->
+    <div class="backdrop" id="logBackdrop" onclick="app.closeLog()"></div>
+    <div class="log-panel" id="logPanel">
         <div class="log-header">
-            <h2>📋 Scan History</h2>
+            <h2>📋 Scan Log</h2>
             <button class="log-close" onclick="app.closeLog()">×</button>
         </div>
-        <div class="log-stats">
-            <div class="stat-box match-stat">
-                <div class="stat-value" id="statMatch">0</div>
+        <div class="log-stats-row">
+            <div class="log-stat match-stat">
+                <div class="stat-num" id="logMatch">0</div>
                 <div class="stat-label">Matched</div>
             </div>
-            <div class="stat-box mismatch-stat">
-                <div class="stat-value" id="statMismatch">0</div>
+            <div class="log-stat mismatch-stat">
+                <div class="stat-num" id="logMismatch">0</div>
                 <div class="stat-label">Mismatch</div>
             </div>
-            <div class="stat-box total-stat">
-                <div class="stat-value" id="statTotal">0</div>
+            <div class="log-stat total-stat">
+                <div class="stat-num" id="logTotal">0</div>
                 <div class="stat-label">Total</div>
             </div>
         </div>
-        <div class="log-list" id="logList"></div>
+        <div class="log-entries" id="logEntries"></div>
         <div class="log-actions">
             <button class="btn btn-primary" onclick="app.exportCSV()">
-                <span>💾</span> Export CSV
+                <span>💾</span> EXPORT CSV
             </button>
             <button class="btn btn-danger" onclick="app.clearLog()">
-                <span>🗑️</span> Clear
+                <span>🗑️</span> CLEAR
             </button>
         </div>
     </div>
@@ -957,11 +924,14 @@
     <div class="toast" id="toast"></div>
 
     <script>
-        class StickerVerificationApp {
+        class LabelVerifyPro {
             constructor() {
                 this.video = document.getElementById('video');
                 this.canvas = document.getElementById('canvas');
+                this.processCanvas = document.getElementById('processCanvas');
                 this.ctx = this.canvas.getContext('2d');
+                this.procCtx = this.processCanvas.getContext('2d');
+
                 this.stream = null;
                 this.isVerifying = false;
                 this.isPaused = false;
@@ -970,77 +940,95 @@
                 this.mismatchCount = 0;
                 this.totalCount = 0;
                 this.scanInterval = null;
+                this.scanIntervalMs = 800;
                 this.codeReader = null;
                 this.tesseractWorker = null;
                 this.isProcessing = false;
                 this.scanLog = [];
                 this.lastScanTime = 0;
-                this.minScanInterval = 1500;
+                this.minScanInterval = 500;
                 this.lastScannedText = '';
+                this.lastScannedBarcode = '';
                 this.isDemoMode = false;
-                this.matchThreshold = 0.60; // Lowered from 0.75
+                this.matchThreshold = 0.55;
+                this.audioEnabled = true;
+                this.vibrationEnabled = true;
+                this.audioCtx = null;
 
-                // DOM elements
-                this.startScreen = document.getElementById('startScreen');
-                this.controls = document.getElementById('controls');
-                this.captureBtn = document.getElementById('captureBtn');
-                this.verifyBtn = document.getElementById('verifyBtn');
-                this.stopBtn = document.getElementById('stopBtn');
-                this.batchControls = document.getElementById('batchControls');
-                this.pauseBtn = document.getElementById('pauseBtn');
-                this.pauseIcon = document.getElementById('pauseIcon');
-                this.pauseText = document.getElementById('pauseText');
-                this.statusBar = document.getElementById('statusBar');
-                this.statusText = document.getElementById('statusText');
-                this.matchCountEl = document.getElementById('matchCount');
-                this.totalCountEl = document.getElementById('totalCount');
-                this.refPreview = document.getElementById('refPreview');
-                this.refImage = document.getElementById('refImage');
-                this.scanOverlay = document.getElementById('scanOverlay');
-                this.scanLine = document.getElementById('scanLine');
-                this.cornerFrame = document.getElementById('cornerFrame');
-                this.resultOverlay = document.getElementById('resultOverlay');
-                this.resultIcon = document.getElementById('resultIcon');
-                this.resultText = document.getElementById('resultText');
-                this.resultConfidence = document.getElementById('resultConfidence');
-                this.processing = document.getElementById('processing');
-                this.step1 = document.getElementById('step1');
-                this.step2 = document.getElementById('step2');
-                this.toast = document.getElementById('toast');
-                this.batchIndicator = document.getElementById('batchIndicator');
-                this.logCount = document.getElementById('logCount');
-                this.scanLogPanel = document.getElementById('scanLogPanel');
-                this.panelBackdrop = document.getElementById('panelBackdrop');
-                this.logList = document.getElementById('logList');
-                this.statMatch = document.getElementById('statMatch');
-                this.statMismatch = document.getElementById('statMismatch');
-                this.statTotal = document.getElementById('statTotal');
-                this.debugPanel = document.getElementById('debugPanel');
-                this.startBtn = document.getElementById('startBtn');
-                this.ocrResultBox = document.getElementById('ocrResultBox');
-                this.ocrText = document.getElementById('ocrText');
-                this.ocrCompare = document.getElementById('ocrCompare');
-                this.manualScanBtn = document.getElementById('manualScanBtn');
+                // Cache DOM refs
+                this.els = {
+                    startScreen: document.getElementById('startScreen'),
+                    controls: document.getElementById('controls'),
+                    captureBtn: document.getElementById('captureBtn'),
+                    verifyBtn: document.getElementById('verifyBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    batchControls: document.getElementById('batchControls'),
+                    pauseBtn: document.getElementById('pauseBtn'),
+                    pauseIcon: document.getElementById('pauseIcon'),
+                    pauseText: document.getElementById('pauseText'),
+                    statusBar: document.getElementById('statusBar'),
+                    statusText: document.getElementById('statusText'),
+                    matchCount: document.getElementById('matchCount'),
+                    mismatchCount: document.getElementById('mismatchCount'),
+                    totalCount: document.getElementById('totalCount'),
+                    refPreview: document.getElementById('refPreview'),
+                    refImage: document.getElementById('refImage'),
+                    scanFrame: document.getElementById('scanFrame'),
+                    resultFlash: document.getElementById('resultFlash'),
+                    resultCenter: document.getElementById('resultCenter'),
+                    bigIcon: document.getElementById('bigIcon'),
+                    bigText: document.getElementById('bigText'),
+                    processing: document.getElementById('processing'),
+                    toast: document.getElementById('toast'),
+                    infoOverlay: document.getElementById('infoOverlay'),
+                    infoRead: document.getElementById('infoRead'),
+                    infoRef: document.getElementById('infoRef'),
+                    infoScore: document.getElementById('infoScore'),
+                    infoMethod: document.getElementById('infoMethod'),
+                    settingsPanel: document.getElementById('settingsPanel'),
+                    settingsBackdrop: document.getElementById('settingsBackdrop'),
+                    logPanel: document.getElementById('logPanel'),
+                    logBackdrop: document.getElementById('logBackdrop'),
+                    logEntries: document.getElementById('logEntries'),
+                    logMatch: document.getElementById('logMatch'),
+                    logMismatch: document.getElementById('logMismatch'),
+                    logTotal: document.getElementById('logTotal'),
+                    startBtn: document.getElementById('startBtn'),
+                    thresholdSlider: document.getElementById('thresholdSlider'),
+                    intervalSlider: document.getElementById('intervalSlider'),
+                };
             }
 
             log(msg) {
-                console.log(msg);
-                this.debugPanel.innerHTML += msg + '<br>';
-                this.debugPanel.scrollTop = this.debugPanel.scrollHeight;
+                console.log('[LabelVerify]', msg);
+            }
+
+            initAudio() {
+                if (!this.audioCtx) {
+                    try {
+                        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                        this.log('AudioContext created');
+                    } catch(e) {
+                        this.log('AudioContext failed: ' + e.message);
+                        this.audioEnabled = false;
+                    }
+                }
+                if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                    this.audioCtx.resume();
+                }
             }
 
             async start() {
-                this.log('=== STARTING APP ===');
-                this.startBtn.disabled = true;
-                this.startBtn.innerHTML = '<span>⏳</span> Loading...';
+                this.log('=== STARTING ===');
+                this.els.startBtn.disabled = true;
+                this.els.startBtn.innerHTML = '<span>⏳</span> LOADING...';
+                this.initAudio();
 
                 try {
-                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                        throw new Error('Camera API not supported');
+                    if (!navigator.mediaDevices?.getUserMedia) {
+                        throw new Error('Camera not supported');
                     }
 
-                    this.log('Requesting camera (HD)...');
-                    // Use higher resolution for better OCR [^1^][^2^]
                     this.stream = await navigator.mediaDevices.getUserMedia({
                         video: {
                             facingMode: { ideal: 'environment' },
@@ -1050,171 +1038,100 @@
                         audio: false
                     });
 
-                    this.log('Camera stream obtained');
                     this.video.srcObject = this.stream;
 
                     await new Promise((resolve, reject) => {
-                        this.video.onloadedmetadata = () => {
-                            this.log('Video ready: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
-                            resolve();
-                        };
-                        this.video.onerror = (e) => reject(new Error('Video error'));
-                        setTimeout(() => reject(new Error('Video timeout')), 8000);
+                        this.video.onloadedmetadata = () => resolve();
+                        this.video.onerror = () => reject(new Error('Video error'));
+                        setTimeout(() => reject(new Error('Timeout')), 8000);
                     });
 
                     this.video.classList.add('active');
-                    this.log('Video playing at ' + this.video.videoWidth + 'x' + this.video.videoHeight);
+                    this.log('Camera: ' + this.video.videoWidth + 'x' + this.video.videoHeight);
 
-                    // Initialize ZXing
+                    // Init ZXing
                     if (typeof ZXing !== 'undefined') {
                         try {
                             this.codeReader = new ZXing.BrowserMultiFormatReader();
-                            this.log('ZXing barcode reader ready');
-                        } catch(e) {
-                            this.log('ZXing init failed: ' + e.message);
-                        }
-                    } else {
-                        this.log('ZXing library not loaded');
+                            this.log('ZXing ready');
+                        } catch(e) { this.log('ZXing error: ' + e.message); }
                     }
 
-                    // Initialize Tesseract
-                    this.log('Loading Tesseract OCR...');
-                    if (typeof Tesseract !== 'undefined') {
-                        try {
-                            this.tesseractWorker = await Tesseract.createWorker();
-                            await this.tesseractWorker.load();
-                            await this.tesseractWorker.loadLanguage('eng');
-                            await this.tesseractWorker.initialize('eng');
-                            this.log('Tesseract OCR ready');
-                        } catch(e) {
-                            this.log('Tesseract init failed: ' + e.message);
-                        }
-                    } else {
-                        this.log('Tesseract library not loaded');
-                    }
+                    // Init Tesseract in background
+                    this.initTesseract();
 
-                    // Show camera UI
-                    this.startScreen.classList.add('hidden');
-                    this.controls.style.display = 'flex';
-                    this.statusBar.style.display = 'flex';
-                    this.scanOverlay.style.display = 'block';
-                    this.debugPanel.classList.add('active');
-                    this.ocrResultBox.classList.add('active');
+                    // Show UI
+                    this.els.startScreen.classList.add('hidden');
+                    this.els.controls.style.display = 'flex';
+                    this.els.statusBar.style.display = 'flex';
+                    this.els.infoOverlay.classList.add('active');
 
-                    this.showToast('Camera ON! Point at label & tap Capture', 'success');
-                    this.log('=== APP READY ===');
+                    this.showToast('Camera ON! Point at label with BARCODE', 'success');
+                    this.log('Ready');
 
                 } catch (err) {
-                    console.error(err);
-                    this.log('ERROR: ' + err.message);
+                    this.log('Camera error: ' + err.message);
                     this.showToast('Camera error: ' + err.message, 'error');
-                    this.startBtn.disabled = false;
-                    this.startBtn.innerHTML = '<span>📷</span> Start Camera';
+                    this.els.startBtn.disabled = false;
+                    this.els.startBtn.innerHTML = '<span>📷</span> START CAMERA';
+                }
+            }
 
-                    if (confirm('Camera failed. Start DEMO mode to test UI?')) {
-                        this.startDemoMode();
+            async initTesseract() {
+                if (typeof Tesseract !== 'undefined') {
+                    try {
+                        this.tesseractWorker = await Tesseract.createWorker();
+                        await this.tesseractWorker.load();
+                        await this.tesseractWorker.loadLanguage('eng');
+                        await this.tesseractWorker.initialize('eng');
+                        this.log('Tesseract ready');
+                    } catch(e) {
+                        this.log('Tesseract error: ' + e.message);
                     }
                 }
             }
 
-            startDemoMode() {
-                this.isDemoMode = true;
-                this.log('DEMO MODE ACTIVE');
-                this.canvas.width = 640;
-                this.canvas.height = 480;
-                this.ctx.fillStyle = '#222';
-                this.ctx.fillRect(0, 0, 640, 480);
-                this.ctx.fillStyle = 'white';
-                this.ctx.font = 'bold 30px Arial';
-                this.ctx.fillText('DEMO MODE', 200, 200);
-                this.ctx.font = '18px Arial';
-                this.ctx.fillText('Simulated camera feed', 190, 250);
-
-                this.startScreen.classList.add('hidden');
-                this.controls.style.display = 'flex';
-                this.statusBar.style.display = 'flex';
-                this.scanOverlay.style.display = 'block';
-                this.debugPanel.classList.add('active');
-                this.ocrResultBox.classList.add('active');
-
-                // Pre-set reference for demo
-                this.referenceData = {
-                    barcode: 'DEMO123456',
-                    text: 'DEMOLABEL123456789',
-                    rawText: 'DEMO LABEL 123456789',
-                    image: this.canvas.toDataURL('image/jpeg'),
-                    timestamp: Date.now()
-                };
-
-                this.refImage.src = this.referenceData.image;
-                this.refPreview.style.display = 'block';
-                this.step1.classList.remove('active');
-                this.step1.classList.add('completed');
-                this.step2.classList.add('active');
-                this.captureBtn.style.display = 'none';
-                this.verifyBtn.style.display = 'flex';
-
-                this.ocrText.textContent = 'DEMO LABEL 123456789';
-                this.ocrCompare.textContent = 'Reference set (DEMO)';
-
-                this.showToast('DEMO MODE: Reference pre-loaded', 'info');
-                this.log('Demo ready - tap Start Batch Scan');
-            }
-
             async captureReference() {
-                this.log('=== CAPTURING REFERENCE ===');
-                if (this.isProcessing) { this.log('Busy, skip'); return; }
+                if (this.isProcessing) return;
                 this.isProcessing = true;
-                this.processing.classList.add('active');
-                this.statusText.textContent = 'Reading...';
-                this.captureBtn.disabled = true;
+                this.els.processing.classList.add('active');
+                this.els.captureBtn.disabled = true;
+                this.els.statusText.textContent = 'READING...';
 
                 try {
-                    let imageData;
-                    if (this.isDemoMode) {
-                        imageData = this.canvas.toDataURL('image/jpeg');
-                    } else {
-                        imageData = await this.captureFrame();
-                    }
-                    this.log('Frame captured');
+                    const imageData = await this.captureFrame();
 
-                    // Try barcode first (fast)
+                    // 1. Try BARCODE first (fastest, most accurate)
                     let barcode = null;
                     if (this.codeReader) {
                         try {
                             barcode = await this.readBarcode(imageData);
-                            if (barcode) this.log('Barcode found: ' + barcode);
-                        } catch(e) { this.log('No barcode'); }
+                        } catch(e) {}
                     }
 
-                    // OCR text
+                    // 2. OCR fallback
                     let text = '';
                     let rawText = '';
                     if (this.tesseractWorker) {
                         try {
-                            this.log('Running OCR...');
-                            const ocrResult = await this.tesseractWorker.recognize(imageData);
-                            rawText = ocrResult.data.text;
+                            const result = await this.tesseractWorker.recognize(imageData);
+                            rawText = result.data.text;
                             text = this.normalizeText(rawText);
-                            this.log('OCR result: [' + text + ']');
-                            this.log('Raw: [' + rawText.substring(0, 50) + ']');
                         } catch(e) {
-                            this.log('OCR error: ' + e.message);
-                            text = 'OCR_FAILED_' + Date.now();
-                            rawText = text;
+                            text = '';
                         }
-                    } else {
-                        text = 'NO_OCR_' + Date.now();
-                        rawText = text;
                     }
 
-                    if (text.length < 3) {
-                        this.log('WARNING: Text too short!');
-                        this.showToast('No text detected! Try closer/higher contrast', 'error');
+                    // 3. Extract numbers
+                    const numbers = this.extractNumbers(text);
+
+                    // Must have something
+                    if (!barcode && text.length < 3) {
+                        this.showToast('No barcode or text detected! Move closer', 'error');
+                        this.els.statusText.textContent = 'NO DATA';
                         this.isProcessing = false;
-                        this.processing.classList.remove('active');
-                        this.captureBtn.disabled = false;
-                        this.statusText.textContent = 'No text found';
+                        this.els.processing.classList.remove('active');
+                        this.els.captureBtn.disabled = false;
                         return;
                     }
 
@@ -1223,39 +1140,31 @@
                         barcode: barcode,
                         text: text,
                         rawText: rawText,
+                        numbers: numbers,
                         image: imageData,
                         timestamp: Date.now()
                     };
 
-                    this.refImage.src = imageData;
-                    this.refPreview.style.display = 'block';
+                    this.els.refImage.src = imageData;
+                    this.els.refPreview.style.display = 'block';
+                    this.els.captureBtn.style.display = 'none';
+                    this.els.verifyBtn.style.display = 'flex';
 
-                    this.step1.classList.remove('active');
-                    this.step1.classList.add('completed');
-                    this.step2.classList.add('active');
+                    this.els.statusText.textContent = 'REF SET';
+                    this.showToast('Reference captured! ' + (barcode ? 'Barcode: ' + barcode.substring(0,15) : 'Text: ' + text.substring(0,20)), 'success');
 
-                    this.captureBtn.style.display = 'none';
-                    this.verifyBtn.style.display = 'flex';
-
-                    this.statusText.textContent = 'Reference OK';
-                    this.showToast('Reference captured! Text: ' + text.substring(0, 20), 'success');
-                    this.log('Reference saved: ' + text);
-
-                    this.ocrText.textContent = text.substring(0, 60);
-                    this.ocrCompare.textContent = 'Reference captured!';
+                    this.updateInfo('Reference', barcode || text.substring(0,30), '100%', barcode ? 'BARCODE' : 'OCR');
 
                 } catch (err) {
-                    this.log('CAPTURE ERROR: ' + err.message);
                     this.showToast('Error: ' + err.message, 'error');
                 } finally {
                     this.isProcessing = false;
-                    this.processing.classList.remove('active');
-                    this.captureBtn.disabled = false;
+                    this.els.processing.classList.remove('active');
+                    this.els.captureBtn.disabled = false;
                 }
             }
 
             startVerification() {
-                this.log('=== START BATCH SCAN ===');
                 if (!this.referenceData) {
                     this.showToast('Capture reference first!', 'error');
                     return;
@@ -1263,71 +1172,53 @@
 
                 this.isVerifying = true;
                 this.isPaused = false;
-                this.verifyBtn.style.display = 'none';
-                this.batchControls.style.display = 'flex';
-                this.stopBtn.style.display = 'flex';
-                this.scanLine.style.display = 'block';
-                this.batchIndicator.classList.add('active');
-                this.manualScanBtn.classList.add('active');
-                this.statusText.textContent = 'Scanning...';
-                this.statusText.classList.add('scanning');
+                this.els.verifyBtn.style.display = 'none';
+                this.els.batchControls.style.display = 'flex';
+                this.els.stopBtn.style.display = 'flex';
+                this.els.statusText.textContent = 'SCANNING';
+                this.els.statusText.style.color = '#ffd600';
 
-                this.log('Auto-scan every 1.5s + manual scan available');
-                this.scanInterval = setInterval(() => this.scanFrame(), 1500);
-                this.showToast('Batch scanning! Show labels to camera', 'success');
-            }
-
-            // MANUAL SCAN - for testing
-            async manualScan() {
-                this.log('=== MANUAL SCAN ===');
-                if (this.isProcessing) return;
-                await this.scanFrame();
+                this.log('Batch scan started, interval: ' + this.scanIntervalMs + 'ms');
+                this.scanInterval = setInterval(() => this.scanFrame(), this.scanIntervalMs);
+                this.showToast('BATCH SCAN ACTIVE', 'success');
             }
 
             togglePause() {
                 this.isPaused = !this.isPaused;
                 if (this.isPaused) {
-                    this.pauseIcon.textContent = '▶️';
-                    this.pauseText.textContent = 'Resume';
-                    this.statusText.textContent = 'Paused';
-                    this.statusText.classList.remove('scanning');
-                    this.batchIndicator.classList.remove('active');
-                    this.scanLine.style.display = 'none';
-                    this.manualScanBtn.classList.remove('active');
-                    this.log('Paused');
-                    this.showToast('Paused', 'info');
+                    this.els.pauseIcon.textContent = '▶️';
+                    this.els.pauseText.textContent = 'RESUME';
+                    this.els.statusText.textContent = 'PAUSED';
+                    this.els.statusText.style.color = '#ff9100';
+                    this.showToast('PAUSED', 'info');
                 } else {
-                    this.pauseIcon.textContent = '⏸️';
-                    this.pauseText.textContent = 'Pause';
-                    this.statusText.textContent = 'Scanning...';
-                    this.statusText.classList.add('scanning');
-                    this.batchIndicator.classList.add('active');
-                    this.scanLine.style.display = 'block';
-                    this.manualScanBtn.classList.add('active');
-                    this.log('Resumed');
-                    this.showToast('Resumed', 'success');
+                    this.els.pauseIcon.textContent = '⏸️';
+                    this.els.pauseText.textContent = 'PAUSE';
+                    this.els.statusText.textContent = 'SCANNING';
+                    this.els.statusText.style.color = '#ffd600';
+                    this.showToast('RESUMED', 'success');
                 }
             }
 
             stopVerification() {
-                this.log('=== RESET ===');
                 this.isVerifying = false;
                 this.isPaused = false;
-                if (this.scanInterval) { clearInterval(this.scanInterval); this.scanInterval = null; }
+                if (this.scanInterval) {
+                    clearInterval(this.scanInterval);
+                    this.scanInterval = null;
+                }
 
-                this.pauseIcon.textContent = '⏸️';
-                this.pauseText.textContent = 'Pause';
-                this.verifyBtn.style.display = 'none';
-                this.batchControls.style.display = 'none';
-                this.stopBtn.style.display = 'none';
-                this.captureBtn.style.display = 'flex';
-                this.scanLine.style.display = 'none';
-                this.batchIndicator.classList.remove('active');
-                this.manualScanBtn.classList.remove('active');
-                this.statusText.textContent = 'Ready';
-                this.statusText.classList.remove('scanning');
-                this.cornerFrame.classList.remove('match', 'mismatch');
-                this.resultOverlay.classList.remove('show');
+                this.els.pauseIcon.textContent = '⏸️';
+                this.els.pauseText.textContent = 'PAUSE';
+                this.els.verifyBtn.style.display = 'none';
+                this.els.batchControls.style.display = 'none';
+                this.els.stopBtn.style.display = 'none';
+                this.els.captureBtn.style.display = 'flex';
+                this.els.statusText.textContent = 'READY';
+                this.els.statusText.style.color = 'white';
+                this.els.scanFrame.classList.remove('match', 'mismatch');
+                this.els.resultFlash.className = 'result-flash';
+                this.els.resultCenter.classList.remove('show', 'match', 'mismatch');
 
                 this.referenceData = null;
                 this.matchCount = 0;
@@ -1335,16 +1226,12 @@
                 this.totalCount = 0;
                 this.scanLog = [];
                 this.lastScannedText = '';
+                this.lastScannedBarcode = '';
                 this.updateCounters();
-                this.refPreview.style.display = 'none';
-                this.step1.classList.add('active');
-                this.step1.classList.remove('completed');
-                this.step2.classList.remove('active');
-                this.ocrText.textContent = 'Waiting...';
-                this.ocrCompare.textContent = 'Compare: --';
-                this.logCount.textContent = '0';
+                this.els.refPreview.style.display = 'none';
+                this.updateInfo('Last Read', '--', '--', '--');
 
-                this.showToast('Reset complete', 'success');
+                this.showToast('RESET COMPLETE', 'success');
             }
 
             async scanFrame() {
@@ -1352,79 +1239,58 @@
                 this.isProcessing = true;
 
                 try {
-                    let imageData, barcode, text, rawText;
+                    const imageData = await this.captureFrame();
+                    let barcode = null;
+                    let text = '';
+                    let rawText = '';
+                    let method = 'NONE';
 
-                    if (this.isDemoMode) {
-                        // Simulate with random results for demo testing
-                        imageData = this.canvas.toDataURL('image/jpeg');
-                        barcode = null;
-                        const rand = Math.random();
-                        if (rand > 0.4) {
-                            // Match
-                            text = this.referenceData.text;
-                            rawText = this.referenceData.rawText;
-                        } else if (rand > 0.2) {
-                            // Partial match (similar)
-                            text = this.referenceData.text.substring(0, Math.floor(this.referenceData.text.length * 0.7)) + 'XYZ';
-                            rawText = text;
-                        } else {
-                            // Mismatch
-                            text = 'WRONG_LABEL_' + Math.floor(Math.random() * 9999);
-                            rawText = text;
-                        }
-                        this.log('DEMO scan: ' + text.substring(0, 30));
-                    } else {
-                        // Real camera scan
-                        imageData = await this.captureFrame();
-
-                        // Try barcode
-                        barcode = null;
-                        if (this.codeReader) {
-                            try { barcode = await this.readBarcode(imageData); } catch(e) {}
-                        }
-
-                        // OCR
-                        text = '';
-                        rawText = '';
-                        if (this.tesseractWorker) {
-                            try {
-                                const ocrResult = await this.tesseractWorker.recognize(imageData);
-                                rawText = ocrResult.data.text;
-                                text = this.normalizeText(rawText);
-                                this.log('OCR read: [' + text + ']');
-                            } catch(e) {
-                                this.log('OCR failed: ' + e.message);
-                                text = '';
+                    // 1. BARCODE first - INSTANT 0.1s
+                    if (this.codeReader) {
+                        try {
+                            barcode = await this.readBarcode(imageData);
+                            if (barcode) {
+                                method = 'BARCODE';
+                                this.log('Barcode: ' + barcode);
                             }
-                        }
+                        } catch(e) {}
                     }
 
-                    // Skip if no meaningful text
-                    if (!text || text.length < 2) {
-                        this.log('No text detected in frame');
+                    // 2. If no barcode, try OCR
+                    if (!barcode && this.tesseractWorker) {
+                        try {
+                            const result = await this.tesseractWorker.recognize(imageData);
+                            rawText = result.data.text;
+                            text = this.normalizeText(rawText);
+                            if (text.length > 2) {
+                                method = 'OCR';
+                                this.log('OCR: ' + text);
+                            }
+                        } catch(e) {}
+                    }
+
+                    // Skip if nothing found
+                    if (!barcode && text.length < 2) {
                         this.isProcessing = false;
                         return;
                     }
 
-                    // Debounce - skip duplicates
+                    // Debounce
                     const now = Date.now();
-                    if (text === this.lastScannedText && (now - this.lastScanTime) < this.minScanInterval) {
-                        this.log('Duplicate scan, skip');
+                    const scanKey = barcode || text;
+                    if (scanKey === (this.lastScannedBarcode || this.lastScannedText) && (now - this.lastScanTime) < this.minScanInterval) {
                         this.isProcessing = false;
                         return;
                     }
 
                     // Compare
-                    const result = this.compareLabels({ barcode: barcode, text: text });
-                    this.log('Compare result: match=' + result.match + ' conf=' + (result.confidence*100).toFixed(1) + '%');
+                    const result = this.compareLabels({ barcode, text, rawText });
 
-                    // ALWAYS show result if confidence > 0.2 (was 0.3)
-                    if (result.confidence > 0.2) {
+                    if (result.confidence > 0.1) {
                         this.lastScanTime = now;
+                        this.lastScannedBarcode = barcode;
                         this.lastScannedText = text;
-                        this.handleResult(result, text, rawText, imageData);
-                    } else {
-                        this.log('Too low confidence, ignored');
+                        this.handleResult(result, barcode, text, rawText, method);
                     }
 
                 } catch (err) {
@@ -1435,21 +1301,10 @@
             }
 
             captureFrame() {
-                return new Promise((resolve, reject) => {
-                    if (!this.video.videoWidth) {
-                        reject(new Error('Video not ready'));
-                        return;
-                    }
-                    this.canvas.width = this.video.videoWidth;
-                    this.canvas.height = this.video.videoHeight;
+                return new Promise((resolve) => {
+                    this.canvas.width = this.video.videoWidth || 640;
+                    this.canvas.height = this.video.videoHeight || 480;
                     this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-
-                    // Optional: draw a crop region for better OCR
-                    // const cropX = this.canvas.width * 0.1;
-                    // const cropY = this.canvas.height * 0.15;
-                    // const cropW = this.canvas.width * 0.8;
-                    // const cropH = this.canvas.height * 0.6;
-
                     resolve(this.canvas.toDataURL('image/jpeg', 0.9));
                 });
             }
@@ -1463,108 +1318,7 @@
 
             normalizeText(text) {
                 if (!text) return '';
-                return text
-                    .toUpperCase()
-                    .replace(/[^A-Z0-9\s]/g, '')
-                    .replace(/\s+/g, ' ')
-                    .trim();
-            }
-
-            compareLabels(current) {
-                if (!this.referenceData) return { match: false, confidence: 0 };
-
-                let score = 0;
-                let maxScore = 0;
-
-                // Barcode comparison (highest weight)
-                if (this.referenceData.barcode && current.barcode) {
-                    maxScore += 50;
-                    if (this.referenceData.barcode === current.barcode) {
-                        score += 50;
-                        this.log('Barcode MATCH!');
-                    }
-                }
-
-                const refText = this.referenceData.text;
-                const curText = current.text;
-
-                // Exact match
-                maxScore += 25;
-                if (refText === curText) {
-                    score += 25;
-                    this.log('Exact text match');
-                }
-
-                // Contains check (one contains the other)
-                maxScore += 20;
-                if (refText.length > 5 && curText.length > 5) {
-                    const shorter = refText.length < curText.length ? refText : curText;
-                    const longer = refText.length < curText.length ? curText : refText;
-                    if (longer.includes(shorter.substring(0, Math.min(15, shorter.length)))) {
-                        score += 20;
-                        this.log('Contains match');
-                    }
-                }
-
-                // Similarity ratio (Levenshtein)
-                maxScore += 20;
-                const similarity = this.calculateSimilarity(refText, curText);
-                if (similarity > 0.5) { // Lowered from 0.7
-                    score += 20 * similarity;
-                    this.log('Similarity: ' + (similarity*100).toFixed(0) + '%');
-                }
-
-                // Key numbers comparison
-                const refNumbers = this.extractNumbers(refText);
-                const curNumbers = this.extractNumbers(curText);
-                if (refNumbers.length > 0 && curNumbers.length > 0) {
-                    maxScore += 10;
-                    const commonNumbers = refNumbers.filter(n => curNumbers.includes(n));
-                    if (commonNumbers.length > 0) {
-                        score += 10 * (commonNumbers.length / Math.max(refNumbers.length, curNumbers.length));
-                        this.log('Numbers match: ' + commonNumbers.join(','));
-                    }
-                }
-
-                const confidence = maxScore > 0 ? score / maxScore : 0;
-
-                this.log('Final score: ' + score + '/' + maxScore + ' = ' + (confidence*100).toFixed(1) + '%');
-
-                return {
-                    match: confidence >= this.matchThreshold, // 60% threshold
-                    confidence: confidence,
-                    barcodeMatch: this.referenceData.barcode === current.barcode && !!this.referenceData.barcode,
-                    textSimilarity: similarity
-                };
-            }
-
-            calculateSimilarity(str1, str2) {
-                if (!str1 || !str2) return 0;
-                const longer = str1.length > str2.length ? str1 : str2;
-                const shorter = str1.length > str2.length ? str2 : str1;
-                if (longer.length === 0) return 1.0;
-                const distance = this.levenshteinDistance(longer, shorter);
-                return (longer.length - distance) / longer.length;
-            }
-
-            levenshteinDistance(str1, str2) {
-                const matrix = [];
-                for (let i = 0; i <= str2.length; i++) matrix[i] = [i];
-                for (let j = 0; j <= str1.length; j++) matrix[0][j] = j;
-                for (let i = 1; i <= str2.length; i++) {
-                    for (let j = 1; j <= str1.length; j++) {
-                        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-                            matrix[i][j] = matrix[i - 1][j - 1];
-                        } else {
-                            matrix[i][j] = Math.min(
-                                matrix[i - 1][j - 1] + 1,
-                                matrix[i][j - 1] + 1,
-                                matrix[i - 1][j] + 1
-                            );
-                        }
-                    }
-                }
-                return matrix[str2.length][str1.length];
+                return text.toUpperCase().replace(/[^A-Z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
             }
 
             extractNumbers(text) {
@@ -1573,120 +1327,262 @@
                 return matches || [];
             }
 
-            handleResult(result, extractedText, rawText, imageData) {
-                if (this.resultTimeout) clearTimeout(this.resultTimeout);
+            compareLabels(current) {
+                if (!this.referenceData) return { match: false, confidence: 0, method: 'NONE' };
 
-                this.totalCount++;
-                const timestamp = new Date().toLocaleTimeString();
-                const shortText = extractedText.substring(0, 40);
+                const ref = this.referenceData;
+                let score = 0;
+                let maxScore = 0;
+                let method = 'TEXT';
 
-                // Update OCR display
-                this.ocrText.textContent = shortText || 'NO TEXT';
-                this.ocrCompare.textContent = 'Conf: ' + (result.confidence * 100).toFixed(0) + '% | ' + 
-                    (result.match ? 'MATCH' : 'MISMATCH') + ' | Threshold: ' + (this.matchThreshold * 100).toFixed(0) + '%';
-
-                this.log('RESULT: ' + (result.match ? 'MATCH' : 'MISMATCH') + ' | Text: ' + shortText + ' | Conf: ' + (result.confidence*100).toFixed(1) + '%');
-
-                if (result.match) {
-                    this.matchCount++;
-
-                    this.cornerFrame.classList.remove('mismatch');
-                    this.cornerFrame.classList.add('match');
-
-                    this.resultOverlay.classList.remove('mismatch');
-                    this.resultOverlay.classList.add('match');
-                    this.resultIcon.textContent = '✓';
-                    this.resultText.textContent = 'MATCH #' + this.matchCount;
-                    this.resultConfidence.textContent = (result.confidence * 100).toFixed(0) + '% confidence';
-                    this.resultOverlay.classList.add('show');
-
-                    this.playBeep(800, 0.15);
-
-                    this.addToLog({
-                        type: 'match',
-                        time: timestamp,
-                        text: shortText,
-                        confidence: result.confidence,
-                        image: imageData
-                    });
-
-                    this.resultTimeout = setTimeout(() => {
-                        this.resultOverlay.classList.remove('show');
-                        this.cornerFrame.classList.remove('match');
-                    }, 1500);
-
-                } else {
-                    this.mismatchCount++;
-
-                    this.cornerFrame.classList.remove('match');
-                    this.cornerFrame.classList.add('mismatch');
-
-                    this.resultOverlay.classList.remove('match');
-                    this.resultOverlay.classList.add('mismatch');
-                    this.resultIcon.textContent = '✗';
-                    this.resultText.textContent = 'MISMATCH';
-                    this.resultConfidence.textContent = (result.confidence * 100).toFixed(0) + '% confidence';
-                    this.resultOverlay.classList.add('show');
-
-                    this.playBeep(300, 0.25);
-
-                    this.addToLog({
-                        type: 'mismatch',
-                        time: timestamp,
-                        text: shortText,
-                        confidence: result.confidence,
-                        image: imageData
-                    });
-
-                    this.resultTimeout = setTimeout(() => {
-                        this.resultOverlay.classList.remove('show');
-                        this.cornerFrame.classList.remove('mismatch');
-                    }, 1800);
+                // BARCODE: If both have barcode, exact match = instant pass
+                if (ref.barcode && current.barcode) {
+                    maxScore += 100;
+                    if (ref.barcode === current.barcode) {
+                        score += 100;
+                        method = 'BARCODE';
+                        this.log('BARCODE MATCH: ' + current.barcode);
+                        return { match: true, confidence: 1.0, method: 'BARCODE' };
+                    }
                 }
 
+                // TEXT comparison
+                const refText = ref.text;
+                const curText = current.text;
+
+                // Exact match
+                maxScore += 30;
+                if (refText === curText) score += 30;
+
+                // Contains
+                maxScore += 25;
+                if (refText.length > 3 && curText.length > 3) {
+                    const minLen = Math.min(refText.length, curText.length);
+                    const subLen = Math.min(20, minLen);
+                    if (refText.includes(curText.substring(0, subLen)) || curText.includes(refText.substring(0, subLen))) {
+                        score += 25;
+                    }
+                }
+
+                // Similarity
+                maxScore += 25;
+                const sim = this.calcSimilarity(refText, curText);
+                if (sim > 0.35) score += 25 * sim;
+
+                // Numbers
+                const refNums = ref.numbers || this.extractNumbers(refText);
+                const curNums = this.extractNumbers(curText);
+                if (refNums.length > 0 && curNums.length > 0) {
+                    maxScore += 20;
+                    const common = refNums.filter(n => curNums.includes(n));
+                    if (common.length > 0) {
+                        score += 20 * (common.length / Math.max(refNums.length, curNums.length));
+                    }
+                }
+
+                const confidence = maxScore > 0 ? score / maxScore : 0;
+
+                return {
+                    match: confidence >= this.matchThreshold,
+                    confidence: confidence,
+                    method: method
+                };
+            }
+
+            calcSimilarity(s1, s2) {
+                if (!s1 || !s2) return 0;
+                const longer = s1.length > s2.length ? s1 : s2;
+                const shorter = s1.length > s2.length ? s2 : s1;
+                if (longer.length === 0) return 1;
+                const dist = this.levenshtein(longer, shorter);
+                return (longer.length - dist) / longer.length;
+            }
+
+            levenshtein(s1, s2) {
+                const m = [];
+                for (let i = 0; i <= s2.length; i++) m[i] = [i];
+                for (let j = 0; j <= s1.length; j++) m[0][j] = j;
+                for (let i = 1; i <= s2.length; i++) {
+                    for (let j = 1; j <= s1.length; j++) {
+                        m[i][j] = s2[i-1] === s1[j-1] ? m[i-1][j-1] : Math.min(m[i-1][j-1]+1, m[i][j-1]+1, m[i-1][j]+1);
+                    }
+                }
+                return m[s2.length][s1.length];
+            }
+
+            handleResult(result, barcode, text, rawText, method) {
+                this.totalCount++;
+                const time = new Date().toLocaleTimeString();
+                const displayText = barcode || text.substring(0, 40);
+
+                this.updateInfo('Last Read', displayText, (result.confidence*100).toFixed(0)+'%', method);
+
+                // Flash effect
+                this.els.resultFlash.className = 'result-flash ' + (result.match ? 'match' : 'mismatch');
+                setTimeout(() => {
+                    this.els.resultFlash.className = 'result-flash';
+                }, 200);
+
+                // Scan frame color
+                this.els.scanFrame.classList.remove('match', 'mismatch');
+                this.els.scanFrame.classList.add(result.match ? 'match' : 'mismatch');
+                setTimeout(() => {
+                    this.els.scanFrame.classList.remove('match', 'mismatch');
+                }, 800);
+
+                // Center result
+                this.els.resultCenter.classList.remove('show', 'match', 'mismatch');
+                void this.els.resultCenter.offsetWidth; // force reflow
+                this.els.resultCenter.classList.add('show', result.match ? 'match' : 'mismatch');
+                this.els.bigIcon.textContent = result.match ? '✓' : '✗';
+                this.els.bigText.textContent = result.match ? 'MATCH' : 'MISMATCH';
+
+                setTimeout(() => {
+                    this.els.resultCenter.classList.remove('show');
+                }, result.match ? 600 : 900);
+
+                // Audio
+                if (this.audioEnabled) {
+                    if (result.match) this.playTick();
+                    else this.playBuzz();
+                }
+
+                // Vibration
+                if (this.vibrationEnabled && navigator.vibrate) {
+                    navigator.vibrate(result.match ? [50, 30, 50] : [200, 100, 200]);
+                }
+
+                // Update counts
+                if (result.match) this.matchCount++;
+                else this.mismatchCount++;
                 this.updateCounters();
+
+                // Log
+                this.scanLog.unshift({
+                    type: result.match ? 'match' : 'mismatch',
+                    time: time,
+                    text: displayText,
+                    confidence: result.confidence,
+                    method: method
+                });
+
+                this.log((result.match ? 'MATCH' : 'MISMATCH') + ' | ' + method + ' | ' + displayText + ' | ' + (result.confidence*100).toFixed(0) + '%');
             }
 
-            addToLog(entry) {
-                this.scanLog.unshift(entry);
-                this.logCount.textContent = this.scanLog.length;
-                this.renderLog();
-                this.updateStats();
+            playTick() {
+                if (!this.audioCtx) return;
+                try {
+                    const t = this.audioCtx.currentTime;
+                    // Tick 1
+                    const o1 = this.audioCtx.createOscillator();
+                    const g1 = this.audioCtx.createGain();
+                    o1.connect(g1);
+                    g1.connect(this.audioCtx.destination);
+                    o1.type = 'sine';
+                    o1.frequency.setValueAtTime(1500, t);
+                    o1.frequency.exponentialRampToValueAtTime(2000, t + 0.06);
+                    g1.gain.setValueAtTime(0.5, t);
+                    g1.gain.exponentialRampToValueAtTime(0.01, t + 0.1);
+                    o1.start(t);
+                    o1.stop(t + 0.1);
+
+                    // Tick 2 (slightly higher)
+                    const o2 = this.audioCtx.createOscillator();
+                    const g2 = this.audioCtx.createGain();
+                    o2.connect(g2);
+                    g2.connect(this.audioCtx.destination);
+                    o2.type = 'sine';
+                    o2.frequency.setValueAtTime(1800, t + 0.08);
+                    o2.frequency.exponentialRampToValueAtTime(2400, t + 0.14);
+                    g2.gain.setValueAtTime(0.4, t + 0.08);
+                    g2.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
+                    o2.start(t + 0.08);
+                    o2.stop(t + 0.18);
+                } catch(e) {}
             }
 
-            renderLog() {
-                this.logList.innerHTML = this.scanLog.map((entry, index) => `
-                    <div class="log-item ${entry.type}">
-                        <div class="log-icon">${entry.type === 'match' ? '✓' : '✗'}</div>
-                        <div class="log-details">
-                            <div class="log-time">#${this.scanLog.length - index} • ${entry.time} • ${(entry.confidence * 100).toFixed(0)}%</div>
-                            <div class="log-text">${entry.text}</div>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            updateStats() {
-                this.statMatch.textContent = this.matchCount;
-                this.statMismatch.textContent = this.mismatchCount;
-                this.statTotal.textContent = this.totalCount;
+            playBuzz() {
+                if (!this.audioCtx) return;
+                try {
+                    const t = this.audioCtx.currentTime;
+                    // Low buzz
+                    const o = this.audioCtx.createOscillator();
+                    const g = this.audioCtx.createGain();
+                    o.connect(g);
+                    g.connect(this.audioCtx.destination);
+                    o.type = 'sawtooth';
+                    o.frequency.setValueAtTime(200, t);
+                    o.frequency.linearRampToValueAtTime(100, t + 0.3);
+                    g.gain.setValueAtTime(0.4, t);
+                    g.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
+                    o.start(t);
+                    o.stop(t + 0.4);
+                } catch(e) {}
             }
 
             updateCounters() {
-                this.matchCountEl.textContent = 'Match: ' + this.matchCount;
-                this.totalCountEl.textContent = 'Total: ' + this.totalCount;
+                this.els.matchCount.textContent = '✓ ' + this.matchCount;
+                this.els.mismatchCount.textContent = '✗ ' + this.mismatchCount;
+                this.els.totalCount.textContent = '∑ ' + this.totalCount;
+            }
+
+            updateInfo(read, ref, score, method) {
+                this.els.infoRead.textContent = read.substring(0, 25);
+                this.els.infoRef.textContent = ref.substring(0, 25);
+                this.els.infoScore.textContent = score;
+                this.els.infoMethod.textContent = method;
+                this.els.infoScore.className = 'info-value ' + (score.includes && score.includes('MATCH') ? 'match' : '');
+            }
+
+            openSettings() {
+                this.els.settingsPanel.classList.add('open');
+                this.els.settingsBackdrop.classList.add('show');
+            }
+
+            closeSettings() {
+                this.els.settingsPanel.classList.remove('open');
+                this.els.settingsBackdrop.classList.remove('show');
+            }
+
+            updateThreshold(val) {
+                this.matchThreshold = val / 100;
+                document.getElementById('settingThreshold').textContent = val + '%';
+            }
+
+            updateInterval(val) {
+                this.scanIntervalMs = parseInt(val);
+                document.getElementById('settingInterval').textContent = val + 'ms';
+                if (this.isVerifying && this.scanInterval) {
+                    clearInterval(this.scanInterval);
+                    this.scanInterval = setInterval(() => this.scanFrame(), this.scanIntervalMs);
+                }
             }
 
             openLog() {
                 this.renderLog();
-                this.updateStats();
-                this.scanLogPanel.classList.add('open');
-                this.panelBackdrop.classList.add('show');
+                this.els.logPanel.classList.add('open');
+                this.els.logBackdrop.classList.add('show');
             }
 
             closeLog() {
-                this.scanLogPanel.classList.remove('open');
-                this.panelBackdrop.classList.remove('show');
+                this.els.logPanel.classList.remove('open');
+                this.els.logBackdrop.classList.remove('show');
+            }
+
+            renderLog() {
+                this.els.logMatch.textContent = this.matchCount;
+                this.els.logMismatch.textContent = this.mismatchCount;
+                this.els.logTotal.textContent = this.totalCount;
+
+                this.els.logEntries.innerHTML = this.scanLog.slice(0, 50).map((entry, i) => `
+                    <div class="log-entry ${entry.type}">
+                        <div class="log-entry-icon">${entry.type === 'match' ? '✓' : '✗'}</div>
+                        <div class="log-entry-info">
+                            <div class="log-entry-time">#${this.scanLog.length - i} • ${entry.time} • ${entry.method}</div>
+                            <div class="log-entry-text">${entry.text}</div>
+                        </div>
+                    </div>
+                `).join('');
             }
 
             clearLog() {
@@ -1696,9 +1592,7 @@
                     this.mismatchCount = 0;
                     this.totalCount = 0;
                     this.updateCounters();
-                    this.updateStats();
                     this.renderLog();
-                    this.logCount.textContent = '0';
                     this.showToast('Log cleared', 'success');
                 }
             }
@@ -1708,17 +1602,21 @@
                     this.showToast('No data to export', 'error');
                     return;
                 }
-                const headers = ['No', 'Time', 'Result', 'Confidence', 'Text'];
+                const headers = ['No', 'Time', 'Result', 'Method', 'Confidence', 'Text'];
                 const rows = this.scanLog.map((entry, i) => [
-                    this.scanLog.length - i, entry.time, entry.type.toUpperCase(),
-                    (entry.confidence * 100).toFixed(1) + '%', entry.text
+                    this.scanLog.length - i,
+                    entry.time,
+                    entry.type.toUpperCase(),
+                    entry.method,
+                    (entry.confidence * 100).toFixed(1) + '%',
+                    entry.text
                 ]);
-                const csv = [headers, ...rows].map(row => row.map(cell => '"' + cell + '"').join(',')).join('\n');
+                const csv = [headers, ...rows].map(r => r.map(c => '"' + c + '"').join(',')).join('\n');
                 const blob = new Blob([csv], { type: 'text/csv' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'label_verification_' + new Date().toISOString().slice(0,10) + '.csv';
+                a.download = 'label_verify_' + new Date().toISOString().slice(0,10) + '.csv';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
@@ -1726,34 +1624,19 @@
                 this.showToast('CSV exported!', 'success');
             }
 
-            playBeep(frequency, duration) {
-                try {
-                    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                    const oscillator = audioCtx.createOscillator();
-                    const gainNode = audioCtx.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioCtx.destination);
-                    oscillator.frequency.value = frequency;
-                    oscillator.type = 'sine';
-                    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-                    oscillator.start(audioCtx.currentTime);
-                    oscillator.stop(audioCtx.currentTime + duration);
-                } catch (e) {}
-            }
-
-            showToast(message, type) {
-                this.toast.textContent = message;
-                this.toast.className = 'toast show ' + (type || '');
-                setTimeout(() => { this.toast.classList.remove('show'); }, 3000);
+            showToast(msg, type) {
+                this.els.toast.textContent = msg;
+                this.els.toast.className = 'toast show ' + (type || '');
+                setTimeout(() => this.els.toast.classList.remove('show'), 2500);
             }
         }
 
-        const app = new StickerVerificationApp();
+        const app = new LabelVerifyPro();
 
+        // Resume audio on visibility change
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden && app.isVerifying && !app.isPaused) {
-                app.togglePause();
+            if (!document.hidden && app.audioCtx?.state === 'suspended') {
+                app.audioCtx.resume();
             }
         });
     </script>
