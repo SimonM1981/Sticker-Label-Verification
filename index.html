@@ -1,155 +1,128 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: https: https://unpkg.com https://cdn.jsdelivr.net;">
-    
-    <title>Sticker Label Verify - All Angle</title>
-    
-    <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+<script>
+    class LabelVerifyAllAngle {
+        constructor() {
+            // Safe initialization
+            this.initApp = this.initApp.bind(this);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', this.initApp);
+            } else {
+                this.initApp();
+            }
         }
 
-        html, body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #000;
-            color: white;
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-            position: fixed;
+        initApp() {
+            // Get all canvas elements
+            this.video = document.getElementById('video');
+            this.canvas = document.getElementById('canvas');
+            this.processCanvas = document.getElementById('processCanvas');
+            this.rotateCanvas = document.getElementById('rotateCanvas');
+
+            if (!this.canvas || !this.processCanvas || !this.rotateCanvas) {
+                console.error("Canvas elements not found! Check if IDs are correct.");
+                return;
+            }
+
+            this.ctx = this.canvas.getContext('2d');
+            this.procCtx = this.processCanvas.getContext('2d');
+            this.rotCtx = this.rotateCanvas.getContext('2d');
+
+            console.log("✅ All canvas elements initialized successfully");
+
+            // Initialize the rest
+            this.stream = null;
+            this.isVerifying = false;
+            this.isPaused = false;
+            this.referenceData = null;
+            this.matchCount = 0;
+            this.mismatchCount = 0;
+            this.totalCount = 0;
+            this.scanInterval = null;
+            this.scanIntervalMs = 800;
+            this.codeReader = null;
+            this.tesseractWorker = null;
+            this.isProcessing = false;
+            this.scanLog = [];
+            this.lastScanTime = 0;
+            this.minScanInterval = 400;
+            this.matchThreshold = 0.50;
+
+            this.audioEnabled = true;
+            this.vibrationEnabled = true;
+            this.audioCtx = null;
+            this.currentOrientation = 0;
+
+            this.els = {
+                startScreen: document.getElementById('startScreen'),
+                controls: document.getElementById('controls'),
+                captureBtn: document.getElementById('captureBtn'),
+                verifyBtn: document.getElementById('verifyBtn'),
+                stopBtn: document.getElementById('stopBtn'),
+                batchControls: document.getElementById('batchControls'),
+                pauseBtn: document.getElementById('pauseBtn'),
+                pauseIcon: document.getElementById('pauseIcon'),
+                pauseText: document.getElementById('pauseText'),
+                statusBar: document.getElementById('statusBar'),
+                statusText: document.getElementById('statusText'),
+                matchCount: document.getElementById('matchCount'),
+                mismatchCount: document.getElementById('mismatchCount'),
+                totalCount: document.getElementById('totalCount'),
+                refPreview: document.getElementById('refPreview'),
+                refImage: document.getElementById('refImage'),
+                scanFrame: document.getElementById('scanFrame'),
+                resultFlash: document.getElementById('resultFlash'),
+                resultCenter: document.getElementById('resultCenter'),
+                bigIcon: document.getElementById('bigIcon'),
+                bigText: document.getElementById('bigText'),
+                processing: document.getElementById('processing'),
+                toast: document.getElementById('toast'),
+                infoOverlay: document.getElementById('infoOverlay'),
+                infoRead: document.getElementById('infoRead'),
+                infoRef: document.getElementById('infoRef'),
+                infoScore: document.getElementById('infoScore'),
+                infoMethod: document.getElementById('infoMethod'),
+                orientationBadge: document.getElementById('orientationBadge'),
+                settingsPanel: document.getElementById('settingsPanel'),
+                settingsBackdrop: document.getElementById('settingsBackdrop'),
+                logPanel: document.getElementById('logPanel'),
+                logBackdrop: document.getElementById('logBackdrop'),
+                logEntries: document.getElementById('logEntries'),
+                logMatch: document.getElementById('logMatch'),
+                logMismatch: document.getElementById('logMismatch'),
+                logTotal: document.getElementById('logTotal'),
+                thresholdSlider: document.getElementById('thresholdSlider'),
+                intervalSlider: document.getElementById('intervalSlider'),
+            };
+
+            this.setupOrientationListener();
+            this.log('App fully initialized');
         }
 
-        /* === Paste all your original CSS here === */
-        /* (I omitted it for brevity - copy all your <style> content from the original file) */
-        /* ... Your full CSS ... */
-
-    </style>
-</head>
-<body>
-    <div id="app-container">
-        <!-- Paste your full original body content here -->
-        <!-- Including all divs: header, main-content, start-screen, camera-container, controls, panels, etc. -->
-    </div>
-
-    <!-- IMPORTANT: Script moved to the END of body -->
-    <script>
-        class LabelVerifyAllAngle {
-            constructor() {
-                // Wait until DOM is fully loaded
-                if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', () => this.initApp());
-                } else {
-                    this.initApp();
-                }
+        setupOrientationListener() {
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', (e) => this.handleOrientation(e), true);
             }
-
-            initApp() {
-                this.video = document.getElementById('video');
-                this.canvas = document.getElementById('canvas');
-                this.processCanvas = document.getElementById('processCanvas');
-                this.rotateCanvas = document.getElementById('rotateCanvas');
-
-                // Safety check
-                if (!this.canvas || !this.processCanvas || !this.rotateCanvas) {
-                    console.error("Canvas elements not found!");
-                    return;
-                }
-
-                this.ctx = this.canvas.getContext('2d');
-                this.procCtx = this.processCanvas.getContext('2d');
-                this.rotCtx = this.rotateCanvas.getContext('2d');
-
-                // Rest of your variables
-                this.stream = null;
-                this.isVerifying = false;
-                this.isPaused = false;
-                this.referenceData = null;
-                this.matchCount = 0;
-                this.mismatchCount = 0;
-                this.totalCount = 0;
-                this.scanInterval = null;
-                this.scanIntervalMs = 800;
-                this.codeReader = null;
-                this.tesseractWorker = null;
-                this.isProcessing = false;
-                this.scanLog = [];
-                this.lastScanTime = 0;
-                this.minScanInterval = 400;
-                this.matchThreshold = 0.50;
-
-                this.audioEnabled = true;
-                this.vibrationEnabled = true;
-                this.audioCtx = null;
-                this.currentOrientation = 0;
-
-                this.els = {
-                    startScreen: document.getElementById('startScreen'),
-                    controls: document.getElementById('controls'),
-                    captureBtn: document.getElementById('captureBtn'),
-                    verifyBtn: document.getElementById('verifyBtn'),
-                    stopBtn: document.getElementById('stopBtn'),
-                    batchControls: document.getElementById('batchControls'),
-                    pauseBtn: document.getElementById('pauseBtn'),
-                    pauseIcon: document.getElementById('pauseIcon'),
-                    pauseText: document.getElementById('pauseText'),
-                    statusBar: document.getElementById('statusBar'),
-                    statusText: document.getElementById('statusText'),
-                    matchCount: document.getElementById('matchCount'),
-                    mismatchCount: document.getElementById('mismatchCount'),
-                    totalCount: document.getElementById('totalCount'),
-                    refPreview: document.getElementById('refPreview'),
-                    refImage: document.getElementById('refImage'),
-                    scanFrame: document.getElementById('scanFrame'),
-                    resultFlash: document.getElementById('resultFlash'),
-                    resultCenter: document.getElementById('resultCenter'),
-                    bigIcon: document.getElementById('bigIcon'),
-                    bigText: document.getElementById('bigText'),
-                    processing: document.getElementById('processing'),
-                    toast: document.getElementById('toast'),
-                    infoOverlay: document.getElementById('infoOverlay'),
-                    infoRead: document.getElementById('infoRead'),
-                    infoRef: document.getElementById('infoRef'),
-                    infoScore: document.getElementById('infoScore'),
-                    infoMethod: document.getElementById('infoMethod'),
-                    orientationBadge: document.getElementById('orientationBadge'),
-                    settingsPanel: document.getElementById('settingsPanel'),
-                    settingsBackdrop: document.getElementById('settingsBackdrop'),
-                    logPanel: document.getElementById('logPanel'),
-                    logBackdrop: document.getElementById('logBackdrop'),
-                    logEntries: document.getElementById('logEntries'),
-                    logMatch: document.getElementById('logMatch'),
-                    logMismatch: document.getElementById('logMismatch'),
-                    logTotal: document.getElementById('logTotal'),
-                    thresholdSlider: document.getElementById('thresholdSlider'),
-                    intervalSlider: document.getElementById('intervalSlider'),
-                };
-
-                this.setupOrientationListener();
-                this.log('App initialized successfully');
-            }
-
-            // === All other methods (start, captureFrame, compareLabels, etc.) ===
-            // Paste all your methods here (from previous improved version)
-
-            log(msg) {
-                console.log('[AllAngle]', msg);
-            }
-
-            // ... Add the rest of your class methods here ...
         }
 
-        // Initialize app
-        const app = new LabelVerifyAllAngle();
-    </script>
-</body>
-</html>
+        handleOrientation(event) {
+            const gamma = event.gamma || 0;
+            if (Math.abs(gamma) > 35) this.currentOrientation = gamma > 0 ? 90 : 270;
+        }
+
+        log(msg) {
+            console.log('[AllAngle]', msg);
+        }
+
+        // Add all other methods here (start, captureReference, compareLabels, etc.)
+        // You can copy them from previous responses
+
+        async start() {
+            this.log('Starting camera...');
+            // ... your original start method ...
+        }
+
+        // ... paste the rest of your class methods ...
+    }
+
+    // Create instance
+    const app = new LabelVerifyAllAngle();
+</script>
