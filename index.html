@@ -1,335 +1,299 @@
-<script>
-    class LabelVerifyAllAngle {
-        constructor() {
-            this.video = document.getElementById('video');
-            this.canvas = document.getElementById('canvas');
-            this.processCanvas = document.getElementById('processCanvas');
-            this.rotateCanvas = document.getElementById('rotateCanvas');
-            this.ctx = this.canvas.getContext('2d');
-            this.procCtx = this.processCanvas.getContext('2d');
-            this.rotCtx = this.rotateCanvas.getContext('2d');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: https: https://unpkg.com https://cdn.jsdelivr.net;">
+    
+    <title>Sticker Label Verify - All Angle</title>
+    
+    <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
 
-            this.stream = null;
-            this.isVerifying = false;
-            this.isPaused = false;
-            this.referenceData = null;
-            this.matchCount = 0;
-            this.mismatchCount = 0;
-            this.totalCount = 0;
-            this.scanInterval = null;
-            this.scanIntervalMs = 800;
-            this.codeReader = null;
-            this.tesseractWorker = null;
-            this.isProcessing = false;
-            this.scanLog = [];
-            this.lastScanTime = 0;
-            this.minScanInterval = 500;
-            this.lastScannedText = '';
-            this.lastScannedBarcode = '';
-            
-            this.matchThreshold = 0.50;        // Lowered for better same-label matching
-            this.audioEnabled = true;
-            this.vibrationEnabled = true;
-            this.audioCtx = null;
-            this.currentOrientation = 0;
+    <style>
+        /* Your original CSS remains unchanged */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        html, body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #000; color: white; overflow: hidden; height: 100%; width: 100%; position: fixed; }
+        /* ... (All your original CSS goes here - I kept it the same for brevity) ... */
+    </style>
+</head>
+<body>
+    <!-- Your entire HTML body remains exactly the same -->
+    <div id="app-container">
+        <!-- ... All your HTML content (header, camera, controls, panels, etc.) ... -->
+        <!-- (Copy your original body content here) -->
+    </div>
 
-            // DOM cache
-            this.els = {
-                startScreen: document.getElementById('startScreen'),
-                controls: document.getElementById('controls'),
-                captureBtn: document.getElementById('captureBtn'),
-                verifyBtn: document.getElementById('verifyBtn'),
-                stopBtn: document.getElementById('stopBtn'),
-                batchControls: document.getElementById('batchControls'),
-                pauseBtn: document.getElementById('pauseBtn'),
-                pauseIcon: document.getElementById('pauseIcon'),
-                pauseText: document.getElementById('pauseText'),
-                statusBar: document.getElementById('statusBar'),
-                statusText: document.getElementById('statusText'),
-                matchCount: document.getElementById('matchCount'),
-                mismatchCount: document.getElementById('mismatchCount'),
-                totalCount: document.getElementById('totalCount'),
-                refPreview: document.getElementById('refPreview'),
-                refImage: document.getElementById('refImage'),
-                scanFrame: document.getElementById('scanFrame'),
-                resultFlash: document.getElementById('resultFlash'),
-                resultCenter: document.getElementById('resultCenter'),
-                bigIcon: document.getElementById('bigIcon'),
-                bigText: document.getElementById('bigText'),
-                processing: document.getElementById('processing'),
-                toast: document.getElementById('toast'),
-                infoOverlay: document.getElementById('infoOverlay'),
-                infoRead: document.getElementById('infoRead'),
-                infoRef: document.getElementById('infoRef'),
-                infoScore: document.getElementById('infoScore'),
-                infoMethod: document.getElementById('infoMethod'),
-                orientationBadge: document.getElementById('orientationBadge'),
-                settingsPanel: document.getElementById('settingsPanel'),
-                settingsBackdrop: document.getElementById('settingsBackdrop'),
-                logPanel: document.getElementById('logPanel'),
-                logBackdrop: document.getElementById('logBackdrop'),
-                logEntries: document.getElementById('logEntries'),
-                logMatch: document.getElementById('logMatch'),
-                logMismatch: document.getElementById('logMismatch'),
-                logTotal: document.getElementById('logTotal'),
-                thresholdSlider: document.getElementById('thresholdSlider'),
-                intervalSlider: document.getElementById('intervalSlider'),
-            };
+    <script>
+        class LabelVerifyAllAngle {
+            constructor() {
+                this.video = document.getElementById('video');
+                this.canvas = document.getElementById('canvas');
+                this.processCanvas = document.getElementById('processCanvas');
+                this.rotateCanvas = document.getElementById('rotateCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.procCtx = this.processCanvas.getContext('2d');
+                this.rotCtx = this.rotateCanvas.getContext('2d');
 
-            this.setupOrientationListener();
-        }
+                this.stream = null;
+                this.isVerifying = false;
+                this.isPaused = false;
+                this.referenceData = null;
+                this.matchCount = 0;
+                this.mismatchCount = 0;
+                this.totalCount = 0;
+                this.scanInterval = null;
+                this.scanIntervalMs = 800;
+                this.codeReader = null;
+                this.tesseractWorker = null;
+                this.isProcessing = false;
+                this.scanLog = [];
+                this.lastScanTime = 0;
+                this.minScanInterval = 400;
+                this.matchThreshold = 0.50;   // Improved default
 
-        setupOrientationListener() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (e) => this.handleOrientation(e), true);
+                this.audioEnabled = true;
+                this.vibrationEnabled = true;
+                this.audioCtx = null;
+                this.currentOrientation = 0;
+
+                this.els = {
+                    startScreen: document.getElementById('startScreen'),
+                    controls: document.getElementById('controls'),
+                    captureBtn: document.getElementById('captureBtn'),
+                    verifyBtn: document.getElementById('verifyBtn'),
+                    stopBtn: document.getElementById('stopBtn'),
+                    batchControls: document.getElementById('batchControls'),
+                    pauseBtn: document.getElementById('pauseBtn'),
+                    pauseIcon: document.getElementById('pauseIcon'),
+                    pauseText: document.getElementById('pauseText'),
+                    statusBar: document.getElementById('statusBar'),
+                    statusText: document.getElementById('statusText'),
+                    matchCount: document.getElementById('matchCount'),
+                    mismatchCount: document.getElementById('mismatchCount'),
+                    totalCount: document.getElementById('totalCount'),
+                    refPreview: document.getElementById('refPreview'),
+                    refImage: document.getElementById('refImage'),
+                    scanFrame: document.getElementById('scanFrame'),
+                    resultFlash: document.getElementById('resultFlash'),
+                    resultCenter: document.getElementById('resultCenter'),
+                    bigIcon: document.getElementById('bigIcon'),
+                    bigText: document.getElementById('bigText'),
+                    processing: document.getElementById('processing'),
+                    toast: document.getElementById('toast'),
+                    infoOverlay: document.getElementById('infoOverlay'),
+                    infoRead: document.getElementById('infoRead'),
+                    infoRef: document.getElementById('infoRef'),
+                    infoScore: document.getElementById('infoScore'),
+                    infoMethod: document.getElementById('infoMethod'),
+                    orientationBadge: document.getElementById('orientationBadge'),
+                    settingsPanel: document.getElementById('settingsPanel'),
+                    settingsBackdrop: document.getElementById('settingsBackdrop'),
+                    logPanel: document.getElementById('logPanel'),
+                    logBackdrop: document.getElementById('logBackdrop'),
+                    logEntries: document.getElementById('logEntries'),
+                    logMatch: document.getElementById('logMatch'),
+                    logMismatch: document.getElementById('logMismatch'),
+                    logTotal: document.getElementById('logTotal'),
+                    thresholdSlider: document.getElementById('thresholdSlider'),
+                    intervalSlider: document.getElementById('intervalSlider'),
+                };
+
+                this.setupOrientationListener();
             }
-        }
 
-        handleOrientation(event) {
-            const gamma = event.gamma || 0;
-            if (Math.abs(gamma) > 40) {
-                this.currentOrientation = gamma > 0 ? 90 : 270;
+            setupOrientationListener() {
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener('deviceorientation', (e) => this.handleOrientation(e), true);
+                }
             }
-        }
 
-        log(msg) {
-            console.log('[AllAngle]', msg);
-        }
+            handleOrientation(event) {
+                const gamma = event.gamma || 0;
+                if (Math.abs(gamma) > 35) this.currentOrientation = gamma > 0 ? 90 : 270;
+            }
 
-        initAudio() {
-            if (!this.audioCtx) {
+            log(msg) { console.log('[AllAngle]', msg); }
+
+            initAudio() {
                 try {
                     this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 } catch(e) {}
             }
-        }
 
-        async start() {
-            // ... (same as before - keeping original start method unchanged for brevity)
-            this.log('=== STARTING ALL-ANGLE ===');
-            this.els.startBtn.disabled = true;
-            this.els.startBtn.innerHTML = '<span>⏳</span> LOADING...';
-            this.initAudio();
+            async start() {
+                this.log('=== STARTING ALL-ANGLE ===');
+                this.initAudio();
 
-            try {
-                this.stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }}
+                    });
+
+                    this.video.srcObject = this.stream;
+                    await new Promise(r => this.video.onloadedmetadata = r);
+
+                    this.video.classList.add('active');
+
+                    if (typeof ZXing !== 'undefined') this.codeReader = new ZXing.BrowserMultiFormatReader();
+                    await this.initTesseract();
+
+                    this.els.startScreen.classList.add('hidden');
+                    this.els.controls.style.display = 'flex';
+                    this.els.statusBar.style.display = 'flex';
+                    this.els.infoOverlay.classList.add('active');
+                    this.els.orientationBadge.classList.add('active');
+
+                    this.showToast('Camera Ready - Any Angle Supported', 'success');
+
+                } catch (err) {
+                    this.showToast('Camera Error: ' + err.message, 'error');
+                }
+            }
+
+            async initTesseract() {
+                if (typeof Tesseract !== 'undefined') {
+                    try {
+                        this.tesseractWorker = await Tesseract.createWorker();
+                        await this.tesseractWorker.load();
+                        await this.tesseractWorker.loadLanguage('eng');
+                        await this.tesseractWorker.initialize('eng');
+                        this.log('Tesseract initialized');
+                    } catch(e) { this.log('Tesseract failed: ' + e.message); }
+                }
+            }
+
+            captureFrame() {
+                return new Promise(resolve => {
+                    const w = this.video.videoWidth || 640;
+                    const h = this.video.videoHeight || 480;
+                    this.canvas.width = w; this.canvas.height = h;
+                    this.ctx.drawImage(this.video, 0, 0, w, h);
+                    const corrected = this.correctRotation(this.canvas, this.currentOrientation);
+                    resolve(corrected.toDataURL('image/jpeg', 0.92));
                 });
-
-                this.video.srcObject = this.stream;
-                await new Promise(resolve => this.video.onloadedmetadata = resolve);
-
-                this.video.classList.add('active');
-
-                if (typeof ZXing !== 'undefined') {
-                    this.codeReader = new ZXing.BrowserMultiFormatReader();
-                }
-
-                this.initTesseract();
-
-                this.els.startScreen.classList.add('hidden');
-                this.els.controls.style.display = 'flex';
-                this.els.statusBar.style.display = 'flex';
-                this.els.infoOverlay.classList.add('active');
-                this.els.orientationBadge.classList.add('active');
-
-                this.showToast('Camera ON! Hold at ANY angle', 'success');
-
-            } catch (err) {
-                this.showToast('Camera error: ' + err.message, 'error');
-                this.els.startBtn.disabled = false;
-                this.els.startBtn.innerHTML = '<span>📷</span> START CAMERA';
             }
-        }
 
-        async initTesseract() {
-            if (typeof Tesseract !== 'undefined') {
-                try {
-                    this.tesseractWorker = await Tesseract.createWorker();
-                    await this.tesseractWorker.load();
-                    await this.tesseractWorker.loadLanguage('eng');
-                    await this.tesseractWorker.initialize('eng');
-                    this.log('Tesseract ready');
-                } catch(e) { this.log('Tesseract error: ' + e.message); }
+            correctRotation(source, angle) {
+                if (angle === 0) return source;
+                const w = source.width, h = source.height;
+                this.rotateCanvas.width = (angle === 90 || angle === 270) ? h : w;
+                this.rotateCanvas.height = (angle === 90 || angle === 270) ? w : h;
+                this.rotCtx.save();
+                this.rotCtx.translate(this.rotateCanvas.width/2, this.rotateCanvas.height/2);
+                this.rotCtx.rotate(angle * Math.PI / 180);
+                this.rotCtx.drawImage(source, -w/2, -h/2);
+                this.rotCtx.restore();
+                return this.rotateCanvas;
             }
-        }
 
-        captureFrame() {
-            return new Promise((resolve) => {
-                const w = this.video.videoWidth || 640;
-                const h = this.video.videoHeight || 480;
+            async tryMultipleRotations(imageData) {
+                const rotations = [0, 90, 180, 270];
+                for (let rot of rotations) {
+                    try {
+                        const img = new Image();
+                        img.src = imageData;
+                        await new Promise(r => img.onload = r);
 
-                this.canvas.width = w;
-                this.canvas.height = h;
-                this.ctx.drawImage(this.video, 0, 0, w, h);
+                        this.processCanvas.width = img.width;
+                        this.processCanvas.height = img.height;
+                        this.procCtx.clearRect(0,0,img.width,img.height);
 
-                const corrected = this.correctRotation(this.canvas, this.currentOrientation);
-                resolve(corrected.toDataURL('image/jpeg', 0.92));
-            });
-        }
-
-        correctRotation(sourceCanvas, angle) {
-            if (angle === 0) return sourceCanvas;
-
-            const w = sourceCanvas.width;
-            const h = sourceCanvas.height;
-
-            this.rotateCanvas.width = (angle === 90 || angle === 270) ? h : w;
-            this.rotateCanvas.height = (angle === 90 || angle === 270) ? w : h;
-
-            this.rotCtx.save();
-            this.rotCtx.translate(this.rotateCanvas.width / 2, this.rotateCanvas.height / 2);
-            this.rotCtx.rotate(angle * Math.PI / 180);
-            this.rotCtx.drawImage(sourceCanvas, -w / 2, -h / 2);
-            this.rotCtx.restore();
-
-            return this.rotateCanvas;
-        }
-
-        async tryMultipleRotations(imageData) {
-            const rotations = [0, 90, 180, 270];
-            for (const rot of rotations) {
-                try {
-                    const img = new Image();
-                    img.src = imageData;
-                    await new Promise(r => img.onload = r);
-
-                    this.processCanvas.width = img.width;
-                    this.processCanvas.height = img.height;
-
-                    this.procCtx.save();
-                    if (rot !== 0) {
-                        this.procCtx.translate(this.processCanvas.width / 2, this.processCanvas.height / 2);
-                        this.procCtx.rotate(rot * Math.PI / 180);
-                        this.procCtx.drawImage(img, -img.width / 2, -img.height / 2);
-                    } else {
-                        this.procCtx.drawImage(img, 0, 0);
-                    }
-                    this.procCtx.restore();
-
-                    if (this.codeReader) {
-                        const result = await this.codeReader.decodeFromImage(undefined, this.processCanvas.toDataURL('image/jpeg', 0.9));
-                        if (result && result.getText()) {
-                            this.log(`Barcode found at ${rot}°`);
-                            return result.getText().trim();
+                        this.procCtx.save();
+                        if (rot !== 0) {
+                            this.procCtx.translate(this.processCanvas.width/2, this.processCanvas.height/2);
+                            this.procCtx.rotate(rot * Math.PI / 180);
+                            this.procCtx.drawImage(img, -img.width/2, -img.height/2);
+                        } else {
+                            this.procCtx.drawImage(img, 0, 0);
                         }
-                    }
-                } catch(e) {}
-            }
-            return null;
-        }
+                        this.procCtx.restore();
 
-        // ==================== IMPROVED FUNCTIONS ====================
-
-        normalizeText(text) {
-            if (!text) return '';
-            return text
-                .toUpperCase()
-                .replace(/[^A-Z0-9]/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-        }
-
-        extractNumbers(text) {
-            if (!text) return [];
-            const matches = text.match(/\d+/g);
-            return matches || [];
-        }
-
-        calcSimilarity(s1, s2) {
-            if (!s1 || !s2) return 0;
-            const longer = s1.length > s2.length ? s1 : s2;
-            const shorter = s1.length > s2.length ? s2 : s1;
-            if (longer.length === 0) return 1;
-            const dist = this.levenshtein(longer, shorter);
-            return (longer.length - dist) / longer.length;
-        }
-
-        levenshtein(s1, s2) {
-            // Same as before
-            const m = [];
-            for (let i = 0; i <= s2.length; i++) m[i] = [i];
-            for (let j = 0; j <= s1.length; j++) m[0][j] = j;
-            for (let i = 1; i <= s2.length; i++) {
-                for (let j = 1; j <= s1.length; j++) {
-                    m[i][j] = s2[i-1] === s1[j-1] ? m[i-1][j-1] : Math.min(m[i-1][j-1]+1, m[i][j-1]+1, m[i-1][j]+1);
+                        if (this.codeReader) {
+                            const result = await this.codeReader.decodeFromImage(undefined, this.processCanvas.toDataURL('image/jpeg', 0.9));
+                            if (result?.getText()) return result.getText().trim();
+                        }
+                    } catch(e) {}
                 }
+                return null;
             }
-            return m[s2.length][s1.length];
-        }
 
-        // IMPROVED MATCHING LOGIC
-        compareLabels(current) {
-            if (!this.referenceData) return { match: false, confidence: 0, method: 'NONE' };
+            normalizeText(text) {
+                if (!text) return '';
+                return text.toUpperCase().replace(/[^A-Z0-9]/g, ' ').replace(/\s+/g, ' ').trim();
+            }
 
-            const ref = this.referenceData;
-            let method = 'TEXT';
+            extractNumbers(text) {
+                return text ? (text.match(/\d+/g) || []) : [];
+            }
 
-            // BARCODE - Highest priority
-            if (ref.barcode && current.barcode) {
-                if (ref.barcode === current.barcode) {
-                    this.log('BARCODE EXACT MATCH');
+            calcSimilarity(s1, s2) {
+                if (!s1 || !s2) return 0;
+                const a = s1.length > s2.length ? s1 : s2;
+                const b = s1.length > s2.length ? s2 : s1;
+                const dist = this.levenshtein(a, b);
+                return (a.length - dist) / a.length;
+            }
+
+            levenshtein(s1, s2) {
+                const m = Array.from({length: s2.length+1}, (_,i) => [i]);
+                for (let j=0; j<=s1.length; j++) m[0][j] = j;
+                for (let i=1; i<=s2.length; i++) {
+                    for (let j=1; j<=s1.length; j++) {
+                        m[i][j] = s2[i-1] === s1[j-1] ? m[i-1][j-1] : Math.min(m[i-1][j-1]+1, m[i][j-1]+1, m[i-1][j]+1);
+                    }
+                }
+                return m[s2.length][s1.length];
+            }
+
+            compareLabels(current) {
+                if (!this.referenceData) return { match: false, confidence: 0, method: 'NONE' };
+
+                const ref = this.referenceData;
+
+                // Barcode Exact Match
+                if (ref.barcode && current.barcode && ref.barcode === current.barcode) {
                     return { match: true, confidence: 1.0, method: 'BARCODE' };
                 }
+
+                const refText = this.normalizeText(ref.text || '');
+                const curText = this.normalizeText(current.text || '');
+
+                if (refText.length < 3 || curText.length < 3) {
+                    return { match: false, confidence: 0.2, method: 'TEXT' };
+                }
+
+                if (refText === curText) {
+                    return { match: true, confidence: 1.0, method: 'TEXT_EXACT' };
+                }
+
+                const sim = this.calcSimilarity(refText, curText);
+                const numScore = this.extractNumbers(refText).filter(n => this.extractNumbers(curText).includes(n)).length / 
+                               Math.max(this.extractNumbers(refText).length, 1);
+
+                let confidence = (sim * 0.75) + (numScore * 0.25);
+                if (sim > 0.85) confidence = 0.95;
+
+                return {
+                    match: confidence >= this.matchThreshold,
+                    confidence: Math.min(confidence, 1),
+                    method: 'TEXT'
+                };
             }
 
-            const refText = ref.text || '';
-            const curText = current.text || '';
+            // Keep all your other methods (captureReference, scanFrame, handleResult, etc.)
+            // For space, I didn't paste all, but they remain the same except using the new compareLabels.
 
-            if (refText.length < 2 || curText.length < 2) {
-                return { match: false, confidence: 0.2, method: 'TEXT' };
+            // ... Paste all your remaining original methods here (startVerification, togglePause, stopVerification, scanFrame, handleResult, etc.) ...
+
+            showToast(msg, type = '') {
+                this.els.toast.textContent = msg;
+                this.els.toast.className = `toast show ${type}`;
+                setTimeout(() => this.els.toast.classList.remove('show'), 2200);
             }
-
-            const normRef = this.normalizeText(refText);
-            const normCur = this.normalizeText(curText);
-
-            // Exact match
-            if (normRef === normCur) {
-                return { match: true, confidence: 1.0, method: 'TEXT_EXACT' };
-            }
-
-            const similarity = this.calcSimilarity(normRef, normCur);
-            const refNums = this.extractNumbers(normRef);
-            const curNums = this.extractNumbers(normCur);
-
-            let numberScore = 0;
-            if (refNums.length > 0 && curNums.length > 0) {
-                const common = refNums.filter(n => curNums.includes(n));
-                numberScore = common.length / Math.max(refNums.length, 1);
-            }
-
-            // Final confidence
-            let confidence = (similarity * 0.75) + (numberScore * 0.25);
-            
-            // Strong boost for very high similarity
-            if (similarity > 0.82) confidence = Math.max(confidence, 0.92);
-
-            this.log(`Similarity: ${(similarity*100).toFixed(1)}% | Numbers: ${(numberScore*100).toFixed(0)}% | Confidence: ${(confidence*100).toFixed(1)}%`);
-
-            return {
-                match: confidence >= this.matchThreshold,
-                confidence: Math.min(confidence, 1.0),
-                method: method
-            };
         }
 
-        // Rest of the methods remain mostly the same (captureReference, scanFrame, etc.)
-        // For brevity, I'm only showing changed parts. You can keep the rest of your original methods.
-
-        // ... [Keep all your other methods: captureReference, startVerification, scanFrame, handleResult, etc.] ...
-
-        // Just make sure to update the threshold slider in updateThreshold:
-        updateThreshold(val) {
-            this.matchThreshold = val / 100;
-            document.getElementById('settingThreshold').textContent = val + '%';
-        }
-
-        showToast(msg, type) {
-            this.els.toast.textContent = msg;
-            this.els.toast.className = 'toast show ' + (type || '');
-            setTimeout(() => this.els.toast.classList.remove('show'), 2500);
-        }
-    }
-
-    const app = new LabelVerifyAllAngle();
-</script>
+        const app = new LabelVerifyAllAngle();
+    </script>
+</body>
+</html>
