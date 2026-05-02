@@ -1,128 +1,1113 @@
-<script>
-    class LabelVerifyAllAngle {
-        constructor() {
-            // Safe initialization
-            this.initApp = this.initApp.bind(this);
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', this.initApp);
-            } else {
-                this.initApp();
-            }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>Label Verify Pro</title>
+    <script src="https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
+
+        :root {
+            --green: #00e676;
+            --red: #ff1744;
+            --yellow: #ffd600;
+            --blue: #2979ff;
+            --bg: #080c10;
+            --surface: #0d1520;
+            --surface2: #131d2b;
+            --border: #1e2d3d;
+            --text: #e8f0f8;
+            --muted: #5a7a99;
         }
 
-        initApp() {
-            // Get all canvas elements
-            this.video = document.getElementById('video');
-            this.canvas = document.getElementById('canvas');
-            this.processCanvas = document.getElementById('processCanvas');
-            this.rotateCanvas = document.getElementById('rotateCanvas');
+        html, body {
+            font-family: 'SF Mono', 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100%; width: 100%;
+            position: fixed;
+        }
 
-            if (!this.canvas || !this.processCanvas || !this.rotateCanvas) {
-                console.error("Canvas elements not found! Check if IDs are correct.");
+        #app { width:100%; height:100%; display:flex; flex-direction:column; }
+
+        /* HEADER */
+        .hdr {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            min-height: 48px;
+        }
+        .hdr-title { font-size: 13px; font-weight: 700; letter-spacing: 2px; color: var(--blue); }
+        .hdr-sub { font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 1px; }
+        .hdr-pills { display:flex; gap:6px; }
+        .hdr-pill {
+            padding: 4px 8px; border-radius: 4px;
+            font-size: 10px; font-weight: 700; letter-spacing: 1px;
+        }
+        .pill-match { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+        .pill-mis { background: rgba(255,23,68,0.15); color: var(--red); border: 1px solid rgba(255,23,68,0.3); }
+        .pill-tot { background: rgba(255,214,0,0.12); color: var(--yellow); border: 1px solid rgba(255,214,0,0.25); }
+
+        /* MAIN */
+        .main { flex:1; position:relative; overflow:hidden; min-height:0; display:flex; flex-direction:column; }
+
+        /* CAMERA */
+        .cam-wrap { flex:1; position:relative; background:#000; overflow:hidden; min-height:0; }
+        #video { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; display:none; }
+        #video.on { display:block; }
+        #canvas, #procCanvas, #rotCanvas { display:none; }
+
+        /* SCAN BOX */
+        .scan-box {
+            position: absolute;
+            top: 10%; left: 8%; right: 8%; bottom: 22%;
+            z-index: 10; pointer-events: none;
+            transition: all 0.25s;
+        }
+        .scan-box::before, .scan-box::after,
+        .scan-box .c1, .scan-box .c2 {
+            content: '';
+            position: absolute;
+            width: 28px; height: 28px;
+            border-style: solid;
+            border-color: rgba(255,255,255,0.5);
+        }
+        .scan-box::before { top:-2px; left:-2px; border-width:3px 0 0 3px; border-radius:6px 0 0 0; }
+        .scan-box::after  { bottom:-2px; right:-2px; border-width:0 3px 3px 0; border-radius:0 0 6px 0; }
+        .scan-box .c1 { top:-2px; right:-2px; border-width:3px 3px 0 0; border-radius:0 6px 0 0; }
+        .scan-box .c2 { bottom:-2px; left:-2px; border-width:0 0 3px 3px; border-radius:0 0 0 6px; }
+
+        .scan-box.ok::before, .scan-box.ok::after, .scan-box.ok .c1, .scan-box.ok .c2 {
+            border-color: var(--green);
+            box-shadow: 0 0 12px var(--green);
+        }
+        .scan-box.bad::before, .scan-box.bad::after, .scan-box.bad .c1, .scan-box.bad .c2 {
+            border-color: var(--red);
+            box-shadow: 0 0 12px var(--red);
+        }
+
+        /* Scan line animation */
+        .scan-line {
+            position: absolute;
+            left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--blue), transparent);
+            animation: scanAnim 2s ease-in-out infinite;
+            z-index: 11; pointer-events: none;
+            top: 10%; margin-top: 5%;
+        }
+        @keyframes scanAnim {
+            0%   { top: 10%; opacity:0.8; }
+            50%  { top: 72%; opacity:1; }
+            100% { top: 10%; opacity:0.8; }
+        }
+
+        /* FLASH */
+        .flash {
+            position: absolute; inset: 0; z-index: 50;
+            pointer-events: none; opacity: 0;
+            transition: opacity 0.1s;
+        }
+        .flash.ok  { background: rgba(0,230,118,0.25); opacity:1; }
+        .flash.bad { background: rgba(255,23,68,0.25); opacity:1; }
+
+        /* BIG RESULT */
+        .big-result {
+            position: absolute; top:50%; left:50%;
+            transform: translate(-50%,-50%) scale(0.8);
+            z-index: 40; pointer-events: none;
+            text-align: center; opacity:0;
+            transition: all 0.15s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .big-result.show { opacity:1; transform: translate(-50%,-50%) scale(1); }
+        .big-icon { font-size: 100px; line-height:1; }
+        .big-label {
+            font-size: 36px; font-weight: 900;
+            letter-spacing: 4px;
+            padding: 8px 32px; border-radius: 8px;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(8px);
+        }
+        .big-result.ok .big-label  { color: var(--green); }
+        .big-result.bad .big-label { color: var(--red); }
+
+        /* CONFIDENCE BADGE */
+        .conf-badge {
+            position: absolute; bottom: 24%; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            border: 1px solid var(--border);
+            padding: 5px 14px; border-radius: 20px;
+            font-size: 11px; font-weight: 700;
+            z-index: 15; pointer-events: none;
+            letter-spacing: 1px;
+            display: none;
+        }
+
+        /* INFO STRIP */
+        .info-strip {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(8,12,16,0.92);
+            border-top: 1px solid var(--border);
+            padding: 6px 10px;
+            display: none;
+            z-index: 15;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            font-size: 10px;
+        }
+        .info-strip.on { display: grid; }
+        .info-row { display:flex; justify-content:space-between; gap:8px; }
+        .info-lbl { color: var(--muted); }
+        .info-val { color: var(--blue); font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 120px; }
+        .info-val.ok  { color: var(--green); }
+        .info-val.bad { color: var(--red); }
+
+        /* REF THUMB */
+        .ref-thumb {
+            position: absolute; top: 8px; right: 8px;
+            width: 64px; height: 64px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-radius: 8px; overflow:hidden;
+            background: #222; z-index: 15; display:none;
+        }
+        .ref-thumb img { width:100%; height:100%; object-fit:cover; }
+        .ref-thumb-lbl {
+            position:absolute; bottom:0; left:0; right:0;
+            background: rgba(0,0,0,0.8); font-size:8px;
+            text-align:center; padding:2px; font-weight:700;
+            letter-spacing:1px; color: var(--yellow);
+        }
+
+        /* PROCESSING */
+        .proc {
+            position:absolute; top:50%; left:50%;
+            transform:translate(-50%,-50%);
+            z-index:30; text-align:center; display:none;
+        }
+        .proc.on { display:block; }
+        .spinner {
+            width:44px; height:44px; margin:0 auto 8px;
+            border:3px solid rgba(41,121,255,0.2);
+            border-top-color: var(--blue);
+            border-radius:50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .proc-txt { font-size:11px; color:var(--muted); letter-spacing:2px; }
+
+        /* START SCREEN */
+        .start-scr {
+            position:absolute; inset:0;
+            background: linear-gradient(180deg, #080c10 0%, #0d1520 100%);
+            display:flex; flex-direction:column;
+            align-items:center; justify-content:center;
+            z-index:50; padding:24px; text-align:center;
+        }
+        .start-scr.gone { display:none; }
+        .start-icon { font-size:72px; margin-bottom:16px; }
+        .start-title {
+            font-size:22px; font-weight:900; letter-spacing:3px;
+            color: var(--blue); margin-bottom:8px;
+        }
+        .start-desc { font-size:12px; color:var(--muted); line-height:1.7; margin-bottom:28px; max-width:280px; letter-spacing:0.5px; }
+        .feat-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; max-width:300px; margin-bottom:28px; }
+        .feat {
+            background: var(--surface2); border:1px solid var(--border);
+            padding:10px 8px; border-radius:8px;
+            font-size:11px; color:var(--text); letter-spacing:0.5px;
+        }
+        .feat-ic { font-size:22px; margin-bottom:4px; }
+
+        /* CONTROLS */
+        .ctrl {
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            padding: 10px 12px 16px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .ctrl.on { display:flex; }
+
+        .btn {
+            width:100%; padding:14px 20px; border:none; border-radius:10px;
+            font-size:13px; font-weight:800; cursor:pointer;
+            text-transform:uppercase; letter-spacing:1.5px;
+            display:flex; align-items:center; justify-content:center; gap:8px;
+            min-height:50px; -webkit-appearance:none;
+            font-family: inherit;
+            transition: transform 0.1s, opacity 0.1s;
+        }
+        .btn:active { transform:scale(0.97); }
+        .btn:disabled { opacity:0.35; cursor:not-allowed; }
+
+        .btn-blue  { background:linear-gradient(135deg,#2979ff,#1a4fd6); color:#fff; box-shadow:0 4px 16px rgba(41,121,255,0.3); }
+        .btn-green { background:linear-gradient(135deg,#00c853,#007a2f); color:#fff; box-shadow:0 4px 16px rgba(0,200,83,0.3); }
+        .btn-amber { background:linear-gradient(135deg,#ff9100,#b35a00); color:#fff; box-shadow:0 4px 16px rgba(255,145,0,0.3); }
+        .btn-red   { background:linear-gradient(135deg,#ff1744,#8b0000); color:#fff; box-shadow:0 4px 16px rgba(255,23,68,0.3); }
+
+        .btn-row { display:flex; gap:8px; }
+        .btn-row .btn { flex:1; font-size:11px; padding:12px 6px; min-height:44px; }
+
+        /* PANELS */
+        .backdrop {
+            position:absolute; inset:0;
+            background:rgba(0,0,0,0.65); z-index:55; display:none;
+            backdrop-filter: blur(2px);
+        }
+        .backdrop.on { display:block; }
+
+        .panel {
+            position:absolute; top:0; right:-100%;
+            width:82%; max-width:340px; height:100%;
+            background: var(--surface); z-index:60;
+            transition:right 0.28s cubic-bezier(0.4,0,0.2,1);
+            display:flex; flex-direction:column;
+            border-left:1px solid var(--border);
+        }
+        .panel.open { right:0; }
+        .panel-hdr {
+            padding:14px 16px;
+            background: var(--surface2);
+            border-bottom:1px solid var(--border);
+            display:flex; justify-content:space-between; align-items:center;
+            flex-shrink:0;
+        }
+        .panel-hdr h2 { font-size:13px; font-weight:800; letter-spacing:2px; }
+        .panel-close { background:none; border:none; color:var(--text); font-size:26px; cursor:pointer; line-height:1; }
+        .panel-body { flex:1; padding:16px; overflow-y:auto; }
+
+        /* SETTINGS */
+        .set-item { margin-bottom:22px; }
+        .set-lbl { font-size:10px; color:var(--muted); margin-bottom:6px; letter-spacing:2px; }
+        .set-val { font-size:20px; font-weight:900; color:var(--blue); }
+        .set-desc { font-size:10px; color:#445; margin-top:4px; line-height:1.5; }
+        input[type=range] {
+            width:100%; margin-top:10px; accent-color:var(--blue);
+            height:4px; cursor:pointer;
+        }
+
+        /* LOG */
+        .log-stats { display:flex; gap:8px; padding:10px 12px; border-bottom:1px solid var(--border); flex-shrink:0; }
+        .log-stat { flex:1; text-align:center; padding:10px 6px; border-radius:8px; background:var(--surface2); }
+        .log-num { font-size:22px; font-weight:900; }
+        .log-lbl { font-size:10px; color:var(--muted); margin-top:2px; letter-spacing:1px; }
+        .ok-num  { color: var(--green); }
+        .bad-num { color: var(--red); }
+        .tot-num { color: var(--yellow); }
+        .log-entries { flex:1; overflow-y:auto; padding:8px; }
+        .log-entry {
+            display:flex; align-items:center; gap:10px;
+            padding:10px 12px; margin-bottom:5px; border-radius:8px;
+            background:rgba(255,255,255,0.02);
+            border-left:3px solid transparent; font-size:12px;
+        }
+        .log-entry.ok  { border-left-color:var(--green); }
+        .log-entry.bad { border-left-color:var(--red); }
+        .log-ic { font-size:20px; width:28px; text-align:center; }
+        .log-info { flex:1; }
+        .log-time { font-size:10px; color:var(--muted); }
+        .log-txt  { font-size:11px; color:var(--text); margin-top:2px; word-break:break-all; }
+        .log-acts { padding:10px 12px; border-top:1px solid var(--border); display:flex; gap:8px; flex-shrink:0; }
+        .log-acts .btn { font-size:11px; padding:10px; min-height:40px; }
+
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:110px; left:50%;
+            transform:translateX(-50%) translateY(80px);
+            background:var(--surface2); color:var(--text);
+            padding:10px 22px; border-radius:8px; font-size:13px; font-weight:700;
+            z-index:200; transition:transform 0.25s; white-space:nowrap;
+            border:1px solid var(--border); letter-spacing:0.5px;
+            box-shadow:0 4px 20px rgba(0,0,0,0.5);
+        }
+        .toast.up { transform:translateX(-50%) translateY(0); }
+        .toast.err { background:#2a0008; border-color:var(--red); color:#ff8a80; }
+        .toast.win { background:#002410; border-color:var(--green); color:#69f0ae; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <!-- HEADER -->
+    <div class="hdr">
+        <div>
+            <div class="hdr-title">LABEL VERIFY PRO</div>
+            <div class="hdr-sub">ANY ANGLE · SMART MATCH</div>
+        </div>
+        <div class="hdr-pills">
+            <div class="hdr-pill pill-match" id="hMatch">✓ 0</div>
+            <div class="hdr-pill pill-mis"   id="hMis">✗ 0</div>
+            <div class="hdr-pill pill-tot"   id="hTot">∑ 0</div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+        <!-- CAMERA AREA -->
+        <div class="cam-wrap">
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="canvas"></canvas>
+            <canvas id="procCanvas"></canvas>
+            <canvas id="rotCanvas"></canvas>
+
+            <!-- Start Screen -->
+            <div id="startScr" class="start-scr">
+                <div class="start-icon">🔍</div>
+                <div class="start-title">LABEL VERIFY PRO</div>
+                <div class="start-desc">Smart barcode + OCR matching. Hold at any angle — auto-corrects rotation. Works on any label.</div>
+                <div class="feat-grid">
+                    <div class="feat"><div class="feat-ic">🔄</div>Auto Rotate</div>
+                    <div class="feat"><div class="feat-ic">🧠</div>Smart Match</div>
+                    <div class="feat"><div class="feat-ic">⚡</div>Fast Barcode</div>
+                    <div class="feat"><div class="feat-ic">🔊</div>Audio Alert</div>
+                </div>
+                <button class="btn btn-blue" id="startBtn" onclick="app.start()" style="max-width:300px;">
+                    <span>📷</span> START CAMERA
+                </button>
+            </div>
+
+            <!-- Scan box -->
+            <div class="scan-box" id="scanBox">
+                <div class="c1"></div>
+                <div class="c2"></div>
+            </div>
+            <div class="scan-line" id="scanLine" style="display:none;"></div>
+
+            <!-- Flash & result -->
+            <div class="flash" id="flash"></div>
+            <div class="big-result" id="bigResult">
+                <div class="big-icon" id="bigIc">✓</div>
+                <div class="big-label" id="bigLbl">MATCH</div>
+            </div>
+
+            <!-- Confidence badge -->
+            <div class="conf-badge" id="confBadge"></div>
+
+            <!-- Ref thumbnail -->
+            <div class="ref-thumb" id="refThumb">
+                <img id="refImg" src="" alt="REF">
+                <div class="ref-thumb-lbl">REF</div>
+            </div>
+
+            <!-- Processing -->
+            <div class="proc" id="proc">
+                <div class="spinner"></div>
+                <div class="proc-txt">READING...</div>
+            </div>
+
+            <!-- Info strip -->
+            <div class="info-strip" id="infoStrip">
+                <div class="info-row">
+                    <span class="info-lbl">READ:</span>
+                    <span class="info-val" id="iRead">--</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">METHOD:</span>
+                    <span class="info-val" id="iMethod">--</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">SCORE:</span>
+                    <span class="info-val" id="iScore">--</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-lbl">STATUS:</span>
+                    <span class="info-val" id="iStatus">READY</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="ctrl on" id="ctrl" style="display:none;">
+            <button class="btn btn-blue" id="captBtn" onclick="app.captureRef()">
+                <span>📸</span> CAPTURE REFERENCE LABEL
+            </button>
+            <button class="btn btn-green" id="scanBtn" onclick="app.startScan()" style="display:none;">
+                <span>▶️</span> START BATCH SCAN
+            </button>
+            <div class="btn-row" id="batchRow" style="display:none;">
+                <button class="btn btn-amber" id="pauseBtn" onclick="app.togglePause()">
+                    <span id="pauseIc">⏸️</span><span id="pauseTxt">PAUSE</span>
+                </button>
+                <button class="btn btn-blue" onclick="app.openLog()"><span>📋</span>LOG</button>
+                <button class="btn btn-blue" onclick="app.openSettings()"><span>⚙️</span>SET</button>
+            </div>
+            <button class="btn btn-red" id="resetBtn" onclick="app.reset()" style="display:none;">
+                <span>🔄</span> RESET ALL
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="backdrop" id="setBd" onclick="app.closeSettings()"></div>
+<div class="panel" id="setPanel">
+    <div class="panel-hdr">
+        <h2>⚙️ SETTINGS</h2>
+        <button class="panel-close" onclick="app.closeSettings()">×</button>
+    </div>
+    <div class="panel-body">
+        <div class="set-item">
+            <div class="set-lbl">MATCH THRESHOLD</div>
+            <div class="set-val" id="sThresh">40%</div>
+            <div class="set-desc">Lower = more lenient. Raise if too many false matches. Default 40% works well for OCR.</div>
+            <input type="range" min="20" max="85" value="40" id="thSlider" oninput="app.setThreshold(this.value)">
+        </div>
+        <div class="set-item">
+            <div class="set-lbl">SCAN INTERVAL</div>
+            <div class="set-val" id="sInterval">1000ms</div>
+            <div class="set-desc">Time between scans. Slower = more stable reads.</div>
+            <input type="range" min="500" max="3000" value="1000" step="100" id="intSlider" oninput="app.setInterval(this.value)">
+        </div>
+        <div class="set-item">
+            <div class="set-lbl">DEBOUNCE</div>
+            <div class="set-val" id="sDebounce">1500ms</div>
+            <div class="set-desc">Minimum time before counting the same label again. Prevents double-counting.</div>
+            <input type="range" min="500" max="5000" value="1500" step="250" id="dbSlider" oninput="app.setDebounce(this.value)">
+        </div>
+        <div class="set-item">
+            <div class="set-lbl">AUTO-ROTATE</div>
+            <div class="set-val" style="color:var(--green)">ON</div>
+            <div class="set-desc">Tries 0°, 90°, 180°, 270° for barcode. Uses device tilt for OCR correction.</div>
+        </div>
+        <div class="set-item">
+            <div class="set-lbl">AUDIO + VIBRATION</div>
+            <div class="set-val" style="color:var(--green)">ON</div>
+            <div class="set-desc">Tick = match. Buzz = mismatch.</div>
+        </div>
+    </div>
+</div>
+
+<!-- LOG PANEL -->
+<div class="backdrop" id="logBd" onclick="app.closeLog()"></div>
+<div class="panel" id="logPanel">
+    <div class="panel-hdr">
+        <h2>📋 SCAN LOG</h2>
+        <button class="panel-close" onclick="app.closeLog()">×</button>
+    </div>
+    <div class="log-stats">
+        <div class="log-stat"><div class="log-num ok-num"  id="lMatch">0</div><div class="log-lbl">MATCH</div></div>
+        <div class="log-stat"><div class="log-num bad-num" id="lMis">0</div><div class="log-lbl">MISMATCH</div></div>
+        <div class="log-stat"><div class="log-num tot-num" id="lTot">0</div><div class="log-lbl">TOTAL</div></div>
+    </div>
+    <div class="log-entries" id="logList"></div>
+    <div class="log-acts">
+        <button class="btn btn-blue"  onclick="app.exportCSV()"><span>💾</span>EXPORT</button>
+        <button class="btn btn-red"   onclick="app.clearLog()"><span>🗑️</span>CLEAR</button>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+class LabelVerify {
+    constructor() {
+        this.video      = document.getElementById('video');
+        this.canvas     = document.getElementById('canvas');
+        this.procCanvas = document.getElementById('procCanvas');
+        this.rotCanvas  = document.getElementById('rotCanvas');
+        this.ctx        = this.canvas.getContext('2d');
+        this.procCtx    = this.procCanvas.getContext('2d');
+        this.rotCtx     = this.rotCanvas.getContext('2d');
+
+        this.stream         = null;
+        this.isScanning     = false;
+        this.isPaused       = false;
+        this.refData        = null;
+        this.matchCount     = 0;
+        this.misCount       = 0;
+        this.total          = 0;
+        this.intervalTimer  = null;
+        this.intervalMs     = 1000;
+        this.codeReader     = null;
+        this.tessWorker     = null;
+        this.isProc         = false;
+        this.log            = [];
+        this.lastScanTime   = 0;
+        this.debounceMs     = 1500;
+        this.lastKey        = '';
+        this.threshold      = 0.40;
+        this.audioCtx       = null;
+        this.orientation    = 0;
+
+        // Cache DOM
+        this.el = {};
+        ['startScr','scanBox','flash','bigResult','bigIc','bigLbl','confBadge',
+         'refThumb','refImg','proc','infoStrip','iRead','iMethod','iScore','iStatus',
+         'ctrl','captBtn','scanBtn','batchRow','pauseBtn','pauseIc','pauseTxt','resetBtn',
+         'setPanel','setBd','logPanel','logBd','logList','lMatch','lMis','lTot',
+         'toast','scanLine','hMatch','hMis','hTot','startBtn'
+        ].forEach(id => this.el[id] = document.getElementById(id));
+
+        window.addEventListener('deviceorientation', e => this.onOrientation(e), true);
+    }
+
+    onOrientation(e) {
+        const g = e.gamma, b = e.beta;
+        if (Math.abs(g) > 45)      this.orientation = g > 0 ? 90  : 270;
+        else if (Math.abs(b) > 45) this.orientation = b > 0 ? 0   : 180;
+    }
+
+    initAudio() {
+        if (!this.audioCtx) {
+            try { this.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+        }
+        if (this.audioCtx?.state === 'suspended') this.audioCtx.resume();
+    }
+
+    // ─── START ────────────────────────────────────────────────────────────────
+    async start() {
+        this.el.startBtn.disabled = true;
+        this.el.startBtn.innerHTML = '<span>⏳</span> STARTING...';
+        this.initAudio();
+
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    width:  { min: 1280, ideal: 1920 },
+                    height: { min: 720,  ideal: 1080 }
+                }, audio: false
+            });
+            this.video.srcObject = this.stream;
+            await new Promise((res, rej) => {
+                this.video.onloadedmetadata = res;
+                setTimeout(() => rej(new Error('Timeout')), 8000);
+            });
+            this.video.classList.add('on');
+
+            if (typeof ZXing !== 'undefined') {
+                try { this.codeReader = new ZXing.BrowserMultiFormatReader(); } catch(e) {}
+            }
+            this.initTess();
+
+            this.el.startScr.classList.add('gone');
+            this.el.ctrl.style.display = 'flex';
+            this.el.infoStrip.classList.add('on');
+            this.el.scanLine.style.display = 'block';
+            this.toast('Camera ready — capture a reference label', 'win');
+        } catch(err) {
+            this.toast('Camera error: ' + err.message, 'err');
+            this.el.startBtn.disabled = false;
+            this.el.startBtn.innerHTML = '<span>📷</span> START CAMERA';
+        }
+    }
+
+    async initTess() {
+        if (typeof Tesseract === 'undefined') return;
+        try {
+            this.tessWorker = await Tesseract.createWorker();
+            await this.tessWorker.load();
+            await this.tessWorker.loadLanguage('eng');
+            await this.tessWorker.initialize('eng');
+        } catch(e) {}
+    }
+
+    // ─── FRAME CAPTURE ────────────────────────────────────────────────────────
+    captureFrame() {
+        const w = this.video.videoWidth  || 640;
+        const h = this.video.videoHeight || 480;
+        this.canvas.width = w; this.canvas.height = h;
+        this.ctx.drawImage(this.video, 0, 0, w, h);
+        const corrected = this.rotateCanvas(this.canvas, this.orientation);
+        return corrected.toDataURL('image/jpeg', 0.92);
+    }
+
+    rotateCanvas(src, angle) {
+        if (angle === 0) return src;
+        const w = src.width, h = src.height;
+        const sw = (angle === 90 || angle === 270) ? h : w;
+        const sh = (angle === 90 || angle === 270) ? w : h;
+        this.rotCanvas.width = sw; this.rotCanvas.height = sh;
+        this.rotCtx.save();
+        this.rotCtx.translate(sw/2, sh/2);
+        this.rotCtx.rotate(angle * Math.PI / 180);
+        this.rotCtx.drawImage(src, -w/2, -h/2);
+        this.rotCtx.restore();
+        return this.rotCanvas;
+    }
+
+    // Try barcode at 0, 90, 180, 270
+    async readBarcode(imageData) {
+        if (!this.codeReader) return null;
+        const angles = [0, 90, 180, 270];
+        for (const ang of angles) {
+            try {
+                const img = new Image();
+                img.src = imageData;
+                await new Promise(r => img.onload = r);
+                this.procCanvas.width = img.width;
+                this.procCanvas.height = img.height;
+                if (ang !== 0) {
+                    const sw = (ang===90||ang===270) ? img.height : img.width;
+                    const sh = (ang===90||ang===270) ? img.width  : img.height;
+                    this.procCanvas.width = sw; this.procCanvas.height = sh;
+                    this.procCtx.save();
+                    this.procCtx.translate(sw/2, sh/2);
+                    this.procCtx.rotate(ang * Math.PI/180);
+                    this.procCtx.drawImage(img, -img.width/2, -img.height/2);
+                    this.procCtx.restore();
+                } else {
+                    this.procCtx.drawImage(img, 0, 0);
+                }
+                const res = await this.codeReader.decodeFromImage(undefined, this.procCanvas.toDataURL());
+                if (res) return res.getText();
+            } catch(e) {}
+        }
+        return null;
+    }
+
+    // ─── CAPTURE REFERENCE ────────────────────────────────────────────────────
+    async captureRef() {
+        if (this.isProc) return;
+        this.isProc = true;
+        this.el.proc.classList.add('on');
+        this.el.captBtn.disabled = true;
+        this.el.iStatus.textContent = 'READING REF...';
+        this.el.iStatus.className = 'info-val';
+
+        try {
+            const img = this.captureFrame();
+
+            const barcode = await this.readBarcode(img);
+
+            let text = '', rawText = '';
+            if (this.tessWorker) {
+                try {
+                    const r = await this.tessWorker.recognize(img);
+                    rawText = r.data.text;
+                    text = this.normalise(rawText);
+                } catch(e) {}
+            }
+
+            const nums = this.getNumbers(text);
+
+            if (!barcode && text.length < 3) {
+                this.toast('Nothing read — move closer!', 'err');
+                this.el.iStatus.textContent = 'NO DATA';
                 return;
             }
 
-            this.ctx = this.canvas.getContext('2d');
-            this.procCtx = this.processCanvas.getContext('2d');
-            this.rotCtx = this.rotateCanvas.getContext('2d');
-
-            console.log("✅ All canvas elements initialized successfully");
-
-            // Initialize the rest
-            this.stream = null;
-            this.isVerifying = false;
-            this.isPaused = false;
-            this.referenceData = null;
-            this.matchCount = 0;
-            this.mismatchCount = 0;
-            this.totalCount = 0;
-            this.scanInterval = null;
-            this.scanIntervalMs = 800;
-            this.codeReader = null;
-            this.tesseractWorker = null;
-            this.isProcessing = false;
-            this.scanLog = [];
-            this.lastScanTime = 0;
-            this.minScanInterval = 400;
-            this.matchThreshold = 0.50;
-
-            this.audioEnabled = true;
-            this.vibrationEnabled = true;
-            this.audioCtx = null;
-            this.currentOrientation = 0;
-
-            this.els = {
-                startScreen: document.getElementById('startScreen'),
-                controls: document.getElementById('controls'),
-                captureBtn: document.getElementById('captureBtn'),
-                verifyBtn: document.getElementById('verifyBtn'),
-                stopBtn: document.getElementById('stopBtn'),
-                batchControls: document.getElementById('batchControls'),
-                pauseBtn: document.getElementById('pauseBtn'),
-                pauseIcon: document.getElementById('pauseIcon'),
-                pauseText: document.getElementById('pauseText'),
-                statusBar: document.getElementById('statusBar'),
-                statusText: document.getElementById('statusText'),
-                matchCount: document.getElementById('matchCount'),
-                mismatchCount: document.getElementById('mismatchCount'),
-                totalCount: document.getElementById('totalCount'),
-                refPreview: document.getElementById('refPreview'),
-                refImage: document.getElementById('refImage'),
-                scanFrame: document.getElementById('scanFrame'),
-                resultFlash: document.getElementById('resultFlash'),
-                resultCenter: document.getElementById('resultCenter'),
-                bigIcon: document.getElementById('bigIcon'),
-                bigText: document.getElementById('bigText'),
-                processing: document.getElementById('processing'),
-                toast: document.getElementById('toast'),
-                infoOverlay: document.getElementById('infoOverlay'),
-                infoRead: document.getElementById('infoRead'),
-                infoRef: document.getElementById('infoRef'),
-                infoScore: document.getElementById('infoScore'),
-                infoMethod: document.getElementById('infoMethod'),
-                orientationBadge: document.getElementById('orientationBadge'),
-                settingsPanel: document.getElementById('settingsPanel'),
-                settingsBackdrop: document.getElementById('settingsBackdrop'),
-                logPanel: document.getElementById('logPanel'),
-                logBackdrop: document.getElementById('logBackdrop'),
-                logEntries: document.getElementById('logEntries'),
-                logMatch: document.getElementById('logMatch'),
-                logMismatch: document.getElementById('logMismatch'),
-                logTotal: document.getElementById('logTotal'),
-                thresholdSlider: document.getElementById('thresholdSlider'),
-                intervalSlider: document.getElementById('intervalSlider'),
+            // Store reference fingerprint
+            this.refData = {
+                barcode,
+                text,
+                rawText,
+                nums,
+                image: img,
+                words: this.getWords(text),
+                ngrams: this.getNgrams(text, 3)
             };
 
-            this.setupOrientationListener();
-            this.log('App fully initialized');
+            this.el.refImg.src = img;
+            this.el.refThumb.style.display = 'block';
+            this.el.captBtn.style.display   = 'none';
+            this.el.scanBtn.style.display    = 'flex';
+            this.el.iStatus.textContent = 'REF SET';
+            this.el.iStatus.className = 'info-val ok';
+            this.el.iRead.textContent = (barcode || text.substring(0,25));
+            this.el.iMethod.textContent = barcode ? 'BARCODE' : 'OCR';
+            this.toast('Reference captured! ' + (barcode ? '📊 Barcode' : '🔤 Text'), 'win');
+
+        } finally {
+            this.isProc = false;
+            this.el.proc.classList.remove('on');
+            this.el.captBtn.disabled = false;
         }
-
-        setupOrientationListener() {
-            if (window.DeviceOrientationEvent) {
-                window.addEventListener('deviceorientation', (e) => this.handleOrientation(e), true);
-            }
-        }
-
-        handleOrientation(event) {
-            const gamma = event.gamma || 0;
-            if (Math.abs(gamma) > 35) this.currentOrientation = gamma > 0 ? 90 : 270;
-        }
-
-        log(msg) {
-            console.log('[AllAngle]', msg);
-        }
-
-        // Add all other methods here (start, captureReference, compareLabels, etc.)
-        // You can copy them from previous responses
-
-        async start() {
-            this.log('Starting camera...');
-            // ... your original start method ...
-        }
-
-        // ... paste the rest of your class methods ...
     }
 
-    // Create instance
-    const app = new LabelVerifyAllAngle();
+    // ─── BATCH SCAN ───────────────────────────────────────────────────────────
+    startScan() {
+        if (!this.refData) { this.toast('Capture reference first!', 'err'); return; }
+        this.isScanning = true; this.isPaused = false;
+        this.el.scanBtn.style.display   = 'none';
+        this.el.batchRow.style.display  = 'flex';
+        this.el.resetBtn.style.display  = 'flex';
+        this.el.iStatus.textContent = 'SCANNING';
+        this.el.iStatus.className = 'info-val';
+        this.intervalTimer = setInterval(() => this.doScan(), this.intervalMs);
+        this.toast('Batch scan started', 'win');
+    }
+
+    togglePause() {
+        this.isPaused = !this.isPaused;
+        this.el.pauseIc.textContent  = this.isPaused ? '▶️' : '⏸️';
+        this.el.pauseTxt.textContent = this.isPaused ? 'RESUME' : 'PAUSE';
+        this.el.iStatus.textContent  = this.isPaused ? 'PAUSED' : 'SCANNING';
+    }
+
+    reset() {
+        this.isScanning = false; this.isPaused = false;
+        clearInterval(this.intervalTimer); this.intervalTimer = null;
+        this.refData = null;
+        this.matchCount = this.misCount = this.total = 0;
+        this.log = []; this.lastKey = '';
+        this.el.captBtn.style.display  = 'flex';
+        this.el.captBtn.style.display  = '';
+        this.el.scanBtn.style.display   = 'none';
+        this.el.batchRow.style.display  = 'none';
+        this.el.resetBtn.style.display  = 'none';
+        this.el.refThumb.style.display  = 'none';
+        this.el.scanBox.className = 'scan-box';
+        this.el.flash.className = 'flash';
+        this.el.bigResult.classList.remove('show','ok','bad');
+        this.el.iStatus.textContent = 'READY';
+        this.el.iStatus.className = 'info-val';
+        this.updateCounters();
+        this.toast('Reset complete', 'win');
+    }
+
+    // ─── SCAN FRAME ───────────────────────────────────────────────────────────
+    async doScan() {
+        if (this.isProc || !this.isScanning || this.isPaused) return;
+        this.isProc = true;
+        try {
+            const img = this.captureFrame();
+            let barcode = null, text = '', rawText = '', method = 'NONE';
+
+            barcode = await this.readBarcode(img);
+            if (barcode) method = 'BARCODE';
+
+            if (!barcode && this.tessWorker) {
+                try {
+                    const r = await this.tessWorker.recognize(img);
+                    rawText = r.data.text;
+                    text = this.normalise(rawText);
+                    if (text.length > 2) method = 'OCR';
+                } catch(e) {}
+            }
+
+            if (!barcode && text.length < 2) return;
+
+            // Debounce — don't re-count same label rapidly
+            const key = barcode || text;
+            const now = Date.now();
+            if (key === this.lastKey && (now - this.lastScanTime) < this.debounceMs) return;
+
+            const result = this.compare({ barcode, text, rawText });
+            if (result.confidence < 0.05) return; // nothing readable
+
+            this.lastKey = key;
+            this.lastScanTime = now;
+            this.handleResult(result, barcode, text, method);
+
+        } catch(e) {} finally { this.isProc = false; }
+    }
+
+    // ─── SMART COMPARE ────────────────────────────────────────────────────────
+    compare(cur) {
+        if (!this.refData) return { match:false, confidence:0 };
+        const ref = this.refData;
+
+        // ── BARCODE: exact match wins immediately ──
+        if (ref.barcode && cur.barcode) {
+            const match = ref.barcode.trim() === cur.barcode.trim();
+            return { match, confidence: match ? 1.0 : 0.0, method:'BARCODE' };
+        }
+
+        // ── OCR SMART SCORING ──
+        // We use multiple weighted signals and pick the best
+        const refT = ref.text;
+        const curT = this.normalise(cur.text);
+
+        if (!refT || !curT) return { match:false, confidence:0, method:'OCR' };
+
+        let scores = [];
+
+        // 1. Character-level Levenshtein similarity
+        const levSim = this.levSimilarity(refT, curT);
+        scores.push({ w: 3.0, v: levSim });
+
+        // 2. Token (word) overlap — Jaccard
+        const refWords = ref.words;
+        const curWords = this.getWords(curT);
+        const wordJaccard = this.jaccard(refWords, curWords);
+        scores.push({ w: 3.5, v: wordJaccard });
+
+        // 3. Trigram overlap
+        const refNg = ref.ngrams;
+        const curNg = this.getNgrams(curT, 3);
+        const ngJaccard = this.jaccard(refNg, curNg);
+        scores.push({ w: 2.5, v: ngJaccard });
+
+        // 4. Number overlap (critical for part numbers)
+        const refNums = ref.nums;
+        const curNums = this.getNumbers(curT);
+        if (refNums.length > 0 && curNums.length > 0) {
+            const numMatch = this.jaccard(refNums, curNums);
+            scores.push({ w: 5.0, v: numMatch }); // highest weight — numbers are precise
+        }
+
+        // 5. Longest common substring ratio
+        const lcs = this.lcsRatio(refT, curT);
+        scores.push({ w: 2.0, v: lcs });
+
+        // 6. Contains key tokens (partial match bonus)
+        const containsBonus = this.containsBonus(refWords, curWords);
+        scores.push({ w: 2.0, v: containsBonus });
+
+        // Weighted average
+        const totalW = scores.reduce((s, x) => s + x.w, 0);
+        const weighted = scores.reduce((s, x) => s + x.w * x.v, 0) / totalW;
+
+        // Boost: if any single strong signal is very high, trust it more
+        const maxSingle = Math.max(...scores.map(x => x.v));
+        const confidence = weighted * 0.75 + maxSingle * 0.25;
+
+        return {
+            match: confidence >= this.threshold,
+            confidence: Math.min(confidence, 1.0),
+            method: 'OCR',
+            detail: { levSim, wordJaccard, ngJaccard, lcs, maxSingle }
+        };
+    }
+
+    // ─── STRING UTILS ─────────────────────────────────────────────────────────
+
+    normalise(t) {
+        if (!t) return '';
+        return t.toUpperCase()
+                .replace(/[^A-Z0-9\s\-]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+    }
+
+    getWords(t) {
+        if (!t) return [];
+        return [...new Set(t.split(/\s+/).filter(w => w.length > 1))];
+    }
+
+    getNumbers(t) {
+        if (!t) return [];
+        return [...new Set((t.match(/\d{2,}/g) || []))]; // 2+ digit sequences
+    }
+
+    getNgrams(t, n) {
+        if (!t || t.length < n) return [];
+        const out = new Set();
+        const s = t.replace(/\s+/g,'');
+        for (let i = 0; i <= s.length - n; i++) out.add(s.substring(i, i+n));
+        return [...out];
+    }
+
+    jaccard(a, b) {
+        if (!a.length && !b.length) return 1;
+        if (!a.length || !b.length) return 0;
+        const sa = new Set(a), sb = new Set(b);
+        const intersection = [...sa].filter(x => sb.has(x)).length;
+        const union = new Set([...sa, ...sb]).size;
+        return intersection / union;
+    }
+
+    levSimilarity(s1, s2) {
+        if (!s1 || !s2) return 0;
+        if (s1 === s2) return 1;
+        const longer = s1.length > s2.length ? s1 : s2;
+        const shorter = s1.length > s2.length ? s2 : s1;
+        const dist = this.levenshtein(longer, shorter);
+        return (longer.length - dist) / longer.length;
+    }
+
+    levenshtein(a, b) {
+        // Optimised — only keep 2 rows
+        const la = a.length, lb = b.length;
+        let prev = Array.from({length: lb+1}, (_,i) => i);
+        for (let i = 1; i <= la; i++) {
+            const cur = [i];
+            for (let j = 1; j <= lb; j++) {
+                cur[j] = a[i-1] === b[j-1]
+                    ? prev[j-1]
+                    : 1 + Math.min(prev[j-1], prev[j], cur[j-1]);
+            }
+            prev = cur;
+        }
+        return prev[lb];
+    }
+
+    lcsRatio(s1, s2) {
+        // Longest common substring / shorter length
+        if (!s1 || !s2) return 0;
+        const m = s1.length, n = s2.length;
+        let best = 0;
+        const dp = Array.from({length: m+1}, () => new Array(n+1).fill(0));
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                if (s1[i-1] === s2[j-1]) {
+                    dp[i][j] = dp[i-1][j-1] + 1;
+                    if (dp[i][j] > best) best = dp[i][j];
+                }
+            }
+        }
+        return best / Math.min(m, n);
+    }
+
+    containsBonus(refWords, curWords) {
+        // How many ref words appear in cur?
+        if (!refWords.length) return 0;
+        const curSet = new Set(curWords);
+        const hits = refWords.filter(w => curSet.has(w)).length;
+        return hits / refWords.length;
+    }
+
+    // ─── HANDLE RESULT ────────────────────────────────────────────────────────
+    handleResult(result, barcode, text, method) {
+        this.total++;
+        const ok = result.match;
+        const pct = (result.confidence * 100).toFixed(0) + '%';
+        const displayText = (barcode || text).substring(0, 40);
+        const time = new Date().toLocaleTimeString();
+
+        // Info strip
+        this.el.iRead.textContent   = displayText.substring(0,22);
+        this.el.iMethod.textContent = method;
+        this.el.iScore.textContent  = pct;
+        this.el.iStatus.textContent = ok ? 'MATCH' : 'MISMATCH';
+        this.el.iStatus.className   = 'info-val ' + (ok ? 'ok' : 'bad');
+
+        // Flash
+        this.el.flash.className = 'flash ' + (ok ? 'ok' : 'bad');
+        setTimeout(() => this.el.flash.className = 'flash', 180);
+
+        // Scan box
+        this.el.scanBox.className = 'scan-box ' + (ok ? 'ok' : 'bad');
+        setTimeout(() => this.el.scanBox.className = 'scan-box', 700);
+
+        // Big result
+        this.el.bigIc.textContent  = ok ? '✓' : '✗';
+        this.el.bigLbl.textContent = ok ? 'MATCH' : 'MISMATCH';
+        this.el.bigResult.classList.remove('show','ok','bad');
+        void this.el.bigResult.offsetWidth;
+        this.el.bigResult.classList.add('show', ok ? 'ok' : 'bad');
+        setTimeout(() => this.el.bigResult.classList.remove('show'), ok ? 600 : 1000);
+
+        // Confidence badge
+        this.el.confBadge.textContent = method + ' · ' + pct;
+        this.el.confBadge.style.display = 'block';
+        this.el.confBadge.style.color = ok ? 'var(--green)' : 'var(--red)';
+        setTimeout(() => this.el.confBadge.style.display = 'none', 1200);
+
+        // Audio
+        if (ok) this.playTick(); else this.playBuzz();
+        if (navigator.vibrate) navigator.vibrate(ok ? [40,20,40] : [180,80,180]);
+
+        if (ok) this.matchCount++; else this.misCount++;
+        this.updateCounters();
+
+        this.log.unshift({ ok, time, text: displayText, pct, method });
+    }
+
+    updateCounters() {
+        this.el.hMatch.textContent = '✓ ' + this.matchCount;
+        this.el.hMis.textContent   = '✗ ' + this.misCount;
+        this.el.hTot.textContent   = '∑ ' + this.total;
+    }
+
+    // ─── AUDIO ────────────────────────────────────────────────────────────────
+    playTick() {
+        if (!this.audioCtx) return;
+        try {
+            const t = this.audioCtx.currentTime;
+            [[1400,1900,0,0.08,0.5],[1700,2300,0.07,0.15,0.35]].forEach(([f1,f2,start,end,gain]) => {
+                const o = this.audioCtx.createOscillator();
+                const g = this.audioCtx.createGain();
+                o.connect(g); g.connect(this.audioCtx.destination);
+                o.type = 'sine';
+                o.frequency.setValueAtTime(f1, t+start);
+                o.frequency.exponentialRampToValueAtTime(f2, t+end);
+                g.gain.setValueAtTime(gain, t+start);
+                g.gain.exponentialRampToValueAtTime(0.001, t+end+0.05);
+                o.start(t+start); o.stop(t+end+0.06);
+            });
+        } catch(e) {}
+    }
+
+    playBuzz() {
+        if (!this.audioCtx) return;
+        try {
+            const t = this.audioCtx.currentTime;
+            const o = this.audioCtx.createOscillator();
+            const g = this.audioCtx.createGain();
+            o.connect(g); g.connect(this.audioCtx.destination);
+            o.type = 'sawtooth';
+            o.frequency.setValueAtTime(220, t);
+            o.frequency.linearRampToValueAtTime(90, t+0.35);
+            g.gain.setValueAtTime(0.4, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t+0.45);
+            o.start(t); o.stop(t+0.46);
+        } catch(e) {}
+    }
+
+    // ─── SETTINGS ─────────────────────────────────────────────────────────────
+    openSettings() { this.el.setPanel.classList.add('open'); this.el.setBd.classList.add('on'); }
+    closeSettings() { this.el.setPanel.classList.remove('open'); this.el.setBd.classList.remove('on'); }
+    setThreshold(v) { this.threshold = v/100; document.getElementById('sThresh').textContent = v+'%'; }
+    setInterval(v)  {
+        this.intervalMs = +v; document.getElementById('sInterval').textContent = v+'ms';
+        if (this.isScanning) { clearInterval(this.intervalTimer); this.intervalTimer = setInterval(() => this.doScan(), this.intervalMs); }
+    }
+    setDebounce(v)  { this.debounceMs = +v; document.getElementById('sDebounce').textContent = v+'ms'; }
+
+    // ─── LOG ──────────────────────────────────────────────────────────────────
+    openLog() { this.renderLog(); this.el.logPanel.classList.add('open'); this.el.logBd.classList.add('on'); }
+    closeLog() { this.el.logPanel.classList.remove('open'); this.el.logBd.classList.remove('on'); }
+
+    renderLog() {
+        this.el.lMatch.textContent = this.matchCount;
+        this.el.lMis.textContent   = this.misCount;
+        this.el.lTot.textContent   = this.total;
+        this.el.logList.innerHTML  = this.log.slice(0,60).map((e,i) => `
+            <div class="log-entry ${e.ok?'ok':'bad'}">
+                <div class="log-ic">${e.ok?'✓':'✗'}</div>
+                <div class="log-info">
+                    <div class="log-time">#${this.log.length-i} · ${e.time} · ${e.method} · ${e.pct}</div>
+                    <div class="log-txt">${e.text}</div>
+                </div>
+            </div>`).join('');
+    }
+
+    clearLog() {
+        if (!confirm('Clear scan log?')) return;
+        this.log = []; this.matchCount = this.misCount = this.total = 0;
+        this.updateCounters(); this.renderLog();
+        this.toast('Log cleared', 'win');
+    }
+
+    exportCSV() {
+        if (!this.log.length) { this.toast('No data yet', 'err'); return; }
+        const rows = [['No','Time','Result','Method','Score','Text'],
+            ...this.log.map((e,i) => [this.log.length-i, e.time, e.ok?'MATCH':'MISMATCH', e.method, e.pct, e.text])];
+        const csv = rows.map(r => r.map(c => '"'+c+'"').join(',')).join('\n');
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+        a.download = 'label_verify_' + new Date().toISOString().slice(0,10) + '.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        this.toast('CSV exported!', 'win');
+    }
+
+    // ─── TOAST ────────────────────────────────────────────────────────────────
+    toast(msg, type) {
+        const t = this.el.toast;
+        t.textContent = msg;
+        t.className = 'toast up ' + (type||'');
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => t.classList.remove('up'), 2500);
+    }
+}
+
+const app = new LabelVerify();
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) app.audioCtx?.resume?.();
+});
 </script>
+</body>
+</html>
